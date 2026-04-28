@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Manrope', sans-serif;
+  background-color: #F5F3EF;
+  color: #1C1C1C;
+}
+
+h1, h2, h3, h4, h5, h6, .serif {
+  font-family: 'DM Serif Display', serif;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #F5F3EF; }
+::-webkit-scrollbar-thumb { background: #D1CEC7; border-radius: 3px; }

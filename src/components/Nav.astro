@@ -1,0 +1,40 @@
+---
+const links = [
+  { label: 'Services', href: '#services' },
+  { label: 'Process', href: '#process' },
+  { label: 'Work', href: '#work' },
+  { label: 'Journal', href: '#journal' },
+  { label: 'About', href: '#about' },
+];
+---
+
+<nav class="sticky top-0 z-50 w-full px-6 py-5 flex justify-between items-center bg-[#F5F3EF]/90 backdrop-blur-sm border-b border-stone-200/50 transition-all duration-300">
+
+  <!-- Mobile: hamburger -->
+  <button class="md:hidden text-2xl" aria-label="Menu">
+    <iconify-icon icon="solar:hamburger-menu-linear" stroke-width="1.5"></iconify-icon>
+  </button>
+
+  <!-- Logo -->
+  <a href="/" class="text-xl md:text-2xl font-serif tracking-tight text-stone-900 leading-none uppercase">
+    PREMIUM BRANDS
+  </a>
+
+  <!-- Desktop nav -->
+  <div class="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide text-stone-600">
+    {links.map(link => (
+      <a href={link.href} class="hover:text-stone-900 transition-colors">{link.label}</a>
+    ))}
+    <a
+      href="#contact"
+      class="ml-4 px-5 py-2.5 bg-stone-900 text-[#F5F3EF] rounded-full hover:bg-stone-700 transition-colors duration-300"
+    >
+      Book a Brand Audit
+    </a>
+  </div>
+
+  <!-- Mobile: user icon -->
+  <div class="flex items-center gap-4 md:hidden">
+    <iconify-icon icon="solar:user-circle-linear" class="text-xl" stroke-width="1.5"></iconify-icon>
+  </div>
+</nav>

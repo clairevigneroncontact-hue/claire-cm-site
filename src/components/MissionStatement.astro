@@ -1,0 +1,20 @@
+---
+interface Props {
+  headline?: string;
+  body?: string;
+}
+
+const {
+  headline = 'We treat your personal brand with Fortune-500 <em>strategic rigor</em>.',
+  body = "Most agencies are either too corporate or produce generic, influencer-style content. We bridge the gap, bringing high-end production quality and strategic positioning to leaders who want to build a legacy, not just an audience.",
+} = Astro.props;
+---
+
+<section class="py-24 px-6 md:px-12 bg-[#F5F3EF]">
+  <div class="max-w-4xl mx-auto text-center space-y-8">
+    <iconify-icon icon="solar:diamond-linear" stroke-width="1.5" class="text-4xl text-stone-400 mb-4"></iconify-icon>
+    <h2 class="text-4xl md:text-6xl text-stone-900 leading-tight tracking-tight" set:html={headline}></h2>
+    <div class="w-24 h-px bg-stone-300 mx-auto"></div>
+    <p class="text-lg md:text-xl text-stone-600 leading-relaxed">{body}</p>
+  </div>
+</section>

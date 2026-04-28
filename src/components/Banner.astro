@@ -1,0 +1,10 @@
+---
+interface Props {
+  text?: string;
+}
+const { text = 'Accepting select new clients for Q4 — Book a Brand Audit' } = Astro.props;
+---
+
+<div class="bg-[#1C1C1C] text-[#F5F3EF] text-xs font-medium py-3 text-center tracking-wide uppercase px-4">
+  <span>{text}</span>
+</div>

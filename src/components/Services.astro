@@ -1,0 +1,65 @@
+---
+const services = [
+  {
+    icon: 'solar:target-linear',
+    title: 'Brand Strategy & Positioning',
+    body: 'Define your unique market positioning, content pillars, and visual identity before a single asset is created.',
+  },
+  {
+    icon: 'solar:monitor-camera-linear',
+    title: 'Signature Website Design',
+    body: 'Bespoke, conversion-focused digital platforms designed to reflect your authority and capture high-value opportunities.',
+  },
+  {
+    icon: 'solar:clapperboard-play-linear',
+    title: 'Social Content Systems',
+    body: 'Editorial-grade content engines that scale your thought leadership across LinkedIn, Instagram, and specialized networks.',
+  },
+  {
+    icon: 'solar:videocamera-linear',
+    title: 'Video & Campaign Creative',
+    body: 'Cinematic video production and campaign assets that elevate your speaking engagements, book launches, and flagship offers.',
+  },
+  {
+    icon: 'solar:rocket-linear',
+    title: 'Launch Assets & Paid Creative',
+    body: 'Cohesive visual systems for high-stakes launches, ensuring every touchpoint communicates premium value and drives conversion.',
+  },
+  {
+    icon: 'solar:refresh-circle-linear',
+    title: 'Ongoing Creative Retainers',
+    body: 'A dedicated creative partnership for continuous brand evolution, premium content production, and digital platform optimization.',
+  },
+];
+---
+
+<section id="services" class="py-20 px-6 md:px-12 border-t border-stone-200">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+      <div>
+        <h3 class="text-4xl md:text-5xl text-stone-900 mb-2 tracking-tight">Premium Engagements</h3>
+        <p class="text-stone-500">Cohesive execution across every digital touchpoint.</p>
+      </div>
+      <a href="#" class="text-stone-900 border-b border-stone-900 pb-1 hover:opacity-60 transition-opacity">
+        Explore all services
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {services.map(service => (
+        <div class="group bg-[#EBE8E0] p-8 md:p-10 rounded-2xl hover:bg-[#E5E1D8] transition-colors duration-300 cursor-pointer flex flex-col h-full">
+          <div class="w-12 h-12 bg-stone-900 text-[#F5F3EF] rounded-full flex items-center justify-center mb-8 group-hover:scale-110 transition-transform shrink-0">
+            <iconify-icon icon={service.icon} stroke-width="1.5" class="text-2xl"></iconify-icon>
+          </div>
+          <h4 class="text-3xl text-stone-900 mb-4 tracking-tight">{service.title}</h4>
+          <p class="text-stone-600 mb-8 leading-relaxed flex-grow">{service.body}</p>
+          <span class="inline-flex items-center text-sm font-semibold uppercase tracking-wider text-stone-900 mt-auto">
+            Learn More
+            <iconify-icon icon="solar:arrow-right-up-linear" stroke-width="1.5" class="ml-1"></iconify-icon>
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

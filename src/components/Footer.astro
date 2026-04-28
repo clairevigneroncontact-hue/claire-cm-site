@@ -1,0 +1,79 @@
+---
+const exploreLinks = [
+  { label: 'Services', href: '#services' },
+  { label: 'Process', href: '#process' },
+  { label: 'Work', href: '#work' },
+  { label: 'Journal', href: '#journal' },
+];
+
+const serviceLinks = [
+  { label: 'Brand Strategy', href: '#' },
+  { label: 'Signature Websites', href: '#' },
+  { label: 'Content Systems', href: '#' },
+  { label: 'Video Production', href: '#' },
+];
+---
+
+<footer class="bg-[#1C1C1C] text-[#F5F3EF] pt-20 pb-10 px-6 md:px-12">
+  <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-stone-800 pb-16">
+
+    <!-- Brand -->
+    <div class="md:col-span-1 space-y-6">
+      <a href="/" class="text-2xl font-serif tracking-tight uppercase">PREMIUM BRANDS</a>
+      <p class="text-stone-400 text-sm leading-relaxed">
+        Elevating personal brands for the world's most ambitious leaders. A full-service creative agency.
+      </p>
+      <div class="flex space-x-4">
+        <a href="#" class="w-10 h-10 border border-stone-700 rounded-full flex items-center justify-center hover:bg-[#F5F3EF] hover:text-stone-900 transition-colors" aria-label="Instagram">
+          <iconify-icon icon="solar:camera-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+        </a>
+        <a href="#" class="w-10 h-10 border border-stone-700 rounded-full flex items-center justify-center hover:bg-[#F5F3EF] hover:text-stone-900 transition-colors" aria-label="Email">
+          <iconify-icon icon="solar:letter-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+        </a>
+      </div>
+    </div>
+
+    <!-- Explore -->
+    <div class="col-span-1">
+      <h5 class="font-serif text-xl mb-6 text-stone-300 tracking-tight">Explore</h5>
+      <ul class="space-y-3 text-sm text-stone-400">
+        {exploreLinks.map(link => (
+          <li><a href={link.href} class="hover:text-white transition-colors">{link.label}</a></li>
+        ))}
+      </ul>
+    </div>
+
+    <!-- Services -->
+    <div class="col-span-1">
+      <h5 class="font-serif text-xl mb-6 text-stone-300 tracking-tight">Services</h5>
+      <ul class="space-y-3 text-sm text-stone-400">
+        {serviceLinks.map(link => (
+          <li><a href={link.href} class="hover:text-white transition-colors">{link.label}</a></li>
+        ))}
+      </ul>
+    </div>
+
+    <!-- Inquiries -->
+    <div class="col-span-1" id="contact">
+      <h5 class="font-serif text-xl mb-6 text-stone-300 tracking-tight">Inquiries</h5>
+      <p class="text-xs text-stone-500 mb-6 leading-relaxed">
+        Discuss your brand goals, digital presence, and potential scope.
+      </p>
+      <a
+        href="#"
+        class="inline-block bg-[#F5F3EF] text-stone-900 px-6 py-3 rounded-lg text-sm font-medium hover:bg-stone-300 transition-colors text-center w-full"
+      >
+        Book a Brand Audit
+      </a>
+    </div>
+  </div>
+
+  <!-- Copyright -->
+  <div class="max-w-7xl mx-auto pt-10 flex flex-col md:flex-row justify-between items-center text-xs text-stone-500">
+    <p>© 2024 Premium Brands Agency. All rights reserved.</p>
+    <div class="flex space-x-6 mt-4 md:mt-0">
+      <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+      <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+    </div>
+  </div>
+</footer>
