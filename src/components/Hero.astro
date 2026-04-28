@@ -1,59 +1,52 @@
 ---
-interface Props {
-  label?: string;
-  headline?: string;
-  subheadline?: string;
-  ctaPrimary?: string;
-  ctaSecondary?: string;
-  imageUrl?: string;
-}
-
-const {
-  label = 'Elevate Your Authority',
-  headline = 'Personal brands crafted with',
-  subheadline = 'A full-service digital agency for high-performing founders, authors, and executives. We build cohesive brand assets, signature websites, and content systems that look as valuable as your expertise.',
-  ctaPrimary = 'Book a Brand Audit',
-  ctaSecondary = 'Explore Services',
-  imageUrl = 'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?q=80&w=2070&auto=format&fit=crop',
-} = Astro.props;
 ---
 
 <header class="relative w-full min-h-[90vh] flex flex-col items-center justify-center text-center px-4 md:px-0 py-20 overflow-hidden">
 
-  <!-- Background glow -->
-  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#EBE8E0] rounded-full blur-3xl -z-10 opacity-60"></div>
+  <!-- Halo de fond -->
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#EDE6DB] rounded-full blur-3xl -z-10 opacity-60"></div>
 
   <div class="max-w-5xl mx-auto space-y-8 z-10">
 
-    <span class="inline-block py-1 px-3 border border-stone-300 rounded-full text-xs font-medium uppercase tracking-widest text-stone-500 mb-4 bg-white/30 backdrop-blur-sm">
-      {label}
+    <!-- Label -->
+    <span class="inline-block py-1 px-3 border border-[#D6CCC0] rounded-full text-xs font-medium uppercase tracking-widest text-[#767A55] mb-4 bg-white/30 backdrop-blur-sm">
+      Community Manager · Artisans &amp; Indépendants
     </span>
 
-    <h1 class="text-6xl md:text-8xl lg:text-9xl text-stone-900 leading-[0.9] tracking-tighter mix-blend-darken">
-      {headline}<br />
-      <span class="italic font-light text-stone-800">editorial</span> precision.
+    <!-- H1 -->
+    <h1 class="text-6xl md:text-8xl lg:text-9xl text-[#2C2416] leading-[0.9] tracking-tighter mix-blend-darken">
+      Votre savoir-faire<br />
+      mérite d'être <span class="italic font-light text-[#8B3E22]">vu.</span>
     </h1>
 
-    <p class="max-w-xl mx-auto text-lg md:text-xl text-stone-600 font-light leading-relaxed mt-6">
-      {subheadline}
+    <!-- Sous-titre -->
+    <p class="max-w-xl mx-auto text-lg md:text-xl text-[#2C2416]/70 font-light leading-relaxed mt-6">
+      J'aide les artisans, prothésistes ongulaires et indépendants à construire une présence Instagram qui attire de vrais clients — sans qu'ils aient à s'en occuper.
     </p>
 
+    <!-- CTAs -->
     <div class="flex flex-col md:flex-row items-center justify-center gap-4 mt-10">
-      <button class="group relative px-8 py-4 bg-stone-900 text-[#F5F3EF] rounded-full overflow-hidden transition-all hover:scale-[1.02] duration-300 w-full md:w-auto">
+      <a
+        href="#offres"
+        class="group relative px-8 py-4 bg-[#8B3E22] text-[#F5EDE4] rounded-full overflow-hidden transition-all hover:scale-[1.02] hover:bg-[#6B2E1A] duration-300 w-full md:w-auto"
+      >
         <span class="relative z-10 flex items-center gap-2 font-medium">
-          {ctaPrimary}
+          Voir mes offres
           <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5" class="group-hover:translate-x-1 transition-transform"></iconify-icon>
         </span>
-      </button>
-      <button class="px-8 py-4 border border-stone-300 text-stone-900 rounded-full hover:bg-stone-200 transition-all duration-300 w-full md:w-auto font-medium">
-        {ctaSecondary}
-      </button>
+      </a>
+      <a
+        href="#contact"
+        class="px-8 py-4 border border-[#D6CCC0] text-[#2C2416] rounded-full hover:bg-[#EDE6DB] transition-all duration-300 w-full md:w-auto font-medium"
+      >
+        Réserver un appel gratuit
+      </a>
     </div>
   </div>
 
-  <!-- Hero image -->
+  <!-- Image hero (avant/après ou ambiance — à remplacer par ta propre photo) -->
   <div
-    class="mt-16 w-full max-w-6xl h-64 md:h-96 bg-cover bg-center rounded-t-3xl md:rounded-3xl opacity-90 grayscale-[20%] sepia-[10%] shadow-2xl shadow-[#D1CEC7]/50"
-    style={`background-image: url('${imageUrl}')`}
+    class="mt-16 w-full max-w-6xl h-64 md:h-96 bg-cover bg-center rounded-t-3xl md:rounded-3xl opacity-90 shadow-2xl shadow-[#D6CCC0]/50"
+    style="background-image: url('https://images.unsplash.com/photo-1611532736597-de2d4265fba3?q=80&w=2070&auto=format&fit=crop')"
   ></div>
 </header>

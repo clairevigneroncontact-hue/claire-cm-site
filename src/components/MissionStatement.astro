@@ -1,20 +1,16 @@
 ---
-interface Props {
-  headline?: string;
-  body?: string;
-}
-
-const {
-  headline = 'We treat your personal brand with Fortune-500 <em>strategic rigor</em>.',
-  body = "Most agencies are either too corporate or produce generic, influencer-style content. We bridge the gap, bringing high-end production quality and strategic positioning to leaders who want to build a legacy, not just an audience.",
-} = Astro.props;
 ---
 
-<section class="py-24 px-6 md:px-12 bg-[#F5F3EF]">
+<section class="py-24 px-6 md:px-12 bg-[#F5EDE4]">
   <div class="max-w-4xl mx-auto text-center space-y-8">
-    <iconify-icon icon="solar:diamond-linear" stroke-width="1.5" class="text-4xl text-stone-400 mb-4"></iconify-icon>
-    <h2 class="text-4xl md:text-6xl text-stone-900 leading-tight tracking-tight" set:html={headline}></h2>
-    <div class="w-24 h-px bg-stone-300 mx-auto"></div>
-    <p class="text-lg md:text-xl text-stone-600 leading-relaxed">{body}</p>
+    <iconify-icon icon="solar:diamond-linear" stroke-width="1.5" class="text-4xl text-[#767A55] mb-4"></iconify-icon>
+    <h2 class="text-4xl md:text-6xl text-[#2C2416] leading-tight tracking-tight">
+      Vous avez un vrai métier à montrer.<br />
+      <span class="italic font-light text-[#8B3E22]">Instagram est l'outil pour le faire voir.</span>
+    </h2>
+    <div class="w-24 h-px bg-[#D6CCC0] mx-auto"></div>
+    <p class="text-lg md:text-xl text-[#2C2416]/70 leading-relaxed">
+      La plupart des artisans et indépendants ont quelque chose de précieux à transmettre — mais pas le temps ni les mots pour le faire. Je comble exactement ce fossé : contenu soigné, stratégie ciblée, présence régulière. Vous faites votre métier, je m'occupe du reste.
+    </p>
   </div>
 </section>

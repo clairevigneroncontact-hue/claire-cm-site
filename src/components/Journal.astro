@@ -1,47 +1,47 @@
 ---
 const articles = [
   {
-    category: 'Positioning',
-    title: 'Positioning the Executive Brand for Long-Term Equity',
+    category: 'Stratégie',
+    title: 'Pourquoi les artisans sous-estiment leur Instagram — et comment y remédier',
     href: '#',
   },
   {
-    category: 'Design',
-    title: 'The Architecture of a Signature Website',
+    category: 'Contenu',
+    title: '5 types de posts qui fonctionnent vraiment pour un compte savoir-faire',
     href: '#',
   },
   {
-    category: 'Content',
-    title: 'Building Content Systems for Thought Leaders',
+    category: 'Community Management',
+    title: 'Confier son Instagram : ce que ça change (et ce que ça ne change pas)',
     href: '#',
   },
 ];
 ---
 
-<section id="journal" class="py-24 px-6 md:px-12 bg-[#F5F3EF] border-t border-stone-200">
+<section class="py-24 px-6 md:px-12 bg-[#F5EDE4] border-t border-[#D6CCC0]">
   <div class="max-w-7xl mx-auto">
 
     <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
       <div>
-        <h3 class="text-4xl md:text-5xl text-stone-900 mb-2 tracking-tight">The Journal</h3>
-        <p class="text-stone-500">Insights on premium positioning and design philosophy.</p>
+        <h3 class="text-4xl md:text-5xl text-[#2C2416] mb-2 tracking-tight">Le blog</h3>
+        <p class="text-[#2C2416]/60">Stratégie Instagram pour artisans et indépendants.</p>
       </div>
-      <a href="#" class="text-stone-900 border-b border-stone-900 pb-1 hover:opacity-60 transition-opacity">
-        Read all articles
+      <a href="#" class="text-[#2C2416] border-b border-[#2C2416] pb-1 hover:opacity-60 transition-opacity">
+        Tous les articles
       </a>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       {articles.map(article => (
-        <a href={article.href} class="group block border-t border-stone-300 pt-6">
-          <span class="text-xs text-stone-500 uppercase tracking-widest font-medium block mb-4">
+        <a href={article.href} class="group block border-t border-[#D6CCC0] pt-6">
+          <span class="text-xs text-[#767A55] uppercase tracking-widest font-medium block mb-4">
             {article.category}
           </span>
-          <h5 class="text-2xl font-serif text-stone-900 mb-4 tracking-tight group-hover:text-stone-600 transition-colors">
+          <h5 class="text-2xl font-serif text-[#2C2416] mb-4 tracking-tight group-hover:text-[#8B3E22] transition-colors">
             {article.title}
           </h5>
-          <span class="inline-flex items-center text-sm font-semibold uppercase tracking-wider text-stone-900">
-            Read Article
+          <span class="inline-flex items-center text-sm font-semibold uppercase tracking-wider text-[#2C2416]">
+            Lire l'article
             <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5" class="ml-2 group-hover:translate-x-1 transition-transform"></iconify-icon>
           </span>
         </a>

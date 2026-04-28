@@ -1,14 +1,13 @@
 ---
 const links = [
-  { label: 'Services', href: '#services' },
-  { label: 'Process', href: '#process' },
-  { label: 'Work', href: '#work' },
-  { label: 'Journal', href: '#journal' },
-  { label: 'About', href: '#about' },
+  { label: 'Offres', href: '#offres' },
+  { label: 'Comment ça marche', href: '#process' },
+  { label: 'À propos', href: '#apropos' },
+  { label: 'Contact', href: '#contact' },
 ];
 ---
 
-<nav class="sticky top-0 z-50 w-full px-6 py-5 flex justify-between items-center bg-[#F5F3EF]/90 backdrop-blur-sm border-b border-stone-200/50 transition-all duration-300">
+<nav class="sticky top-0 z-50 w-full px-6 py-5 flex justify-between items-center bg-[#F5EDE4]/90 backdrop-blur-sm border-b border-[#D6CCC0]/50 transition-all duration-300">
 
   <!-- Mobile: hamburger -->
   <button class="md:hidden text-2xl" aria-label="Menu">
@@ -16,24 +15,24 @@ const links = [
   </button>
 
   <!-- Logo -->
-  <a href="/" class="text-xl md:text-2xl font-serif tracking-tight text-stone-900 leading-none uppercase">
-    PREMIUM BRANDS
+  <a href="/" class="text-xl md:text-2xl font-serif tracking-tight text-[#2C2416] leading-none">
+    Claire Vigneron <span class="text-[#767A55]">·</span> CM
   </a>
 
   <!-- Desktop nav -->
-  <div class="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide text-stone-600">
+  <div class="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide text-[#2C2416]/70">
     {links.map(link => (
-      <a href={link.href} class="hover:text-stone-900 transition-colors">{link.label}</a>
+      <a href={link.href} class="hover:text-[#2C2416] transition-colors">{link.label}</a>
     ))}
     <a
       href="#contact"
-      class="ml-4 px-5 py-2.5 bg-stone-900 text-[#F5F3EF] rounded-full hover:bg-stone-700 transition-colors duration-300"
+      class="ml-4 px-5 py-2.5 bg-[#8B3E22] text-[#F5EDE4] rounded-full hover:bg-[#6B2E1A] transition-colors duration-300"
     >
-      Book a Brand Audit
+      Réserver un appel
     </a>
   </div>
 
-  <!-- Mobile: user icon -->
+  <!-- Mobile: icône -->
   <div class="flex items-center gap-4 md:hidden">
     <iconify-icon icon="solar:user-circle-linear" class="text-xl" stroke-width="1.5"></iconify-icon>
   </div>
