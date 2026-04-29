@@ -1,0 +1,258 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+const calendarLink = 'https://calendar.app.google/3MNsKo33KBsLdFB18';
+
+const offers = [
+  {
+    id: 'audit',
+    numero: '01',
+    tag: 'Sans engagement',
+    icon: 'solar:document-text-linear',
+    title: 'Audit Instagram',
+    accroche: 'Vous voulez comprendre avant d\'agir.',
+    price: '97 €',
+    delai: 'Livrable PDF en 5 à 7 jours',
+    description: 'Avant de créer du contenu ou de changer quoi que ce soit, il faut savoir exactement où vous en êtes. L\'audit Instagram est un diagnostic complet de votre compte : ce qui fonctionne, ce qui freine, et ce qu\'il faut changer en priorité.',
+    pourQui: 'Vous avez déjà un compte Instagram mais vous ne savez pas pourquoi ça ne décolle pas. Ou vous démarrez et vous voulez éviter les erreurs.',
+    inclus: [
+      'Analyse de votre bio et de votre identité visuelle',
+      'Étude de vos 9 dernières publications (engagement, cohérence, message)',
+      'Analyse de votre cible et de votre positionnement',
+      'Identification des 3 points bloquants principaux',
+      'Plan d\'action concret et priorisé',
+      'Recommandations de hashtags et de créneaux de publication',
+    ],
+    livrable: 'Un PDF structuré, clair et actionnable — envoyé par email. Pas de jargon, que des actions concrètes.',
+    etapes: [
+      { num: '1', label: 'Vous commandez et renseignez votre compte Instagram' },
+      { num: '2', label: 'J\'analyse votre compte en profondeur (3 à 5 jours)' },
+      { num: '3', label: 'Vous recevez votre PDF d\'audit complet' },
+    ],
+    couleur: 'bg-[#EDE6DB]',
+    cta: "Commander l'audit",
+    ctaHref: 'https://buy.stripe.com/14AaEQ6Al4vqaikdma1oI0b',
+    highlighted: false,
+  },
+  {
+    id: 'pack',
+    numero: '02',
+    tag: 'Sans engagement',
+    icon: 'solar:palette-linear',
+    title: 'Pack Contenu',
+    accroche: 'Vous voulez du contenu prêt à publier, sans vous engager.',
+    price: '320 €',
+    delai: 'Livrable en 7 à 10 jours',
+    description: 'Vous avez un compte Instagram, une activité à montrer, mais le temps ou les mots vous manquent. Le Pack Contenu, c\'est 8 posts créés sur mesure pour vous — visuels et textes — prêts à copier-coller et publier.',
+    pourQui: 'Vous voulez tester la délégation de contenu sans vous engager sur plusieurs mois. Ou vous avez besoin d\'un stock de posts pour tenir plusieurs semaines.',
+    inclus: [
+      '8 visuels créés aux couleurs de votre marque',
+      '8 textes (légendes) rédigés dans votre ton',
+      'Recommandations de publication (jour, heure, hashtags)',
+      'Brief de démarrage pour cerner votre univers',
+      'Une session de retours incluse',
+    ],
+    livrable: 'Un dossier complet avec vos 8 visuels (format Instagram) + un document Word avec les 8 textes prêts à coller.',
+    etapes: [
+      { num: '1', label: 'Vous remplissez un brief de démarrage (15 min)' },
+      { num: '2', label: 'Je crée les 8 posts et vous les soumets pour validation' },
+      { num: '3', label: 'Vous retournez vos retours, je finalise' },
+      { num: '4', label: 'Vous recevez tout le dossier finalisé' },
+    ],
+    couleur: 'bg-[#2C2416]',
+    cta: 'Commander le pack',
+    ctaHref: 'https://buy.stripe.com/eVqaEQ7Epfa41LObe21oI0c',
+    highlighted: true,
+  },
+  {
+    id: 'mensuel',
+    numero: '03',
+    tag: '⭐ Le plus populaire',
+    icon: 'solar:refresh-circle-linear',
+    title: 'Accompagnement Mensuel',
+    accroche: 'Vous voulez déléguer entièrement et voir des résultats durables.',
+    price: '550 €/mois',
+    delai: 'Engagement minimum 3 mois · Audit offert le 1er mois',
+    description: 'L\'accompagnement mensuel, c\'est une présence Instagram gérée de A à Z, chaque mois. Stratégie, création de contenu, publication, analyse des résultats — vous n\'avez qu\'à valider. Je m\'occupe du reste.',
+    pourQui: 'Vous voulez une présence Instagram régulière et professionnelle, sans y consacrer du temps. Vous êtes prêt à déléguer sur le long terme pour voir de vrais résultats.',
+    inclus: [
+      'Audit complet offert dès le premier mois',
+      'Stratégie de contenu définie ensemble',
+      'Contenu créé et publié chaque semaine',
+      'Légendes rédigées dans votre ton',
+      'Analyses statistiques envoyées chaque mois',
+      'Compte-rendu mensuel avec recommandations',
+      'Disponibilité par messages pour vos questions',
+    ],
+    livrable: 'Un Instagram actif, cohérent et qui ressemble à votre activité — géré chaque semaine, sans que vous ayez à y penser.',
+    etapes: [
+      { num: '1', label: 'Appel découverte gratuit (30 min) pour cerner votre activité' },
+      { num: '2', label: 'Audit complet de votre compte le premier mois' },
+      { num: '3', label: 'Mise en place de la stratégie et du calendrier de contenu' },
+      { num: '4', label: 'Création, validation et publication chaque semaine' },
+      { num: '5', label: 'Bilan mensuel avec les statistiques et les prochaines actions' },
+    ],
+    couleur: 'bg-[#EDE6DB]',
+    cta: "Démarrer l'accompagnement",
+    ctaHref: 'https://buy.stripe.com/4gMfZa6Al1je7686XM1oI0d',
+    highlighted: false,
+  },
+];
+---
+
+<BaseLayout title="Mes offres — Claire Vigneron · Community Manager" description="Audit Instagram, Pack Contenu, Accompagnement Mensuel — découvrez en détail les offres de Claire Vigneron, Community Manager pour artisans et indépendants.">
+  <Nav />
+
+  <!-- Hero page -->
+  <section class="pt-32 pb-16 px-6 text-center bg-[#F5EDE4]">
+    <span class="inline-block py-1 px-3 border border-[#D6CCC0] rounded-full text-xs font-medium uppercase tracking-widest text-[#767A55] mb-6 bg-white/30">
+      Community Manager · Artisans & Indépendants
+    </span>
+    <h1 class="text-4xl md:text-6xl text-[#2C2416] tracking-tight mb-6">
+      Mes offres
+    </h1>
+    <p class="max-w-xl mx-auto text-lg text-[#2C2416]/70 font-light leading-relaxed">
+      Trois façons de travailler ensemble — du premier diagnostic jusqu'à la gestion complète de votre Instagram.
+    </p>
+  </section>
+
+  <!-- Blocs offres -->
+  {offers.map((offer, index) => (
+    <section
+      id={offer.id}
+      class={`py-20 px-6 md:px-12 ${offer.highlighted ? 'bg-[#2C2416] text-[#F5EDE4]' : index % 2 === 0 ? 'bg-[#F5EDE4]' : 'bg-[#EDE6DB]'}`}
+    >
+      <div class="max-w-5xl mx-auto">
+
+        <!-- En-tête du bloc -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 border-b pb-10" style={offer.highlighted ? 'border-color: rgba(245,237,228,0.15)' : 'border-color: #D6CCC0'}>
+          <div>
+            <span class={`text-xs font-medium uppercase tracking-widest mb-3 block ${offer.highlighted ? 'text-[#F5EDE4]/50' : 'text-[#767A55]'}`}>
+              {offer.numero} — {offer.tag}
+            </span>
+            <h2 class={`text-4xl md:text-5xl tracking-tight mb-2 ${offer.highlighted ? 'text-[#F5EDE4]' : 'text-[#2C2416]'}`}>
+              {offer.title}
+            </h2>
+            <p class={`text-lg font-light italic ${offer.highlighted ? 'text-[#F5EDE4]/70' : 'text-[#8B3E22]'}`}>
+              {offer.accroche}
+            </p>
+          </div>
+          <div class="text-right shrink-0">
+            <p class={`text-4xl font-serif ${offer.highlighted ? 'text-[#F5EDE4]' : 'text-[#8B3E22]'}`}>{offer.price}</p>
+            <p class={`text-sm mt-1 ${offer.highlighted ? 'text-[#F5EDE4]/60' : 'text-[#2C2416]/50'}`}>{offer.delai}</p>
+          </div>
+        </div>
+
+        <!-- Grille contenu -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+
+          <!-- Colonne gauche -->
+          <div class="space-y-10">
+
+            <!-- Description -->
+            <div>
+              <h3 class={`text-xs uppercase tracking-widest font-medium mb-4 ${offer.highlighted ? 'text-[#F5EDE4]/50' : 'text-[#767A55]'}`}>C'est quoi</h3>
+              <p class={`text-lg font-light leading-relaxed ${offer.highlighted ? 'text-[#F5EDE4]/80' : 'text-[#2C2416]/80'}`}>
+                {offer.description}
+              </p>
+            </div>
+
+            <!-- Pour qui -->
+            <div>
+              <h3 class={`text-xs uppercase tracking-widest font-medium mb-4 ${offer.highlighted ? 'text-[#F5EDE4]/50' : 'text-[#767A55]'}`}>Pour qui</h3>
+              <p class={`text-lg font-light leading-relaxed ${offer.highlighted ? 'text-[#F5EDE4]/80' : 'text-[#2C2416]/80'}`}>
+                {offer.pourQui}
+              </p>
+            </div>
+
+            <!-- Livrable -->
+            <div>
+              <h3 class={`text-xs uppercase tracking-widest font-medium mb-4 ${offer.highlighted ? 'text-[#F5EDE4]/50' : 'text-[#767A55]'}`}>Ce que vous recevez</h3>
+              <p class={`text-lg font-light leading-relaxed ${offer.highlighted ? 'text-[#F5EDE4]/80' : 'text-[#2C2416]/80'}`}>
+                {offer.livrable}
+              </p>
+            </div>
+          </div>
+
+          <!-- Colonne droite -->
+          <div class="space-y-10">
+
+            <!-- Ce qui est inclus -->
+            <div>
+              <h3 class={`text-xs uppercase tracking-widest font-medium mb-6 ${offer.highlighted ? 'text-[#F5EDE4]/50' : 'text-[#767A55]'}`}>Ce qui est inclus</h3>
+              <ul class="space-y-4">
+                {offer.inclus.map(item => (
+                  <li class={`flex items-start gap-3 ${offer.highlighted ? 'text-[#F5EDE4]/80' : 'text-[#2C2416]/80'}`}>
+                    <iconify-icon icon="solar:check-circle-linear" stroke-width="1.5" class={`text-xl shrink-0 mt-0.5 ${offer.highlighted ? 'text-[#8B3E22]' : 'text-[#767A55]'}`}></iconify-icon>
+                    <span class="font-light">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <!-- Étapes -->
+            <div>
+              <h3 class={`text-xs uppercase tracking-widest font-medium mb-6 ${offer.highlighted ? 'text-[#F5EDE4]/50' : 'text-[#767A55]'}`}>Comment ça se passe</h3>
+              <ol class="space-y-4">
+                {offer.etapes.map(etape => (
+                  <li class="flex items-start gap-4">
+                    <span class={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium shrink-0 mt-0.5 ${offer.highlighted ? 'bg-[#8B3E22] text-[#F5EDE4]' : 'bg-[#8B3E22] text-[#F5EDE4]'}`}>
+                      {etape.num}
+                    </span>
+                    <span class={`font-light pt-0.5 ${offer.highlighted ? 'text-[#F5EDE4]/80' : 'text-[#2C2416]/80'}`}>{etape.label}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="mt-16 pt-10 border-t flex flex-col sm:flex-row gap-4 items-center" style={offer.highlighted ? 'border-color: rgba(245,237,228,0.15)' : 'border-color: #D6CCC0'}>
+          <a
+            href={offer.ctaHref}
+            target="_blank"
+            rel="noopener"
+            class="px-8 py-4 bg-[#8B3E22] text-[#F5EDE4] rounded-full font-medium hover:bg-[#6B2E1A] transition-colors duration-300 inline-flex items-center gap-2"
+          >
+            {offer.cta}
+            <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+          </a>
+          <a
+            href={calendarLink}
+            target="_blank"
+            rel="noopener"
+            class={`text-sm font-medium hover:underline ${offer.highlighted ? 'text-[#F5EDE4]/60' : 'text-[#2C2416]/60'}`}
+          >
+            Une question d'abord ? → Réserver un appel gratuit
+          </a>
+        </div>
+
+      </div>
+    </section>
+  ))}
+
+  <!-- CTA final -->
+  <section class="py-20 px-6 text-center bg-[#767A55]">
+    <p class="text-[#F5EDE4]/70 text-sm uppercase tracking-widest mb-4">Pas encore décidée ?</p>
+    <h2 class="text-3xl md:text-4xl font-serif text-[#F5EDE4] mb-6 tracking-tight">
+      Commençons par un appel découverte gratuit.
+    </h2>
+    <p class="text-[#F5EDE4]/70 font-light mb-10 max-w-md mx-auto">
+      30 minutes pour comprendre votre situation et vous orienter vers la bonne offre — sans engagement.
+    </p>
+    <a
+      href={calendarLink}
+      target="_blank"
+      rel="noopener"
+      class="inline-flex items-center gap-2 px-8 py-4 bg-[#F5EDE4] text-[#2C2416] rounded-full font-medium hover:bg-[#EDE6DB] transition-colors duration-300"
+    >
+      Réserver mon appel découverte
+      <iconify-icon icon="solar:calendar-date-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+    </a>
+  </section>
+
+  <Footer />
+</BaseLayout>
