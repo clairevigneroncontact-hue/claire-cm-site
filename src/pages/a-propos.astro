@@ -147,7 +147,7 @@ const projets = [
           />
         </div>
         <div class="absolute -bottom-4 -right-4 bg-[#8B3E22] text-[#F5EDE4] rounded-2xl px-6 py-4 shadow-lg">
-          <p class="text-2xl font-serif">26 ans</p>
+          <p class="text-2xl font-serif"><span id="claire-age">26</span> ans</p>
           <p class="text-xs opacity-70 uppercase tracking-widest mt-1">Community Manager</p>
         </div>
       </div>
@@ -170,7 +170,7 @@ const projets = [
           Animée par l'envie de me spécialiser dans la communication digitale, j'ai ensuite suivi une formation avec <span class="font-medium text-[#2C2416]">Montacomm</span>, qui m'a permis de renforcer mes compétences stratégiques et de structurer mon approche.
         </p>
         <p>
-          À 26 ans, j'ai déjà accompagné plusieurs entreprises dans le développement de leur communication sur Instagram, en les aidant à structurer leur stratégie et à atteindre leurs objectifs. Aujourd'hui, je fais évoluer mon activité en proposant différentes offres d'accompagnement, adaptées aux besoins et aux objectifs de chaque entreprise.
+          À <span class="claire-age-inline">26</span> ans, j'ai déjà accompagné plusieurs entreprises dans le développement de leur communication sur Instagram, en les aidant à structurer leur stratégie et à atteindre leurs objectifs. Aujourd'hui, je fais évoluer mon activité en proposant différentes offres d'accompagnement, adaptées aux besoins et aux objectifs de chaque entreprise.
         </p>
       </div>
     </div>
@@ -333,3 +333,25 @@ const projets = [
 
   <Footer />
 </BaseLayout>
+
+<script>
+  // Anniversaire : 28 février 2000
+  // L'âge s'incrémente automatiquement chaque 28 février
+  function calculerAge() {
+    const aujourd = new Date();
+    const naissance = new Date(2000, 1, 28); // mois 1 = février (0-indexé)
+    let age = aujourd.getFullYear() - naissance.getFullYear();
+    const aPasseSonAnnif =
+      aujourd.getMonth() > 1 ||
+      (aujourd.getMonth() === 1 && aujourd.getDate() >= 28);
+    if (!aPasseSonAnnif) age--;
+    return age;
+  }
+
+  const age = calculerAge();
+  const badge = document.getElementById('claire-age');
+  if (badge) badge.textContent = String(age);
+  document.querySelectorAll('.claire-age-inline').forEach(el => {
+    el.textContent = String(age);
+  });
+</script>
