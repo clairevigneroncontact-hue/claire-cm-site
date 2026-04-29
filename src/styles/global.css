@@ -8,10 +8,10 @@ body {
   color: #2C2416;
 }
 
-h1, h2, h3, h4, h5, h6, .serif {
+h1, h2, h3, h4, h5, h6 {
   font-family: 'DM Serif Display', serif;
 }
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #F5EDE4; }
-::-webkit-scrollbar-thumb { background: #D6CCC0; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #8B3E22; border-radius: 3px; }
