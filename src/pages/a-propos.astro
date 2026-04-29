@@ -1,0 +1,331 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+const calendarLink = 'https://calendar.app.google/3MNsKo33KBsLdFB18';
+
+const valeurs = [
+  {
+    icon: 'solar:heart-linear',
+    titre: 'Authenticité',
+    description: "Créer une communication sincère et fidèle à l'identité de chaque entreprise.",
+  },
+  {
+    icon: 'solar:target-linear',
+    titre: 'Stratégie',
+    description: "Construire une présence réfléchie, avec des objectifs clairs et une vision sur le long terme.",
+  },
+  {
+    icon: 'solar:palette-linear',
+    titre: 'Créativité',
+    description: "Imaginer des contenus qui mettent en valeur l'entreprise tout en restant cohérents avec son image.",
+  },
+];
+
+const methode = [
+  {
+    numero: '01',
+    titre: 'Comprendre l\'entreprise et ses objectifs',
+    sousTitre: 'Le premier échange est essentiel',
+    texte: "Chaque collaboration commence par un premier appel. Il me permet de comprendre votre activité, vos objectifs et votre engagement dans la communication. Nous identifions ensemble votre vision, votre cible, votre positionnement et vos concurrents. Si certains éléments ne sont pas encore définis, nous les construisons ensemble. Je travaille uniquement avec des entreprises déjà en activité, qui ont une offre claire et des clients.",
+    encart: "Instagram vient alors renforcer une stratégie existante pour développer la visibilité et attirer de nouveaux prospects.",
+    points: [
+      "La vision et les attentes de l'entreprise",
+      "La cible à laquelle elle souhaite s'adresser",
+      "Son positionnement et ses concurrents",
+      "Les produits ou services proposés",
+    ],
+  },
+  {
+    numero: '02',
+    titre: 'Construire une stratégie claire',
+    sousTitre: 'Publier avec intention',
+    texte: "À partir de cette analyse, nous définissons une stratégie de communication et des objectifs précis. L'idée n'est pas simplement de publier du contenu, mais de construire une présence cohérente et utile. Publier pour publier n'a pas de sens : chaque contenu doit répondre à un objectif précis.",
+    points: [
+      "Développer la visibilité",
+      "Renforcer l'image de marque",
+      "Attirer des prospects",
+      "Générer des ventes",
+    ],
+    extra: "Une fois la stratégie définie, nous concevons des contenus adaptés à votre image de marque et à vos objectifs. L'objectif n'est pas de publier tous les jours, mais de publier de manière pertinente et stratégique. Chaque contenu est pensé pour apporter de la valeur, créer de l'engagement et soutenir vos objectifs.",
+  },
+  {
+    numero: '03',
+    titre: 'Analyser et ajuster',
+    sousTitre: 'La communication est un processus évolutif',
+    texte: "L'analyse des résultats est une étape essentielle. Elle permet de comprendre ce qui fonctionne, ce qui peut être amélioré, et comment ajuster la stratégie. Cette phase permet d'adapter les contenus et de définir de nouveaux objectifs pour continuer à développer la présence de l'entreprise sur Instagram.",
+    points: [
+      "Ce qui fonctionne",
+      "Ce qui peut être amélioré",
+      "Comment ajuster la stratégie",
+    ],
+  },
+];
+
+const projets = [
+  {
+    client: 'Bahati Body Sculpt',
+    secteur: 'Entreprise de bien-être spécialisée dans le drainage lymphatique',
+    mission: "Création et lancement du compte Instagram afin de développer la visibilité de l'entreprise",
+    duree: '3 mois',
+    description: "J'ai accompagné Bahati Body Sculpt dans la création et le développement de sa présence sur Instagram. L'objectif principal était de faire connaître l'entreprise, développer sa visibilité locale et commencer à attirer ses premiers clients.",
+    realisations: [
+      "Création complète du compte Instagram",
+      "Définition d'une identité visuelle cohérente",
+      "Création d'une link in bio pour faciliter la prise de contact",
+      "Journée de création de contenu",
+      "Création de visuels et de montages vidéo",
+    ],
+    resultat: "Ce projet a permis de poser les bases d'une communication claire et professionnelle pour accompagner le lancement de l'activité.",
+  },
+  {
+    client: 'Transakauto',
+    secteur: 'Entreprise spécialisée dans la revente automobile',
+    mission: "Création et développement du compte Instagram afin de renforcer la visibilité de l'entreprise et mettre en valeur son activité",
+    duree: '1 an',
+    description: "J'ai accompagné Transakauto dans la création et le développement de sa présence sur Instagram. Au début du projet, l'entreprise ne disposait pas de compte. L'objectif était de créer une présence digitale cohérente pour présenter l'activité et valoriser les véhicules proposés à la vente.",
+    realisations: [
+      "Présentation de l'entreprise et de ses collaborateurs",
+      "Mise en avant des véhicules disponibles à la vente",
+      "Valorisation des voitures rares ou exceptionnelles",
+      "Partage de conseils et contenus autour de l'automobile",
+    ],
+    resultat: "Ce projet a permis de structurer la présence sur Instagram et de donner plus de visibilité aux deux agences.",
+  },
+  {
+    client: 'Garage automobile',
+    secteur: 'Garage spécialisé dans la carrosserie',
+    mission: "Création d'un calendrier de publication sur 1 mois afin de structurer la communication sur Instagram et Facebook",
+    duree: '1 mois',
+    description: "J'ai accompagné ce garage dans la mise en place d'une stratégie de contenu simple et efficace. L'objectif était de structurer les publications afin de donner plus de cohérence à la communication et de valoriser l'activité.",
+    realisations: [
+      "Mise en place d'une charte graphique cohérente",
+      "Création d'un calendrier éditorial sur 1 mois",
+      "Mise en avant des réalisations en carrosserie",
+      "Valorisation des services proposés",
+      "Communication autour des offres promotionnelles",
+    ],
+    resultat: "Ce travail a permis à l'entreprise d'avoir une vision claire de ses publications et de mieux structurer sa présence sur Instagram.",
+  },
+];
+---
+
+<BaseLayout
+  title="À propos — Claire Vigneron · Community Manager"
+  description="Découvrez le parcours, la méthode de travail et les projets réalisés de Claire Vigneron, Community Manager spécialisée Instagram pour artisans et indépendants."
+>
+  <Nav />
+
+  <!-- Hero -->
+  <section class="pt-32 pb-20 px-6 bg-[#F5EDE4]">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div>
+        <span class="text-xs font-medium uppercase tracking-widest text-[#767A55] mb-4 block">Community Manager</span>
+        <h1 class="text-5xl md:text-6xl text-[#2C2416] tracking-tight mb-6 leading-tight">
+          Claire<br /><span class="italic font-light text-[#8B3E22]">Vigneron</span>
+        </h1>
+        <p class="text-xl text-[#2C2416]/70 font-light leading-relaxed mb-4">
+          Des stratégies de contenu pensées pour développer la visibilité et attirer des clients sur Instagram.
+        </p>
+        <div class="flex flex-wrap gap-3 mt-8">
+          {['Déterminée', 'Authentique', 'Créative', 'Sportive'].map(trait => (
+            <span class="px-4 py-1.5 border border-[#D6CCC0] rounded-full text-sm text-[#2C2416]/70 font-light">
+              {trait}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <!-- Photo placeholder -->
+      <div class="relative">
+        <div class="aspect-[3/4] max-w-sm mx-auto lg:mx-0 rounded-3xl bg-[#EDE6DB] flex items-center justify-center border border-[#D6CCC0] overflow-hidden">
+          <iconify-icon icon="solar:user-circle-linear" class="text-9xl text-[#8B3E22]/30" stroke-width="0.5"></iconify-icon>
+        </div>
+        <div class="absolute -bottom-4 -right-4 bg-[#8B3E22] text-[#F5EDE4] rounded-2xl px-6 py-4 shadow-lg">
+          <p class="text-2xl font-serif">26 ans</p>
+          <p class="text-xs opacity-70 uppercase tracking-widest mt-1">Community Manager</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Parcours -->
+  <section class="py-20 px-6 bg-[#EDE6DB]">
+    <div class="max-w-4xl mx-auto">
+      <span class="text-xs font-medium uppercase tracking-widest text-[#767A55] mb-4 block">Mon parcours</span>
+      <h2 class="text-4xl md:text-5xl text-[#2C2416] tracking-tight mb-12">Pourquoi la communication ?</h2>
+      <div class="space-y-6 text-lg font-light text-[#2C2416]/80 leading-relaxed">
+        <p>
+          Depuis toujours, la communication et le marketing me passionnent. J'y vois un équilibre entre créativité et stratégie. Communiquer, ce n'est pas seulement publier du contenu : c'est transmettre un message, créer un univers et développer une présence cohérente.
+        </p>
+        <p>
+          Avant de me lancer dans l'entrepreneuriat, j'ai débuté ma carrière dans le domaine commercial. Cette expérience m'a permis de développer un véritable sens de la relation client : comprendre les besoins, créer une relation de confiance et accompagner chaque projet avec attention.
+        </p>
+        <p>
+          Animée par l'envie de me spécialiser dans la communication digitale, j'ai ensuite suivi une formation avec <span class="font-medium text-[#2C2416]">Montacomm</span>, qui m'a permis de renforcer mes compétences stratégiques et de structurer mon approche.
+        </p>
+        <p>
+          À 26 ans, j'ai déjà accompagné plusieurs entreprises dans le développement de leur communication sur Instagram, en les aidant à structurer leur stratégie et à atteindre leurs objectifs. Aujourd'hui, je fais évoluer mon activité en proposant différentes offres d'accompagnement, adaptées aux besoins et aux objectifs de chaque entreprise.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Méthode de travail -->
+  <section class="py-20 px-6 bg-[#F5EDE4]">
+    <div class="max-w-5xl mx-auto">
+      <span class="text-xs font-medium uppercase tracking-widest text-[#767A55] mb-4 block">Comment je travaille</span>
+      <h2 class="text-4xl md:text-5xl text-[#2C2416] tracking-tight mb-16">Ma méthode de travail</h2>
+
+      <div class="space-y-16">
+        {methode.map((etape, i) => (
+          <div class={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-start pb-16 ${i < methode.length - 1 ? 'border-b border-[#D6CCC0]' : ''}`}>
+            <div>
+              <div class="flex items-center gap-4 mb-6">
+                <span class="text-5xl font-serif text-[#8B3E22]/30">{etape.numero}</span>
+                <div>
+                  <h3 class="text-2xl text-[#2C2416] tracking-tight">{etape.titre}</h3>
+                  <p class="text-sm text-[#767A55] italic mt-1">{etape.sousTitre}</p>
+                </div>
+              </div>
+              <p class="text-[#2C2416]/75 font-light leading-relaxed">{etape.texte}</p>
+              {etape.encart && (
+                <div class="mt-6 bg-[#8B3E22] rounded-xl px-6 py-4">
+                  <p class="text-[#F5EDE4] font-light italic text-sm leading-relaxed">{etape.encart}</p>
+                </div>
+              )}
+              {etape.extra && (
+                <p class="mt-6 text-[#2C2416]/75 font-light leading-relaxed text-sm">{etape.extra}</p>
+              )}
+            </div>
+            <div class="bg-[#EDE6DB] rounded-2xl p-8">
+              <p class="text-xs uppercase tracking-widest text-[#767A55] mb-5 font-medium">Points clés</p>
+              <ul class="space-y-4">
+                {etape.points.map(point => (
+                  <li class="flex items-start gap-3 text-[#2C2416]/80 font-light">
+                    <iconify-icon icon="solar:check-circle-linear" stroke-width="1.5" class="text-lg text-[#8B3E22] shrink-0 mt-0.5"></iconify-icon>
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Projets réalisés -->
+  <section class="py-20 px-6 bg-[#2C2416]">
+    <div class="max-w-5xl mx-auto">
+      <span class="text-xs font-medium uppercase tracking-widest text-[#767A55] mb-4 block">Références</span>
+      <h2 class="text-4xl md:text-5xl text-[#F5EDE4] tracking-tight mb-16">Mes projets réalisés</h2>
+
+      <div class="space-y-12">
+        {projets.map((projet, i) => (
+          <div class="bg-[#F5EDE4]/5 border border-[#F5EDE4]/10 rounded-2xl p-8 md:p-10">
+            <div class="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8 pb-8 border-b border-[#F5EDE4]/10">
+              <div>
+                <h3 class="text-2xl text-[#F5EDE4] tracking-tight mb-1">{projet.client}</h3>
+                <p class="text-[#D6CCC0]/70 font-light text-sm">{projet.secteur}</p>
+              </div>
+              <div class="shrink-0">
+                <span class="text-xs uppercase tracking-widest text-[#767A55] block mb-1">Durée</span>
+                <span class="text-[#8B3E22] font-medium">{projet.duree}</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              <div>
+                <p class="text-xs uppercase tracking-widest text-[#767A55] mb-3">Mission</p>
+                <p class="text-[#D6CCC0]/80 font-light italic mb-6 leading-relaxed">{projet.mission}</p>
+                <p class="text-[#F5EDE4]/70 font-light leading-relaxed text-sm">{projet.description}</p>
+              </div>
+              <div>
+                <p class="text-xs uppercase tracking-widest text-[#767A55] mb-4">Réalisations</p>
+                <ul class="space-y-3 mb-6">
+                  {projet.realisations.map(r => (
+                    <li class="flex items-start gap-3 text-[#F5EDE4]/70 text-sm font-light">
+                      <iconify-icon icon="solar:check-circle-linear" stroke-width="1.5" class="text-base text-[#8B3E22] shrink-0 mt-0.5"></iconify-icon>
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+                <p class="text-[#D6CCC0]/60 text-sm font-light italic border-l-2 border-[#8B3E22]/50 pl-4">{projet.resultat}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Valeurs -->
+  <section class="py-20 px-6 bg-[#F5EDE4]">
+    <div class="max-w-5xl mx-auto text-center">
+      <span class="text-xs font-medium uppercase tracking-widest text-[#767A55] mb-4 block">Ce qui guide mon travail</span>
+      <h2 class="text-4xl md:text-5xl text-[#2C2416] tracking-tight mb-6">Mes valeurs</h2>
+      <p class="text-lg text-[#2C2416]/60 font-light max-w-2xl mx-auto mb-16">
+        Dans chaque projet que j'accompagne, certaines valeurs sont essentielles pour construire une collaboration saine et efficace.
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {valeurs.map(v => (
+          <div class="bg-[#EDE6DB] rounded-2xl p-8 text-center">
+            <div class="w-14 h-14 bg-[#8B3E22] rounded-full flex items-center justify-center mx-auto mb-6">
+              <iconify-icon icon={v.icon} stroke-width="1.5" class="text-2xl text-[#F5EDE4]"></iconify-icon>
+            </div>
+            <h3 class="text-2xl text-[#2C2416] mb-4">{v.titre}</h3>
+            <p class="text-[#2C2416]/65 font-light leading-relaxed">{v.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Travaillons ensemble -->
+  <section class="py-20 px-6 bg-[#EDE6DB]">
+    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <div>
+        <h2 class="text-4xl md:text-5xl font-serif text-[#2C2416] tracking-tight mb-6">
+          Travaillons ensemble
+        </h2>
+        <p class="text-[#2C2416]/75 font-light leading-relaxed mb-4">
+          Chaque entreprise a une histoire, des objectifs et une identité qui lui sont propres. Mon rôle est de vous accompagner pour construire une présence sur Instagram cohérente, stratégique et adaptée à votre activité.
+        </p>
+        <p class="text-[#2C2416]/65 font-light leading-relaxed mb-8">
+          Que ce soit pour structurer votre communication, développer votre visibilité ou mettre en valeur votre entreprise, chaque projet est pensé en fonction de vos besoins.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="/offres" class="px-6 py-3 bg-[#8B3E22] text-[#F5EDE4] rounded-full font-medium hover:bg-[#6B2E1A] transition-colors text-center">
+            Découvrir mes offres
+          </a>
+          <a href={calendarLink} target="_blank" rel="noopener" class="px-6 py-3 border border-[#D6CCC0] text-[#2C2416] rounded-full font-medium hover:bg-[#D6CCC0]/30 transition-colors text-center">
+            Réserver un appel
+          </a>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="bg-[#2C2416] rounded-2xl p-8 space-y-5">
+        <p class="text-xs uppercase tracking-widest text-[#767A55] mb-4">Me contacter</p>
+        <p class="text-[#F5EDE4]/70 font-light text-sm leading-relaxed">
+          Vous souhaitez développer votre présence sur Instagram ou structurer votre communication ? Je vous répondrai dans les plus brefs délais.
+        </p>
+        <a href="tel:0678301358" class="flex items-center gap-3 text-[#F5EDE4]/80 hover:text-white transition-colors">
+          <iconify-icon icon="solar:phone-linear" stroke-width="1.5" class="text-xl text-[#8B3E22]"></iconify-icon>
+          <span class="font-light">06 78 30 13 58</span>
+        </a>
+        <a href="mailto:clairevigneron.contact@gmail.com" class="flex items-center gap-3 text-[#F5EDE4]/80 hover:text-white transition-colors">
+          <iconify-icon icon="solar:letter-linear" stroke-width="1.5" class="text-xl text-[#8B3E22]"></iconify-icon>
+          <span class="font-light">clairevigneron.contact@gmail.com</span>
+        </a>
+        <a href={calendarLink} target="_blank" rel="noopener" class="block w-full mt-4 py-3 bg-[#8B3E22] text-[#F5EDE4] rounded-xl text-center font-medium hover:bg-[#6B2E1A] transition-colors text-sm">
+          Réserver un appel découverte gratuit
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</BaseLayout>

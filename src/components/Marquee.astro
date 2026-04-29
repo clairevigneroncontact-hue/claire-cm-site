@@ -11,13 +11,13 @@ const items = [
 const doubled = [...items, ...items];
 ---
 
-<section class="border-y border-[#5A5E3F] py-4 bg-[#767A55] overflow-hidden">
+<section class="border-y border-[#D6CCC0] py-4 bg-[#EDE6DB] overflow-hidden">
   <div class="marquee-container w-full whitespace-nowrap overflow-hidden">
     <div class="animate-scroll inline-block">
       {doubled.map(item => (
         <>
-          <span class="text-2xl md:text-4xl font-serif italic px-8 text-[#F5EDE4]/50">•</span>
-          <span class="text-sm md:text-base font-medium tracking-widest uppercase text-[#F5EDE4]">{item}</span>
+          <span class="text-2xl md:text-4xl font-serif italic px-8 text-[#8B3E22]/50">•</span>
+          <span class="text-sm md:text-base font-medium tracking-widest uppercase text-[#2C2416]">{item}</span>
         </>
       ))}
     </div>
