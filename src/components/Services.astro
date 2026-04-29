@@ -13,6 +13,7 @@ const offers = [
     ],
     cta: "Commander l'audit",
     href: 'https://buy.stripe.com/14AaEQ6Al4vqaikdma1oI0b',
+    detailHref: '/offres#audit',
     highlighted: false,
   },
   {
@@ -28,6 +29,7 @@ const offers = [
     ],
     cta: 'Commander le pack',
     href: 'https://buy.stripe.com/eVqaEQ7Epfa41LObe21oI0c',
+    detailHref: '/offres#pack',
     highlighted: false,
   },
   {
@@ -44,6 +46,7 @@ const offers = [
     ],
     cta: "Démarrer l'accompagnement",
     href: 'https://buy.stripe.com/4gMfZa6Al1je7686XM1oI0d',
+    detailHref: '/offres#mensuel',
     highlighted: true,
   },
 ];
@@ -95,16 +98,24 @@ const calendarLink = 'https://calendar.app.google/3MNsKo33KBsLdFB18';
             ))}
           </ul>
 
-          <!-- CTA -->
-          <a
-            href={offer.href}
-            target="_blank"
-            rel="noopener"
-            class={`mt-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-medium transition-colors duration-300 ${offer.highlighted ? 'bg-[#8B3E22] text-[#F5EDE4] hover:bg-[#6B2E1A]' : 'bg-[#2C2416] text-[#F5EDE4] hover:bg-[#8B3E22]'}`}
-          >
-            {offer.cta}
-            <iconify-icon icon="solar:arrow-right-up-linear" stroke-width="1.5" class="ml-1"></iconify-icon>
-          </a>
+          <!-- Liens -->
+          <div class="mt-auto flex flex-col gap-3">
+            <a
+              href={offer.href}
+              target="_blank"
+              rel="noopener"
+              class={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-medium transition-colors duration-300 ${offer.highlighted ? 'bg-[#8B3E22] text-[#F5EDE4] hover:bg-[#6B2E1A]' : 'bg-[#2C2416] text-[#F5EDE4] hover:bg-[#8B3E22]'}`}
+            >
+              {offer.cta}
+              <iconify-icon icon="solar:arrow-right-up-linear" stroke-width="1.5" class="ml-1"></iconify-icon>
+            </a>
+            <a
+              href={offer.detailHref}
+              class={`text-center text-sm font-medium hover:underline transition-colors ${offer.highlighted ? 'text-[#F5EDE4]/60 hover:text-[#F5EDE4]' : 'text-[#2C2416]/50 hover:text-[#2C2416]'}`}
+            >
+              Voir le détail →
+            </a>
+          </div>
         </div>
       ))}
     </div>
