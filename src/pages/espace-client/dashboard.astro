@@ -1,0 +1,1010 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Mon espace — Claire Vigneron" hideChatWidget={true}>
+
+  <div id="loading" class="min-h-screen bg-[#2C2416] flex items-center justify-center">
+    <p class="text-[#F5EDE4]/50 text-sm">Chargement…</p>
+  </div>
+
+  <!-- Overlay sombre tutoriel -->
+  <div id="tuto-overlay" class="hidden fixed inset-0 z-40 bg-[#2C2416]/60 pointer-events-none"></div>
+
+  <!-- Tooltip tutoriel (fixé en bas) -->
+  <div id="tutorial" class="hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-6">
+    <div class="max-w-lg mx-auto bg-white rounded-3xl p-6 shadow-2xl border border-[#D6CCC0]">
+      <!-- Progress dots -->
+      <div class="flex gap-1.5 mb-4">
+        {[0,1,2,3,4,5].map(i => (
+          <div class={`tuto-dot h-1.5 rounded-full flex-1 transition-all`}></div>
+        ))}
+      </div>
+      <div class="flex items-start gap-4">
+        <div id="tuto-icon-wrap" class="w-11 h-11 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center shrink-0">
+          <iconify-icon id="tuto-icon" icon="solar:user-id-linear" stroke-width="1.5" class="text-xl text-[#8B3E22]"></iconify-icon>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p id="tuto-step" class="text-xs uppercase tracking-widest text-[#767A55] mb-1">Étape 1 sur 5</p>
+          <h2 id="tuto-title" class="text-lg text-[#2C2416] tracking-tight mb-1">Mes informations</h2>
+          <p id="tuto-text" class="text-[#2C2416]/60 font-light leading-relaxed text-sm"></p>
+        </div>
+      </div>
+      <div class="flex items-center justify-between mt-5 pt-4 border-t border-[#D6CCC0]/50">
+        <button id="tuto-skip" class="text-xs text-[#2C2416]/40 hover:text-[#2C2416] transition-colors">Passer le tutoriel</button>
+        <div class="flex gap-2">
+          <button id="tuto-prev" class="hidden px-4 py-2 border border-[#D6CCC0] text-[#2C2416]/60 rounded-full text-sm hover:bg-[#EDE6DB] transition-colors">← Préc.</button>
+          <button id="tuto-next" class="px-5 py-2 bg-[#8B3E22] text-[#F5EDE4] rounded-full text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Suivant →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="hidden min-h-screen bg-[#F5EDE4]">
+    <!-- Toast notification -->
+    <div id="notif-toast" class="hidden fixed top-6 right-6 z-50 bg-[#2C2416] text-[#F5EDE4] px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 max-w-sm">
+      <iconify-icon icon="solar:bell-bing-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl shrink-0"></iconify-icon>
+      <p id="notif-toast-text" class="text-sm font-light"></p>
+      <button onclick="document.getElementById('notif-toast').classList.add('hidden')" class="text-[#F5EDE4]/40 hover:text-white ml-2 shrink-0">✕</button>
+    </div>
+
+    <header class="bg-[#2C2416] px-6 py-4 flex items-center justify-between">
+      <a href="/" class="text-lg font-serif text-[#F5EDE4] tracking-tight">Claire Vigneron <span class="text-[#767A55]">·</span> CM</a>
+      <div class="flex items-center gap-3">
+        <span id="user-name" class="text-sm text-[#F5EDE4]/60 font-light hidden md:block"></span>
+        <!-- Cloche notifications -->
+        <button id="notif-btn" class="relative w-8 h-8 rounded-full border border-[#F5EDE4]/20 flex items-center justify-center text-[#F5EDE4]/50 hover:text-white hover:border-white transition-colors">
+          <iconify-icon icon="solar:bell-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+          <span id="notif-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-[#8B3E22] rounded-full text-[10px] text-white flex items-center justify-center font-medium"></span>
+        </button>
+        <a href="/espace-client/parametres" class="w-8 h-8 rounded-full border border-[#F5EDE4]/20 flex items-center justify-center text-[#F5EDE4]/50 hover:text-white hover:border-white transition-colors" title="Paramètres">
+          <iconify-icon icon="solar:settings-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+        </a>
+        <button id="logout-btn" class="text-xs text-[#F5EDE4]/40 hover:text-white transition-colors uppercase tracking-widest">Déconnexion</button>
+      </div>
+    </header>
+
+    <!-- Panel notifications (dépliable) -->
+    <div id="notif-panel" class="hidden bg-white border-b border-[#D6CCC0] px-6 py-4">
+      <div class="max-w-6xl mx-auto">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-sm font-medium text-[#2C2416]">Notifications</p>
+          <button id="mark-all-read" class="text-xs text-[#8B3E22] hover:underline">Tout marquer comme lu</button>
+        </div>
+        <div id="notif-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+      </div>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 md:px-6 py-10">
+      <div class="mb-6 flex flex-col sm:flex-row sm:items-end gap-4">
+        <div class="flex-1">
+          <h1 id="welcome" class="text-3xl md:text-4xl text-[#2C2416] tracking-tight">Bonjour 👋</h1>
+          <p id="offer-badge" class="text-[#767A55] text-sm mt-1 font-light"></p>
+        </div>
+        <!-- Barre de recherche globale documents -->
+        <div class="relative w-full sm:w-72">
+          <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
+          <input id="doc-search-input" type="text" placeholder="Rechercher un document…" oninput="filterDocs(this.value)" class="w-full pl-8 pr-3 py-2.5 rounded-xl border border-[#D6CCC0] bg-white text-sm text-[#2C2416] focus:outline-none focus:border-[#8B3E22] shadow-sm" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+        <!-- Infos importantes -->
+        <div id="card-infos" class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+              <iconify-icon icon="solar:user-id-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+            </div>
+            <h2 class="text-base text-[#2C2416] font-medium">Mes informations</h2>
+          </div>
+          <div id="infos-content" class="space-y-2 text-sm text-[#2C2416]/70 font-light">
+            <p class="text-xs text-[#2C2416]/30 italic">Chargement…</p>
+          </div>
+          <a href="/espace-client/parametres" class="mt-4 text-xs text-[#8B3E22] hover:underline block">Modifier mes informations →</a>
+        </div>
+
+        <!-- Contenu à valider -->
+        <div id="card-content" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] md:col-span-2">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+              <iconify-icon icon="solar:check-square-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+            </div>
+            <h2 class="text-base text-[#2C2416] font-medium">Contenu à valider</h2>
+          </div>
+          <div id="content-list"><p class="text-xs text-[#2C2416]/30 italic">Aucun contenu en attente</p></div>
+        </div>
+
+        <!-- Documents & Factures unifiés -->
+        <div id="card-docs" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] md:col-span-2">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+              <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+            </div>
+            <h2 class="text-base text-[#2C2416] font-medium">Mes documents</h2>
+          </div>
+          <div id="docs-list" class="space-y-0.5"><p class="text-xs text-[#2C2416]/30 italic">Aucun document</p></div>
+          <div id="invoices-list" class="hidden"></div>
+        </div>
+
+        <!-- Upload -->
+        <div id="card-upload" class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+              <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+            </div>
+            <h2 class="text-base text-[#2C2416] font-medium">Déposer des fichiers</h2>
+          </div>
+          <p class="text-xs text-[#2C2416]/50 font-light mb-4">Photos, vidéos pour vos contenus.</p>
+          <label class="cursor-pointer block">
+            <input id="upload-input" type="file" accept="image/*,video/*" multiple class="hidden" />
+            <div class="border-2 border-dashed border-[#D6CCC0] rounded-xl p-4 text-center hover:border-[#8B3E22] transition-colors">
+              <iconify-icon icon="solar:cloud-upload-linear" stroke-width="1.5" class="text-2xl text-[#D6CCC0] block mx-auto mb-1"></iconify-icon>
+              <span class="text-xs text-[#2C2416]/50">Cliquer pour sélectionner</span>
+            </div>
+          </label>
+          <div id="upload-status" class="mt-2 text-xs text-[#767A55]"></div>
+          <div id="uploads-list" class="mt-3 space-y-1"></div>
+        </div>
+
+        <!-- Notes client - format discussion -->
+        <div id="card-notes" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] md:col-span-2 lg:col-span-3">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+              <iconify-icon icon="solar:notebook-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+            </div>
+            <h2 class="text-base text-[#2C2416] font-medium">Mes notes pour Claire</h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <p class="text-xs text-[#2C2416]/50 font-light mb-3">Préférences, idées, questions… Claire les verra directement dans votre dossier.</p>
+              <textarea id="new-note-ta" rows="5" placeholder="Ex : je préfère les visuels clairs, idée de sujet pour le prochain post…" class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none"></textarea>
+              <div class="flex items-center gap-3 mt-3">
+                <button onclick="addClientNote()" class="px-5 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Envoyer</button>
+                <span id="notes-send-msg" class="text-xs text-green-700 hidden">Envoyé ✓</span>
+              </div>
+            </div>
+            <div>
+              <p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Mes dernières notes</p>
+              <div id="notes-feed" class="space-y-2.5 max-h-52 overflow-y-auto pr-1">
+                <p class="text-xs text-[#2C2416]/30 italic">Aucune note pour l'instant</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tâches -->
+        <div id="card-tasks" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] md:col-span-2 lg:col-span-3">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+              <iconify-icon icon="solar:checklist-minimalistic-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+            </div>
+            <h2 class="text-base text-[#2C2416] font-medium">Mes tâches</h2>
+          </div>
+          <div id="tasks-list" class="space-y-1.5 mb-4">
+            <p class="text-xs text-[#2C2416]/30 italic">Aucune tâche</p>
+          </div>
+          <div class="flex gap-2">
+            <input id="new-task-input" type="text" placeholder="Ajouter une tâche…"
+              onkeydown="if(event.key==='Enter') addTask()"
+              class="flex-1 px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+            <button onclick="addTask()" class="px-4 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">+</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Calendrier éditorial — en bas, pleine largeur -->
+    <div class="max-w-6xl mx-auto px-4 md:px-6 pb-6">
+      <div id="card-calendar" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] mt-5">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+              <iconify-icon icon="solar:calendar-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+            </div>
+            <div>
+              <h2 class="text-base text-[#2C2416] font-medium">Calendrier éditorial</h2>
+              <p class="text-xs text-[#767A55] font-light hidden sm:block">Clic = détail · ✏️ = note</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="calNav(-1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon></button>
+            <div class="relative">
+              <button id="cal-month-label" onclick="calToggleMonthPicker(event)" class="text-sm font-semibold text-[#2C2416] min-w-[130px] text-center px-2 py-1 rounded-lg hover:bg-[#EDE6DB] cursor-pointer transition-colors"></button>
+              <div id="cal-month-picker" class="hidden absolute top-9 left-1/2 bg-white rounded-xl shadow-2xl border border-[#D6CCC0] p-3 z-50" style="min-width:216px;transform:translateX(-50%)">
+                <div class="grid grid-cols-3 gap-1" id="cal-month-grid"></div>
+              </div>
+            </div>
+            <button onclick="calNav(1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon></button>
+            <button onclick="calOpenNoteForm()" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors ml-1" title="Ajouter une note"><iconify-icon icon="solar:pen-linear" stroke-width="1.5"></iconify-icon></button>
+          </div>
+        </div>
+        <!-- Vue grille + note -->
+        <div id="cal-grid-view">
+          <div id="cal-grid" class="overflow-x-auto"></div>
+          <div id="cal-note-modal" class="hidden mt-4 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30">
+            <p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Ajouter / modifier une note</p>
+            <input id="cal-note-date-picker" type="date" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white mb-2" />
+            <textarea id="cal-note-input" rows="2" placeholder="Votre note…" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none bg-white mb-2"></textarea>
+            <div class="flex gap-2">
+              <button onclick="saveCalNote()" class="px-4 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
+              <button onclick="document.getElementById('cal-note-modal').classList.add('hidden')" class="px-4 py-1.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs hover:bg-[#EDE6DB] transition-colors">Annuler</button>
+            </div>
+          </div>
+        </div>
+        <!-- Vue jour plein format -->
+        <div id="cal-day-modal" class="hidden mt-2">
+          <button onclick="closeDashCalFullDay()" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors mb-4">
+            <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon> Retour au calendrier
+          </button>
+          <h4 id="cal-day-title" class="text-xl font-medium text-[#2C2416] mb-5"></h4>
+          <div id="cal-day-content" class="space-y-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contacter Claire — tout en bas -->
+    <div class="max-w-6xl mx-auto px-4 md:px-6 pb-12">
+      <div class="bg-[#2C2416] rounded-2xl p-6">
+        <h2 class="text-base text-[#F5EDE4] font-medium mb-4">Contacter Claire</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <a href="https://wa.me/33678301358" target="_blank" class="flex items-center gap-3 text-sm text-[#F5EDE4]/70 hover:text-white transition-colors">
+            <iconify-icon icon="solar:phone-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl shrink-0"></iconify-icon>06 78 30 13 58
+          </a>
+          <a href="mailto:clairevigneron.contact@gmail.com" class="flex items-center gap-3 text-sm text-[#F5EDE4]/70 hover:text-white transition-colors">
+            <iconify-icon icon="solar:letter-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl shrink-0"></iconify-icon>clairevigneron.contact@gmail.com
+          </a>
+          <a href="https://cal.com/claire-vigneron-k5okcq/30min?user=claire-vigneron-k5okcq&overlayCalendar=true" target="_blank" class="flex items-center gap-3 text-sm text-[#F5EDE4]/70 hover:text-white transition-colors">
+            <iconify-icon icon="solar:calendar-date-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl shrink-0"></iconify-icon>Réserver un appel
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script is:inline>
+  const SUPABASE_URL = 'https://etubpowlffhdvnfqkjij.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_AyehSGHv6TEwFvPQIuMivg_-_mJ7zUH';
+  const ADMIN_EMAIL  = 'clairevigneron.contact@gmail.com';
+  const OFFER_MAP    = { audit: 'Audit Instagram', pack: 'Pack Contenu', mensuel: 'Accompagnement Mensuel' };
+
+  const TUTO_STEPS = [
+    {
+      icon: 'solar:user-id-linear',
+      title: 'Mes informations',
+      text: 'Retrouvez ici vos informations personnelles : nom, email, téléphone et compte Instagram. Vous pouvez les modifier à tout moment dans les paramètres.',
+      card: 'card-infos'
+    },
+    {
+      icon: 'solar:document-text-linear',
+      title: 'Contrats & documents',
+      text: 'Claire y dépose vos contrats signés et tout document lié à votre collaboration. Vous pouvez les télécharger à tout moment.',
+      card: 'card-docs'
+    },
+    {
+      icon: 'solar:check-square-linear',
+      title: 'Contenu à valider',
+      text: 'Chaque semaine, Claire y dépose les posts créés pour vous. Vous pouvez les valider ou les refuser en un clic — rien ne sera publié sans votre accord.',
+      card: 'card-content'
+    },
+    {
+      icon: 'solar:bill-linear',
+      title: 'Factures',
+      text: 'Toutes vos factures sont disponibles ici au format PDF. Vous pouvez les télécharger à tout moment.',
+      card: 'card-invoices'
+    },
+    {
+      icon: 'solar:upload-linear',
+      title: 'Déposer des fichiers',
+      text: 'Partagez ici vos photos et vidéos que Claire pourra utiliser pour créer vos contenus. Formats acceptés : images et vidéos.',
+      card: 'card-upload'
+    },
+    {
+      icon: 'solar:settings-linear',
+      title: 'Vos paramètres',
+      text: 'Via l\'icône ⚙ en haut à droite, accédez à vos paramètres : modifier vos informations, changer votre mot de passe, consulter la FAQ ou contacter le support.',
+      card: null
+    },
+  ];
+
+  function loadScript(src) {
+    return new Promise(resolve => {
+      if (document.querySelector(`script[src="${src}"]`)) return resolve();
+      const s = document.createElement('script'); s.src = src; s.onload = resolve; document.head.appendChild(s);
+    });
+  }
+  async function getSB() {
+    if (!window._sb) {
+      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js');
+      window._sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    return window._sb;
+  }
+  function docItem(d) {
+    const label = d.name || d.file_name || 'Document';
+    const url   = d.file_url || '#';
+    return `<a href="${url}" target="_blank" class="flex items-center gap-2 text-sm text-[#8B3E22] hover:underline py-1.5 border-b border-[#D6CCC0]/30 last:border-0">
+      <iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="shrink-0"></iconify-icon>
+      <span>${label}</span>
+    </a>`;
+  }
+
+  // ─── Tutoriel guidé ──────────────────────────────────────────────────────
+  function initTutorial(userId) {
+    const key = `tuto_done_${userId}`;
+    if (localStorage.getItem(key)) return;
+
+    let step = 0;
+    let prevCard = null;
+
+    const tuto    = document.getElementById('tutorial');
+    const overlay = document.getElementById('tuto-overlay');
+    const dots    = document.querySelectorAll('.tuto-dot');
+    const iconEl  = document.getElementById('tuto-icon');
+    const stepEl  = document.getElementById('tuto-step');
+    const titleEl = document.getElementById('tuto-title');
+    const textEl  = document.getElementById('tuto-text');
+    const prevBtn = document.getElementById('tuto-prev');
+    const nextBtn = document.getElementById('tuto-next');
+    const skipBtn = document.getElementById('tuto-skip');
+
+    function highlightCard(cardId) {
+      // Retirer l'ancien highlight
+      if (prevCard) {
+        prevCard.classList.remove('ring-4', 'ring-[#8B3E22]', 'ring-offset-2', 'scale-[1.02]', 'relative', 'z-50', 'shadow-2xl');
+        prevCard.style.transition = '';
+        prevCard = null;
+      }
+      if (!cardId) {
+        // Étape sans carte : scroll vers le header (paramètres)
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      const card = document.getElementById(cardId);
+      if (card) {
+        card.classList.add('ring-4', 'ring-[#8B3E22]', 'ring-offset-2', 'relative', 'z-50', 'shadow-2xl', 'scale-[1.02]');
+        card.style.transition = 'all 0.4s ease';
+        setTimeout(() => {
+          const rect = card.getBoundingClientRect();
+          const offset = window.scrollY + rect.top - 120;
+          window.scrollTo({ top: offset, behavior: 'smooth' });
+        }, 100);
+        prevCard = card;
+      }
+    }
+
+    function render() {
+      const s = TUTO_STEPS[step];
+      // Dots
+      dots.forEach((d, i) => {
+        d.className = `tuto-dot h-1.5 rounded-full flex-1 transition-all ${i <= step ? 'bg-[#8B3E22]' : 'bg-[#D6CCC0]'}`;
+      });
+      iconEl.setAttribute('icon', s.icon);
+      stepEl.textContent  = `Étape ${step+1} sur ${TUTO_STEPS.length}`;
+      titleEl.textContent = s.title;
+      textEl.textContent  = s.text;
+      prevBtn.classList.toggle('hidden', step === 0);
+      nextBtn.textContent = step === TUTO_STEPS.length - 1 ? '✓ Commencer !' : 'Suivant →';
+      highlightCard(s.card);
+    }
+
+    function close() {
+      localStorage.setItem(key, '1');
+      tuto.classList.add('hidden');
+      overlay.classList.add('hidden');
+      if (prevCard) {
+        prevCard.classList.remove('ring-4', 'ring-[#8B3E22]', 'ring-offset-2', 'relative', 'z-50', 'shadow-2xl', 'scale-[1.02]');
+      }
+    }
+
+    tuto.classList.remove('hidden');
+    overlay.classList.remove('hidden');
+    render();
+
+    prevBtn.onclick = () => { if (step > 0) { step--; render(); } };
+    nextBtn.onclick = () => { if (step < TUTO_STEPS.length - 1) { step++; render(); } else close(); };
+    skipBtn.onclick = close;
+  }
+
+  // ─── Chargement principal ────────────────────────────────────────────────
+  window.addEventListener('load', async () => {
+    const sb = await getSB();
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = '/espace-client'; return; }
+    if (session.user.email === ADMIN_EMAIL) { window.location.href = '/espace-client/admin'; return; }
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+
+    const uid = session.user.id;
+    document.getElementById('logout-btn').onclick = async () => { await sb.auth.signOut(); window.location.href = '/espace-client'; };
+
+    // Profil
+    const { data: p } = await sb.from('profiles').select('*').eq('id', uid).single();
+    const meta = session.user.user_metadata || {};
+    const fullName = p?.full_name || meta.full_name || meta.name || '';
+    const prenom   = fullName ? fullName.split(' ')[0] : (session.user.email || '').split('@')[0];
+
+    document.getElementById('welcome').textContent    = `Bonjour, ${prenom} 👋`;
+    document.getElementById('user-name').textContent  = prenom;
+
+    // Sauvegarder le nom depuis les métadonnées si manquant
+    if (fullName && p && !p.full_name) {
+      await sb.from('profiles').update({ full_name: fullName }).eq('id', uid);
+    }
+
+    // Notes discussion
+    async function loadClientNotes() {
+      const sb2 = await getSB();
+      const { data } = await sb2.from('client_notes').select('*').eq('client_id', uid).order('created_at', { ascending: false }).limit(30);
+      const feed = document.getElementById('notes-feed');
+      if (!feed) return;
+      if (!data || !data.length) { feed.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucune note pour l\'instant</p>'; return; }
+      feed.innerHTML = data.map(n => {
+        const d = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+        const txt = n.note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return `<div class="bg-[#EDE6DB] rounded-xl rounded-tr-sm px-4 py-3">
+          <p class="text-sm text-[#2C2416] leading-relaxed">${txt}</p>
+          <p class="text-[10px] text-[#767A55] mt-1.5">${d}</p>
+        </div>`;
+      }).join('');
+    }
+    window.addClientNote = async () => {
+      const sb2 = await getSB();
+      const ta = document.getElementById('new-note-ta');
+      const note = ta.value.trim();
+      if (!note) return;
+      const { error } = await sb2.from('client_notes').insert({ client_id: uid, note });
+      if (!error) {
+        ta.value = '';
+        const msg = document.getElementById('notes-send-msg');
+        msg.classList.remove('hidden'); setTimeout(() => msg.classList.add('hidden'), 2000);
+        await loadClientNotes();
+      }
+    };
+
+    // Tâches
+    async function loadTasks() {
+      const sb2 = await getSB();
+      const { data } = await sb2.from('tasks').select('*').eq('client_id', uid).order('created_at', { ascending: true });
+      const el = document.getElementById('tasks-list');
+      if (!el) return;
+      if (!data || !data.length) { el.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucune tâche</p>'; return; }
+      el.innerHTML = data.map(t => {
+        const title = t.title.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return `<div class="flex items-center gap-3 py-2 border-b border-[#D6CCC0]/30 last:border-0">
+          <button onclick="toggleTask('${t.id}',${t.done})" class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${t.done ? 'bg-[#8B3E22] border-[#8B3E22]' : 'border-[#D6CCC0] hover:border-[#8B3E22]'}">
+            ${t.done ? '<iconify-icon icon="solar:check-linear" stroke-width="2.5" class="text-white" style="font-size:9px"></iconify-icon>' : ''}
+          </button>
+          <span class="text-sm flex-1 ${t.done ? 'line-through text-[#2C2416]/40' : 'text-[#2C2416]'}">${title}</span>
+          <button onclick="deleteTask('${t.id}')" class="text-[#D6CCC0] hover:text-red-400 transition-colors shrink-0">
+            <iconify-icon icon="solar:close-circle-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+          </button>
+        </div>`;
+      }).join('');
+    }
+    window.addTask = async () => {
+      const sb2 = await getSB();
+      const input = document.getElementById('new-task-input');
+      const title = input.value.trim();
+      if (!title) return;
+      await sb2.from('tasks').insert({ client_id: uid, title });
+      input.value = '';
+      await loadTasks();
+    };
+    window.toggleTask = async (id, done) => {
+      const sb2 = await getSB();
+      await sb2.from('tasks').update({ done: !done }).eq('id', id);
+      await loadTasks();
+    };
+    window.deleteTask = async (id) => {
+      const sb2 = await getSB();
+      await sb2.from('tasks').delete().eq('id', id);
+      await loadTasks();
+    };
+
+    if (p) {
+      if (p.offer) document.getElementById('offer-badge').textContent = `Offre : ${OFFER_MAP[p.offer] || p.offer}`;
+      document.getElementById('infos-content').innerHTML = [
+        fullName              ? `<p><span class="font-medium text-[#2C2416]">Nom :</span> ${fullName}</p>` : '',
+        (p.email || session.user.email) ? `<p><span class="font-medium text-[#2C2416]">Email :</span> ${p.email || session.user.email}</p>` : '',
+        p.phone               ? `<p><span class="font-medium text-[#2C2416]">Téléphone :</span> ${p.phone}</p>` : '',
+        p.instagram_handle    ? `<p><span class="font-medium text-[#2C2416]">Instagram :</span> @${p.instagram_handle}</p>` : '',
+      ].join('') || '<p class="text-xs text-[#2C2416]/30 italic">À compléter dans les paramètres</p>';
+    }
+
+    // Documents
+    const { data: docs } = await sb.from('documents').select('*').eq('client_id', uid).order('created_at', { ascending: false });
+    const TYPE_LABELS = {
+      contrat: 'Contrat', facture: 'Facture', post: 'Post',
+      reel: 'Reel', carrousel: 'Carrousel', planning: 'Planning éditorial',
+      audit: 'Audit Instagram', autre: 'Document',
+    };
+    const invoices  = (docs||[]).filter(d => d.type === 'facture');
+    const contracts = (docs||[]).filter(d => d.type === 'contrat');
+    const content   = (docs||[]).filter(d => !['facture','contrat'].includes(d.type));
+    const allDocs   = [...contracts, ...content];
+
+    function docItemTyped(d) {
+      const label = d.name || d.file_name || 'Document';
+      const type  = TYPE_LABELS[d.type] || d.type || '';
+      const url   = d.file_url || '#';
+      return `<a href="${url}" target="_blank" class="flex items-center justify-between gap-3 text-sm py-2 border-b border-[#D6CCC0]/30 last:border-0 hover:text-[#8B3E22] transition-colors group">
+        <div class="flex items-center gap-2 min-w-0">
+          <iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] shrink-0"></iconify-icon>
+          <span class="truncate">${label}</span>
+        </div>
+        ${type ? `<span class="text-xs text-[#767A55] shrink-0 bg-[#EDE6DB] px-2 py-0.5 rounded-full">${type}</span>` : ''}
+      </a>`;
+    }
+
+    // Tous les docs dans une liste unifiée avec data-search pour le filtre
+    const allDocsUnified = [...(docs||[])].sort((a,b) => new Date(b.created_at)-new Date(a.created_at));
+    window._allDocsHtml = allDocsUnified.length
+      ? allDocsUnified.map(d => {
+          const label = d.name || d.file_name || 'Document';
+          const type  = TYPE_LABELS[d.type] || d.type || '';
+          const url   = d.file_url || '#';
+          return `<a href="${url}" target="_blank" data-search="${label.toLowerCase()} ${type.toLowerCase()}"
+            class="flex items-center justify-between gap-3 text-sm py-2 border-b border-[#D6CCC0]/30 last:border-0 hover:text-[#8B3E22] transition-colors">
+            <div class="flex items-center gap-2 min-w-0">
+              <iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] shrink-0"></iconify-icon>
+              <span class="truncate">${label}</span>
+            </div>
+            ${type ? `<span class="text-xs text-[#767A55] shrink-0 bg-[#EDE6DB] px-2 py-0.5 rounded-full">${type}</span>` : ''}
+          </a>`;
+        }).join('')
+      : '<p class="text-xs text-[#2C2416]/30 italic">Aucun document</p>';
+    document.getElementById('docs-list').innerHTML = window._allDocsHtml;
+
+    window.filterDocs = (q) => {
+      const term = q.trim().toLowerCase();
+      document.getElementById('docs-list').querySelectorAll('[data-search]').forEach(el => {
+        el.style.display = (el.dataset.search || '').includes(term) ? '' : 'none';
+      });
+    };
+
+    // Contenu (tous statuts)
+    const { data: allItems } = await sb.from('content_items').select('*').eq('client_id', uid).order('created_at', { ascending: false });
+    const pending  = (allItems||[]).filter(i => i.status === 'pending');
+    const done     = (allItems||[]).filter(i => i.status !== 'pending');
+    const contentEl = document.getElementById('content-list');
+
+    const TYPE_COLORS_DASH = { 'POST':'bg-blue-100 text-blue-700', 'REEL':'bg-purple-100 text-purple-700', 'CARROUSEL':'bg-emerald-100 text-emerald-700', 'PLANNING':'bg-orange-100 text-orange-700', 'AUDIT':'bg-gray-100 text-gray-500' };
+    function renderContentCard(item, statusBadge) {
+      let files = [];
+      try { files = Array.isArray(item.files) ? item.files : (item.files ? JSON.parse(item.files) : []); } catch(e) {}
+      const f0 = files[0];
+      const isImg = f0?.url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(f0.url);
+      const tMatch = item.title.match(/^\[([A-Z\s\-]+)\]/i);
+      const tType  = tMatch ? tMatch[1].toUpperCase() : '';
+      const cleanT = item.title.replace(/^\[[^\]]+\]\s*/, '') || item.title;
+      const tColor = TYPE_COLORS_DASH[tType] || 'bg-[#8B3E22]/10 text-[#8B3E22]';
+      const typeTag = tType ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${tColor} uppercase tracking-wide shrink-0">${tType}</span>` : '';
+      return `
+      <div class="border border-[#D6CCC0] rounded-xl overflow-hidden mb-3 last:mb-0">
+        <div class="flex items-center justify-between gap-2 p-3 cursor-pointer hover:bg-[#F5EDE4]/50 transition-colors" onclick="toggleDashContent('${item.id}')">
+          <div class="flex items-center gap-2 min-w-0">
+            ${f0?.url && isImg ? `<img src="${f0.url}" class="w-9 h-9 rounded-lg object-cover shrink-0" />` : `<div class="w-9 h-9 bg-[#8B3E22]/10 rounded-lg flex items-center justify-center shrink-0"><iconify-icon icon="solar:image-linear" stroke-width="1.5" class="text-[#8B3E22] text-sm"></iconify-icon></div>`}
+            <div class="min-w-0">
+              ${typeTag ? `<div class="mb-0.5">${typeTag}</div>` : ''}
+              <p class="font-medium text-[#2C2416] text-sm truncate leading-tight">${cleanT}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            ${f0?.url ? `<a href="${f0.url}" target="_blank" onclick="event.stopPropagation()" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors" title="Voir"><iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon></a>` : ''}
+            ${statusBadge}
+            <iconify-icon id="dash-chev-${item.id}" icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform ml-1"></iconify-icon>
+          </div>
+        </div>
+        <div id="dash-detail-${item.id}" class="hidden border-t border-[#D6CCC0]/50 p-3">
+          ${f0?.url && !isImg ? `<a href="${f0.url}" target="_blank" class="flex items-center gap-3 p-3 bg-[#EDE6DB] rounded-xl hover:bg-[#D6CCC0] transition-colors mb-3"><iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] text-2xl shrink-0"></iconify-icon><span class="text-sm text-[#2C2416] truncate">${f0.name||'Ouvrir'}</span></a>` : ''}
+          ${item.description ? `<div class="bg-[#F5EDE4] rounded-xl p-3 mb-3 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Légende</p><p class="text-sm text-[#2C2416]/75 leading-relaxed whitespace-pre-wrap">${item.description}</p></div>` : ''}
+          ${item.status === 'pending' ? `
+          <div class="flex gap-2 flex-wrap mt-2">
+            <button onclick="validate('${item.id}','approved')" class="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700">✓ Valider</button>
+            <button onclick="showFeedback('${item.id}')" class="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600">✗ Refuser</button>
+          </div>
+          <div id="feedback-${item.id}" class="hidden mt-3">
+            <textarea id="feedback-text-${item.id}" placeholder="Votre commentaire…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-red-400 resize-none"></textarea>
+            <button onclick="validateWithFeedback('${item.id}')" class="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600">Envoyer le refus</button>
+          </div>` : ''}
+        </div>
+      </div>`;
+    }
+    window.toggleDashContent = (id) => {
+      const d = document.getElementById('dash-detail-' + id);
+      const c = document.getElementById('dash-chev-' + id);
+      if (d) d.classList.toggle('hidden');
+      if (c) c.classList.toggle('rotate-180');
+    };
+
+    if (!allItems || !allItems.length) {
+      contentEl.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucun contenu en attente</p>';
+    } else {
+      contentEl.innerHTML = [
+        pending.length
+          ? pending.map(i => renderContentCard(i, '<span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full shrink-0">En attente</span>')).join('')
+          : '<p class="text-xs text-[#2C2416]/30 italic mb-3">Aucun contenu en attente ✓</p>',
+        done.length ? `<details class="mt-2"><summary class="text-xs text-[#767A55] cursor-pointer hover:text-[#2C2416] transition-colors">Historique (${done.length})</summary>
+          <div class="mt-2">${done.map(i => renderContentCard(i, `<span class="text-xs px-2 py-0.5 rounded-full shrink-0 ${i.status==='approved'?'bg-green-100 text-green-700':'bg-red-100 text-red-600'}">${i.status==='approved'?'Validé ✓':'Refusé'}</span>`)).join('')}</div></details>` : ''
+      ].join('');
+    }
+    window.validate = async (id, status, feedback = '') => {
+      const sb2 = await getSB();
+      await sb2.from('content_items').update({ status, feedback, updated_at: new Date().toISOString() }).eq('id', id);
+      window.location.reload();
+    };
+
+    window.showFeedback = (id) => {
+      document.getElementById('feedback-' + id).classList.toggle('hidden');
+    };
+
+    window.validateWithFeedback = (id) => {
+      const text = document.getElementById('feedback-text-' + id).value.trim();
+      window.validate(id, 'rejected', text);
+    };
+
+    // Uploads
+    const { data: existingUploads } = await sb.from('client_uploads').select('*').eq('client_id', uid).order('created_at', { ascending: false });
+    if (existingUploads && existingUploads.length) {
+      document.getElementById('uploads-list').innerHTML = existingUploads.map(f =>
+        `<div class="flex items-center gap-2 text-xs text-[#2C2416]/60"><iconify-icon icon="solar:paperclip-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>${f.name}</div>`
+      ).join('');
+    }
+    document.getElementById('upload-input').onchange = async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      const status = document.getElementById('upload-status');
+      status.textContent = 'Envoi en cours…';
+      const sb2 = await getSB();
+      for (const file of files) {
+        const path = `${uid}/${Date.now()}-${file.name}`;
+        const { data, error } = await sb2.storage.from('client-uploads').upload(path, file);
+        if (!error && data) {
+          const { data: urlData } = sb2.storage.from('client-uploads').getPublicUrl(path);
+          await sb2.from('client_uploads').insert({ client_id: uid, name: file.name, file_url: urlData.publicUrl, file_type: file.type.startsWith('video') ? 'video' : 'photo' });
+        }
+      }
+      status.textContent = `${files.length} fichier(s) envoyé(s) ✓`;
+      setTimeout(() => window.location.reload(), 800);
+    };
+
+    // ─── Notifications ───────────────────────────────────────────────────────
+    // Cible de redirection selon type de notification
+    function notifTarget(type) {
+      if (type === 'content')  return { id: 'card-content',  label: 'Contenu à valider' };
+      if (type === 'document') return { id: 'card-docs',     label: 'Contrats & documents' };
+      if (type === 'facture')  return { id: 'card-invoices', label: 'Factures' };
+      return null;
+    }
+
+    async function loadNotifications() {
+      const { data: notifs } = await sb.from('notifications')
+        .select('*').eq('client_id', uid).order('created_at', { ascending: false }).limit(20);
+      const unread = (notifs||[]).filter(n => !n.read);
+      const badge  = document.getElementById('notif-badge');
+      const list   = document.getElementById('notif-list');
+
+      // Badge : nombre non lus
+      if (unread.length > 0) {
+        badge.textContent = unread.length > 9 ? '9+' : String(unread.length);
+        badge.classList.remove('hidden');
+        badge.classList.add('flex');
+      } else {
+        badge.classList.add('hidden');
+        badge.classList.remove('flex');
+      }
+
+      if (list) {
+        list.innerHTML = (notifs||[]).length ? (notifs||[]).map(n => {
+          const target  = notifTarget(n.type);
+          const icon    = n.type === 'content' ? 'solar:check-square-linear' : 'solar:document-text-linear';
+          const dateStr = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+          return `
+          <div onclick="goToSection('${n.id}','${target?.id||''}')"
+               class="flex items-start gap-3 py-2.5 border-b border-[#D6CCC0]/40 last:border-0 cursor-pointer hover:bg-[#F5EDE4] -mx-2 px-2 rounded-lg transition-colors ${n.read ? '' : 'bg-[#8B3E22]/10'}">
+            <iconify-icon icon="${icon}" stroke-width="1.5" class="text-[#8B3E22] text-lg shrink-0 mt-0.5"></iconify-icon>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-[#2C2416]">${n.message}</p>
+              <p class="text-xs text-[#767A55] mt-0.5">${dateStr}${target ? ' · Cliquer pour y aller →' : ''}</p>
+            </div>
+            ${!n.read ? '<span class="w-2 h-2 bg-[#8B3E22] rounded-full shrink-0 mt-2 flex-shrink-0"></span>' : ''}
+          </div>`;
+        }).join('') : '<p class="text-xs text-[#2C2416]/40 italic py-2">Aucune notification</p>';
+      }
+    }
+
+    // Clic sur notification → marquer lu + scroller vers la section
+    window.goToSection = async (notifId, cardId) => {
+      await sb.from('notifications').update({ read: true }).eq('id', notifId);
+      document.getElementById('notif-panel').classList.add('hidden');
+      loadNotifications();
+      if (cardId) {
+        const card = document.getElementById(cardId);
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          card.classList.add('ring-4', 'ring-[#8B3E22]', 'ring-offset-2');
+          setTimeout(() => card.classList.remove('ring-4', 'ring-[#8B3E22]', 'ring-offset-2'), 2500);
+        }
+      }
+    };
+
+    document.getElementById('notif-btn').onclick = async () => {
+      const panel = document.getElementById('notif-panel');
+      const isOpen = !panel.classList.contains('hidden');
+      panel.classList.toggle('hidden');
+      if (!isOpen) {
+        // Ouvrir → marquer tout comme lu et réinitialiser le badge
+        await sb.from('notifications').update({ read: true }).eq('client_id', uid).eq('read', false);
+        const badge = document.getElementById('notif-badge');
+        badge.classList.add('hidden');
+        badge.classList.remove('flex');
+        loadNotifications();
+      }
+    };
+
+    document.getElementById('mark-all-read').onclick = async () => {
+      await sb.from('notifications').update({ read: true }).eq('client_id', uid);
+      loadNotifications();
+    };
+
+    loadNotifications();
+
+    // Realtime — notification en temps réel quand Claire dépose quelque chose
+    sb.channel('notifications-' + uid)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `client_id=eq.${uid}` },
+        payload => {
+          const toast = document.getElementById('notif-toast');
+          document.getElementById('notif-toast-text').textContent = payload.new.message;
+          toast.classList.remove('hidden');
+          toast.classList.add('flex');
+          setTimeout(() => toast.classList.add('hidden'), 6000);
+          loadNotifications();
+          window.location.reload(); // Recharger pour voir le nouveau contenu
+        })
+      .subscribe();
+
+    // ─── Événements français ─────────────────────────────────────────────────
+    function getEasterDate(y) {
+      const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25);
+      const g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4;
+      const l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451);
+      return new Date(y,Math.floor((h+l-7*m+114)/31)-1,((h+l-7*m+114)%31)+1);
+    }
+    function getFrEvents(y) {
+      const ev={};
+      const add=(m,d,n)=>{ const k=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; if(!ev[k])ev[k]=[]; ev[k].push(n); };
+      const addD=(dt,n)=>add(dt.getMonth()+1,dt.getDate(),n);
+      add(1,1,'🥂 Jour de l\'an'); add(5,1,'🏛 Fête du Travail'); add(5,8,'🕊 Victoire 45');
+      add(7,14,'🎆 Fête Nationale'); add(8,15,'⛪ Assomption'); add(11,1,'🕯 Toussaint');
+      add(11,11,'🕊 Armistice'); add(12,25,'🎄 Noël');
+      const pa=getEasterDate(y);
+      addD(pa,'🐣 Pâques');
+      const lpa=new Date(pa); lpa.setDate(pa.getDate()+1); addD(lpa,'🐣 Lundi Pâques');
+      const asc=new Date(pa); asc.setDate(pa.getDate()+39); addD(asc,'✝ Ascension');
+      const pen=new Date(pa); pen.setDate(pa.getDate()+49); addD(pen,'🕊 Pentecôte');
+      const lpe=new Date(pa); lpe.setDate(pa.getDate()+50); addD(lpe,'🕊 Lundi Pentecôte');
+      add(1,7,'👑 Épiphanie'); add(2,14,'❤️ St-Valentin'); add(3,8,'💜 Journée Femme');
+      add(4,1,'🐟 Poisson d\'avril'); add(10,31,'🎃 Halloween'); add(12,6,'🎅 St-Nicolas'); add(12,31,'🥂 Réveillon');
+      function lastSun(mo){const d=new Date(y,mo+1,0);d.setDate(d.getDate()-d.getDay());return d;}
+      function firstSun(mo){const d=new Date(y,mo,1);while(d.getDay()!==0)d.setDate(d.getDate()+1);return d;}
+      function nthSun(mo,n){const d=firstSun(mo);d.setDate(d.getDate()+(n-1)*7);return d;}
+      function nthFri(mo,n){const d=new Date(y,mo,1);while(d.getDay()!==5)d.setDate(d.getDate()+1);d.setDate(d.getDate()+(n-1)*7);return d;}
+      const fmt=(dt)=>`${y}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+      const fm=lastSun(4);
+      addD(fmt(fm)===fmt(pen)?firstSun(5):fm,'💐 Fête des Mères');
+      addD(nthSun(5,3),'👔 Fête des Pères');
+      addD(nthFri(10,4),'🛍 Black Friday');
+      return ev;
+    }
+
+    window.calToggleMonthPicker = (e) => {
+      e.stopPropagation();
+      const picker = document.getElementById('cal-month-picker');
+      if (!picker) return;
+      const isHidden = picker.classList.contains('hidden');
+      picker.classList.toggle('hidden');
+      if (isHidden) {
+        const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+        document.getElementById('cal-month-grid').innerHTML = months.map((m,i)=>
+          `<button onclick="calGoToMonth(${i},event)" class="py-2 text-xs rounded-lg ${i===calMonth?'bg-[#8B3E22] text-white font-bold':'hover:bg-[#8B3E22] hover:text-white text-[#2C2416]'} transition-colors font-medium">${m.slice(0,3)}</button>`
+        ).join('');
+      }
+    };
+    window.calGoToMonth = (m, e) => {
+      if(e) e.stopPropagation();
+      calMonth = m;
+      document.getElementById('cal-month-picker')?.classList.add('hidden');
+      renderCal();
+    };
+    document.addEventListener('click', () => document.getElementById('cal-month-picker')?.classList.add('hidden'));
+
+    // ─── Calendrier éditorial ────────────────────────────────────────────────
+    const TYPE_COLORS_CAL = { 'POST':'#3B82F6','REEL':'#8B5CF6','CARROUSEL':'#10B981','PLANNING':'#F59E0B','AUDIT':'#6B7280' };
+    let calYear = new Date().getFullYear();
+    let calMonth = new Date().getMonth();
+    let calSelectedDate = null;
+    let calApproved = [];
+    let calNotes = [];
+
+    async function loadCalData() {
+      const sb2 = await getSB();
+      const [{ data: approved }, { data: notes }] = await Promise.all([
+        sb2.from('content_items').select('id,title,scheduled_at,updated_at,files').eq('client_id', uid).eq('status','approved'),
+        sb2.from('calendar_notes').select('*').eq('client_id', uid),
+      ]);
+      calApproved = approved || [];
+      calNotes    = notes    || [];
+      renderCal();
+    }
+
+    function renderCal() {
+      const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+      document.getElementById('cal-month-label').textContent = `${months[calMonth]} ${calYear}`;
+      const frEvents = getFrEvents(calYear);
+      const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=dim
+      const startOffset = (firstDay === 0 ? 6 : firstDay - 1); // lundi=0
+      const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+      const days = ['Lu','Ma','Me','Je','Ve','Sa','Di'];
+
+      let html = `<table class="w-full border-collapse text-xs table-fixed"><thead><tr>`;
+      days.forEach(d => { html += `<th class="py-1.5 text-center text-[#767A55] font-medium text-[10px] uppercase tracking-widest">${d}</th>`; });
+      html += `</tr></thead><tbody><tr>`;
+
+      let col = 0;
+      for (let i = 0; i < startOffset; i++) { html += `<td class="border border-[#D6CCC0]/30 p-1 h-16 align-top bg-[#F5EDE4]/30"></td>`; col++; }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const isToday = dateStr === new Date().toISOString().slice(0,10);
+        const dayApproved = calApproved.filter(a => (a.scheduled_at||a.updated_at||'').slice(0,10) === dateStr);
+        const dayNotes    = calNotes.filter(n => n.date === dateStr);
+
+        let cellContent = '';
+        dayApproved.forEach(a => {
+          const tMatch = a.title.match(/^\[([A-Z\s\-]+)\]/i);
+          const tType  = tMatch ? tMatch[1].toUpperCase() : '';
+          const color  = TYPE_COLORS_CAL[tType] || '#8B3E22';
+          const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'').slice(0,18);
+          const heure  = a.scheduled_at ? ' ' + new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+          cellContent += `<div style="background:${color}15;color:${color};border-left:2px solid ${color}" class="text-[9px] leading-tight px-1 py-0.5 rounded-r mb-0.5 truncate font-medium">${clean}${heure}</div>`;
+        });
+        dayNotes.forEach(n => {
+          cellContent += `<div class="text-[9px] leading-tight px-1 py-0.5 rounded bg-[#EDE6DB] text-[#767A55] mb-0.5 truncate italic">${n.note.slice(0,20)}</div>`;
+        });
+        const hasDot = (dayNotes.length || dayApproved.length) ? `<span class="w-1 h-1 rounded-full bg-[#8B3E22] inline-block ml-0.5 mb-0.5 shrink-0"></span>` : '';
+
+        const dayFrEv = (frEvents[dateStr] || []);
+        const evHtml  = dayFrEv.map(e => `<div style="font-size:8px;color:#8B3E22;line-height:1.3;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e}</div>`).join('');
+
+        html += `<td class="border border-[#D6CCC0]/30 p-1 align-top cursor-pointer hover:bg-[#F5EDE4] transition-colors ${dayFrEv.length ? 'bg-[#FFF8F5]' : ''}"
+          style="height:72px"
+          onclick="calCellClick('${dateStr}')"
+          ondblclick="calDayDetail('${dateStr}')">
+          <div class="flex items-center justify-center gap-0.5 mb-0.5">
+            <span class="${isToday ? 'w-5 h-5 bg-[#8B3E22] text-white rounded-full inline-flex items-center justify-center' : ''} text-[10px] font-${isToday?'bold':'medium'} text-${isToday?'white':'[#2C2416]'}">${day}</span>${hasDot}
+          </div>
+          ${cellContent}${evHtml}
+        </td>`;
+        col++;
+        if (col % 7 === 0 && day < daysInMonth) html += `</tr><tr>`;
+      }
+      const remaining = 7 - (col % 7);
+      if (remaining < 7) for (let i = 0; i < remaining; i++) html += `<td class="border border-[#D6CCC0]/30 p-1 h-16 bg-[#F5EDE4]/30"></td>`;
+      html += `</tr></tbody></table>`;
+      document.getElementById('cal-grid').innerHTML = html;
+    }
+
+    window.calNav = (dir) => { calMonth += dir; if (calMonth > 11) { calMonth=0; calYear++; } if (calMonth < 0) { calMonth=11; calYear--; } renderCal(); };
+
+    const isTouch = () => window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+
+    // Clic sur une case : détail si mobile, sinon détail aussi (1 clic = détail)
+    window.calCellClick = (dateStr) => {
+      calDayDetail(dateStr);
+    };
+
+    // Crayon dans le header → formulaire note avec date picker
+    window.calOpenNoteForm = () => {
+      const today = new Date().toISOString().slice(0,10);
+      const picker = document.getElementById('cal-note-date-picker');
+      picker.value = calSelectedDate || today;
+      document.getElementById('cal-note-input').value = '';
+      const existing = calNotes.find(n => n.date === picker.value);
+      if (existing) document.getElementById('cal-note-input').value = existing.note;
+      const modal = document.getElementById('cal-note-modal');
+      modal.classList.remove('hidden');
+      modal.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      // Mettre à jour le contenu quand la date change
+      picker.onchange = () => {
+        const ex = calNotes.find(n => n.date === picker.value);
+        document.getElementById('cal-note-input').value = ex?.note || '';
+      };
+    };
+
+    window.calDayDetail = (dateStr) => {
+      const dayItems = calApproved.filter(a => (a.scheduled_at||a.updated_at||'').slice(0,10) === dateStr);
+      const dayNotes = calNotes.filter(n => n.date === dateStr);
+      const [y,m,d] = dateStr.split('-');
+      const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+      const FD_HEX  = { 'POST':'#3B82F6','REEL':'#8B5CF6','CARROUSEL':'#10B981','PLANNING':'#F59E0B','CALENDRIER ÉDITORIAL':'#F59E0B','AUDIT':'#6B7280' };
+      const FD_ICON = { 'POST':'solar:image-linear','REEL':'solar:videocamera-linear','CARROUSEL':'solar:gallery-linear','PLANNING':'solar:calendar-linear','CALENDRIER ÉDITORIAL':'solar:calendar-linear' };
+      let html = '';
+      dayItems.forEach(a => {
+        const tMatch = a.title.match(/^\[([A-Z\s\-]+)\]/i);
+        const tType  = tMatch ? tMatch[1].toUpperCase() : '';
+        const color  = FD_HEX[tType] || '#8B3E22';
+        const icon   = FD_ICON[tType] || 'solar:document-text-linear';
+        const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'');
+        let files = []; try { files = Array.isArray(a.files) ? a.files : JSON.parse(a.files||'[]'); } catch(e){}
+        const isImgF = files[0]?.url && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(files[0].url);
+        const heure  = a.scheduled_at ? new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+        html += `<div class="flex overflow-hidden rounded-2xl border border-[#D6CCC0]">
+          <div class="w-28 sm:w-40 shrink-0 flex items-center justify-center" style="background:${color}15; min-height:110px">
+            ${isImgF ? `<img src="${files[0].url}" class="w-full h-full object-cover" style="min-height:110px" />` : `<iconify-icon icon="${icon}" stroke-width="1.5" style="color:${color}" class="text-4xl"></iconify-icon>`}
+          </div>
+          <div class="flex-1 p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span style="background:${color}20;color:${color}" class="text-xs font-bold px-2 py-0.5 rounded-full">${tType||'—'}</span>
+              ${heure ? `<span class="text-xs text-[#767A55] font-medium">🕐 ${heure}</span>` : ''}
+            </div>
+            <p class="text-base font-semibold text-[#2C2416] mb-1">${clean}</p>
+            ${a.description ? `<p class="text-sm text-[#2C2416]/70 leading-relaxed">${a.description}</p>` : ''}
+          </div>
+        </div>`;
+      });
+      dayNotes.forEach(n => {
+        html += `<div class="p-4 rounded-2xl bg-[#EDE6DB] border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Note</p><p class="text-sm text-[#2C2416]/80 italic leading-relaxed">${n.note}</p></div>`;
+      });
+      if (!html) html = '<p class="text-sm text-[#2C2416]/40 italic">Aucune publication programmée ce jour.</p>';
+      // Basculer vers la vue plein format
+      document.getElementById('cal-day-title').textContent = `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
+      document.getElementById('cal-day-content').innerHTML = html;
+      document.getElementById('cal-note-modal').classList.add('hidden');
+      document.getElementById('cal-grid-view').classList.add('hidden');
+      document.getElementById('cal-day-modal').classList.remove('hidden');
+      document.getElementById('cal-day-modal').scrollIntoView({ behavior:'smooth', block:'start' });
+    };
+
+    window.closeDashCalFullDay = () => {
+      document.getElementById('cal-day-modal').classList.add('hidden');
+      document.getElementById('cal-grid-view').classList.remove('hidden');
+    };
+
+    window.calClickDay = (dateStr, day) => {
+      calSelectedDate = dateStr;
+      const months = ['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+      const [y,m,d] = dateStr.split('-');
+      document.getElementById('cal-note-date-label').textContent = `Note du ${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
+      const existing = calNotes.find(n => n.date === dateStr);
+      document.getElementById('cal-note-input').value = existing?.note || '';
+      document.getElementById('cal-note-modal').classList.remove('hidden');
+      document.getElementById('cal-note-modal').scrollIntoView({ behavior:'smooth', block:'nearest' });
+    };
+
+    window.saveCalNote = async () => {
+      const sb2 = await getSB();
+      const note = document.getElementById('cal-note-input').value.trim();
+      const date = document.getElementById('cal-note-date-picker').value || calSelectedDate;
+      if (!note || !date) return;
+      const existing = calNotes.find(n => n.date === date);
+      if (existing) {
+        await sb2.from('calendar_notes').update({ note }).eq('id', existing.id);
+      } else {
+        await sb2.from('calendar_notes').insert({ date, note, client_id: uid, created_by: uid });
+      }
+      document.getElementById('cal-note-modal').classList.add('hidden');
+      await loadCalData();
+    };
+
+    loadClientNotes();
+    loadTasks();
+    loadCalData();
+
+    // Lancer le tutoriel si première connexion
+    initTutorial(uid);
+  });
+</script>

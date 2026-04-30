@@ -1,0 +1,1667 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Admin — Claire Vigneron" hideChatWidget={true}>
+
+  <div id="loading" class="min-h-screen bg-[#2C2416] flex items-center justify-center">
+    <p class="text-[#F5EDE4]/50 text-sm">Vérification…</p>
+  </div>
+
+  <div id="admin-panel" class="hidden min-h-screen bg-[#F5EDE4]">
+    <header class="bg-[#2C2416] px-6 py-4 flex items-center justify-between relative z-40">
+      <a href="/" class="text-lg font-serif text-[#F5EDE4] tracking-tight">
+        Claire Vigneron <span class="text-[#767A55]">·</span> CM
+        <span class="text-[#8B3E22] text-xs ml-2 uppercase tracking-widest">Admin</span>
+      </a>
+      <div class="flex items-center gap-3">
+        <button id="admin-bell-btn" class="relative p-2 text-[#F5EDE4]/50 hover:text-white transition-colors rounded-lg hover:bg-white/10">
+          <iconify-icon icon="solar:bell-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+          <span id="admin-notif-badge" class="hidden absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#8B3E22] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none"></span>
+        </button>
+        <button id="logout-btn" class="text-xs text-[#F5EDE4]/40 hover:text-white transition-colors uppercase tracking-widest">Déconnexion</button>
+      </div>
+    </header>
+
+    <!-- Panel notifications admin -->
+    <div id="admin-notif-panel" class="hidden fixed top-[65px] right-4 w-80 bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] z-50 overflow-hidden">
+      <div class="px-4 py-3 border-b border-[#D6CCC0] flex items-center justify-between">
+        <span class="text-sm font-semibold text-[#2C2416]">Notifications</span>
+        <button onclick="markAdminNotifsRead()" class="text-xs text-[#8B3E22] hover:underline">Tout marquer lu</button>
+      </div>
+      <div id="admin-notif-list" class="max-h-[360px] overflow-y-auto divide-y divide-[#D6CCC0]/40">
+        <p class="text-xs text-[#2C2416]/40 italic p-4">Chargement…</p>
+      </div>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 md:px-6 py-10">
+
+      <!-- Vue liste clients -->
+      <div id="view-list">
+        <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-3xl text-[#2C2416] tracking-tight">Vue admin</h1>
+            <p class="text-[#767A55] text-sm mt-1 font-light">Accès à tous les espaces clients</p>
+          </div>
+          <button id="new-client-btn" class="px-5 py-2.5 bg-[#8B3E22] text-[#F5EDE4] rounded-full text-sm font-medium hover:bg-[#6B2E1A] transition-colors">
+            + Nouveau client
+          </button>
+        </div>
+
+
+        <!-- Formulaire nouveau client -->
+        <div id="new-client-form" class="hidden bg-white rounded-2xl p-6 border border-[#D6CCC0] mb-6">
+          <h2 class="text-lg text-[#2C2416] mb-2 font-medium">Créer un espace client</h2>
+          <p class="text-xs text-[#767A55] mb-4">Le client recevra un email pour définir son mot de passe.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <input id="nc-email"     type="email" placeholder="Email *"       class="px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+            <input id="nc-name"      type="text"  placeholder="Nom complet"   class="px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+            <input id="nc-instagram" type="text"  placeholder="@instagram"    class="px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+            <input id="nc-phone"     type="tel"   placeholder="Téléphone"     class="px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+            <select id="nc-offer" class="px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white">
+              <option value="">Choisir l'offre…</option>
+              <option value="audit">Audit Instagram — 97 €</option>
+              <option value="pack">Pack Contenu — 320 €</option>
+              <option value="mensuel">Accompagnement Mensuel — 550 €/mois</option>
+            </select>
+          </div>
+          <div id="nc-msg" class="hidden text-sm rounded-xl px-4 py-3 mb-3"></div>
+          <div class="flex gap-3">
+            <button id="nc-submit" class="px-5 py-2.5 bg-[#8B3E22] text-[#F5EDE4] rounded-full text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Créer l'espace</button>
+            <button id="nc-cancel" class="px-5 py-2.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-full text-sm hover:bg-[#EDE6DB] transition-colors">Annuler</button>
+          </div>
+        </div>
+
+        <!-- Panel : Clients -->
+        <div id="mtab-clients-panel">
+          <!-- Barre de recherche -->
+          <div class="relative mb-4">
+            <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-4 top-1/2 -translate-y-1/2 text-[#767A55] text-lg pointer-events-none"></iconify-icon>
+            <input
+              id="client-search"
+              type="text"
+              placeholder="Rechercher un client par nom, email ou Instagram…"
+              class="w-full pl-11 pr-4 py-3 rounded-xl border border-[#D6CCC0] bg-white text-sm text-[#2C2416] focus:outline-none focus:border-[#8B3E22] transition-colors"
+            />
+          </div>
+
+          <div class="flex items-center justify-between mb-3">
+            <p id="clients-count" class="text-sm text-[#2C2416]/50 font-light"></p>
+            <button id="refresh-btn" class="flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors">
+              <iconify-icon icon="solar:refresh-linear" stroke-width="1.5"></iconify-icon>Actualiser
+            </button>
+          </div>
+          <div id="clients-list" class="space-y-3">
+            <p class="text-sm text-[#2C2416]/40 italic">Chargement des clients…</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Vue client sélectionné -->
+      <div id="view-client" class="hidden">
+        <button id="back-btn" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors mb-6">
+          <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon> Retour à la liste
+        </button>
+        <div id="client-detail"></div>
+      </div>
+    </main>
+  </div>
+</BaseLayout>
+
+<script is:inline>
+  const SUPABASE_URL = 'https://etubpowlffhdvnfqkjij.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_AyehSGHv6TEwFvPQIuMivg_-_mJ7zUH';
+  const ADMIN_EMAIL  = 'clairevigneron.contact@gmail.com';
+  const OFFER_MAP    = { audit: 'Audit', pack: 'Pack Contenu', mensuel: 'Accompagnement' };
+
+  function loadScript(src) {
+    return new Promise(resolve => {
+      if (document.querySelector(`script[src="${src}"]`)) return resolve();
+      const s = document.createElement('script'); s.src = src; s.onload = resolve; document.head.appendChild(s);
+    });
+  }
+
+  async function getSB() {
+    if (!window._sb) {
+      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js');
+      window._sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    return window._sb;
+  }
+
+  window.addEventListener('load', async () => {
+    const sb = await getSB();
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session || session.user.email !== ADMIN_EMAIL) { window.location.href = '/espace-client'; return; }
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('admin-panel').classList.remove('hidden');
+
+    document.getElementById('logout-btn').onclick = async () => { await sb.auth.signOut(); window.location.href = '/espace-client'; };
+
+    // ===== Notifications admin =====
+    const NOTIFS_KEY = 'adminNotifsLastSeen';
+
+    function showAdminToast(message) {
+      const t = document.createElement('div');
+      t.className = 'fixed bottom-6 left-6 z-[999] bg-[#2C2416] text-[#F5EDE4] text-sm px-4 py-3 rounded-xl shadow-lg flex items-center gap-2';
+      t.textContent = message;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 4000);
+    }
+
+    async function loadAdminNotifs() {
+      const sb2  = await getSB();
+      const since    = new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString();
+      const lastSeen = localStorage.getItem(NOTIFS_KEY) || '1970-01-01';
+
+      const [{ data: contentEvents }, { data: uploads }, { data: newClients }] = await Promise.all([
+        sb2.from('content_items')
+          .select('id, title, status, updated_at, client_id, profiles(full_name, email)')
+          .in('status', ['approved', 'rejected'])
+          .gte('updated_at', since)
+          .order('updated_at', { ascending: false })
+          .limit(20),
+        sb2.from('client_uploads')
+          .select('id, name, created_at, client_id, profiles(full_name, email)')
+          .gte('created_at', since)
+          .order('created_at', { ascending: false })
+          .limit(10),
+        sb2.from('profiles')
+          .select('id, full_name, email, created_at')
+          .eq('role', 'client')
+          .gte('created_at', since)
+          .order('created_at', { ascending: false })
+          .limit(5),
+      ]);
+
+      const items = [];
+      (contentEvents || []).forEach(e => {
+        const client = e.profiles?.full_name || e.profiles?.email || 'Client';
+        items.push({ id:'c-'+e.id, date:e.updated_at, unread:e.updated_at>lastSeen,
+          icon: e.status==='approved' ? '✅' : '❌',
+          text: e.status==='approved' ? `${client} a validé "${e.title}"` : `${client} a refusé "${e.title}"`,
+          clientId:e.client_id, tab:'contenu' });
+      });
+      (uploads || []).forEach(u => {
+        const client = u.profiles?.full_name || u.profiles?.email || 'Client';
+        items.push({ id:'u-'+u.id, date:u.created_at, unread:u.created_at>lastSeen,
+          icon:'📎', text:`${client} a déposé "${u.name}"`, clientId:u.client_id, tab:'fichiers' });
+      });
+      (newClients || []).forEach(nc => {
+        items.push({ id:'nc-'+nc.id, date:nc.created_at, unread:nc.created_at>lastSeen,
+          icon:'👤', text:`Nouveau client : ${nc.full_name||nc.email}`, clientId:nc.id, tab:'infos' });
+      });
+      items.sort((a,b) => b.date.localeCompare(a.date));
+
+      const unread = items.filter(i => i.unread).length;
+      const badge  = document.getElementById('admin-notif-badge');
+      if (badge) {
+        badge.textContent = unread > 9 ? '9+' : String(unread);
+        badge.classList.toggle('hidden', unread === 0);
+      }
+
+      const list = document.getElementById('admin-notif-list');
+      if (!list) return;
+      if (!items.length) { list.innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4">Aucune notification récente.</p>'; return; }
+      list.innerHTML = items.map(item => {
+        const when = new Date(item.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+        return `<div onclick="window.openClient('${item.clientId}'); window.switchClientTab('${item.tab}'); window.toggleAdminNotifPanel()"
+          class="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-[#F5EDE4] transition-colors ${item.unread?'bg-[#8B3E22]/10':'bg-white'}">
+          <span class="text-base mt-0.5 shrink-0">${item.icon}</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs text-[#2C2416] leading-relaxed ${item.unread?'font-medium':''}">${item.text}</p>
+            <p class="text-[10px] text-[#767A55] mt-0.5">${when}</p>
+          </div>
+          ${item.unread ? '<div class="w-2 h-2 bg-[#8B3E22] rounded-full shrink-0 mt-1.5"></div>' : ''}
+        </div>`;
+      }).join('');
+    }
+
+    window.markAdminNotifsRead = () => {
+      localStorage.setItem(NOTIFS_KEY, new Date().toISOString());
+      loadAdminNotifs();
+    };
+
+    window.toggleAdminNotifPanel = () => {
+      const panel = document.getElementById('admin-notif-panel');
+      if (!panel) return;
+      panel.classList.toggle('hidden');
+      if (!panel.classList.contains('hidden')) loadAdminNotifs();
+    };
+
+    document.getElementById('admin-bell-btn').onclick = (e) => { e.stopPropagation(); window.toggleAdminNotifPanel(); };
+
+    document.addEventListener('click', (e) => {
+      const panel = document.getElementById('admin-notif-panel');
+      const bell  = document.getElementById('admin-bell-btn');
+      if (panel && !panel.contains(e.target) && bell && !bell.contains(e.target)) panel.classList.add('hidden');
+    });
+
+    loadAdminNotifs();
+    setInterval(loadAdminNotifs, 60000);
+
+    // Realtime — nouvelles activités clients
+    sb.channel('admin-realtime')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'content_items' }, (payload) => {
+        if (['approved','rejected'].includes(payload.new?.status)) {
+          loadAdminNotifs();
+          showAdminToast(payload.new.status === 'approved' ? '✅ Contenu validé par un client' : '❌ Contenu refusé par un client');
+        }
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'client_uploads' }, () => {
+        loadAdminNotifs();
+        showAdminToast('📎 Nouveau fichier déposé par un client');
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, (payload) => {
+        if (payload.new?.role === 'client') {
+          loadAdminNotifs();
+          showAdminToast('👤 Nouveau client inscrit');
+        }
+      })
+      .subscribe();
+
+    // ─── Calendrier admin ─────────────────────────────────────────────────────
+    const ADMIN_CAL_COLORS = { 'POST':'#3B82F6','REEL':'#8B5CF6','CARROUSEL':'#10B981','PLANNING':'#F59E0B','AUDIT':'#6B7280' };
+    let adminCalYear  = new Date().getFullYear();
+    let adminCalMonth = new Date().getMonth();
+    let adminCalSel   = null;
+    let adminCalApproved = [];
+    let adminCalNotes    = [];
+
+    async function loadAdminCalData() {
+      const sb2 = await getSB();
+      const [{ data: approved }, { data: notes }] = await Promise.all([
+        sb2.from('content_items').select('id,title,updated_at,client_id,profiles(full_name,email)').eq('status','approved'),
+        sb2.from('calendar_notes').select('*'),
+      ]);
+      adminCalApproved = approved || [];
+      adminCalNotes    = notes    || [];
+      renderAdminCal();
+    }
+
+    function renderAdminCal() {
+      const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+      document.getElementById('admin-cal-label').textContent = `${months[adminCalMonth]} ${adminCalYear}`;
+      const firstDay   = new Date(adminCalYear, adminCalMonth, 1).getDay();
+      const startOffset = (firstDay === 0 ? 6 : firstDay - 1);
+      const daysInMonth = new Date(adminCalYear, adminCalMonth+1, 0).getDate();
+      const days = ['Lu','Ma','Me','Je','Ve','Sa','Di'];
+
+      let html = `<table class="w-full border-collapse text-xs table-fixed"><thead><tr>`;
+      days.forEach(d => { html += `<th class="py-1.5 text-center text-[#767A55] font-medium text-[10px] uppercase tracking-widest">${d}</th>`; });
+      html += `</tr></thead><tbody><tr>`;
+
+      let col = 0;
+      for (let i = 0; i < startOffset; i++) { html += `<td class="border border-[#D6CCC0]/30 p-1 h-16 align-top bg-[#F5EDE4]/30"></td>`; col++; }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr  = `${adminCalYear}-${String(adminCalMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const isToday  = dateStr === new Date().toISOString().slice(0,10);
+        const dayItems = adminCalApproved.filter(a => a.updated_at?.slice(0,10) === dateStr);
+        const dayNotes = adminCalNotes.filter(n => n.date === dateStr);
+
+        let cellContent = '';
+        dayItems.forEach(a => {
+          const tMatch = a.title.match(/^\[([A-Z\s\-]+)\]/i);
+          const tType  = tMatch ? tMatch[1].toUpperCase() : '';
+          const color  = ADMIN_CAL_COLORS[tType] || '#8B3E22';
+          const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'').slice(0,16);
+          const client = a.profiles?.full_name || a.profiles?.email || '';
+          cellContent += `<div style="background:${color}15;color:${color};border-left:2px solid ${color}" class="text-[9px] leading-tight px-1 py-0.5 rounded-r mb-0.5 truncate font-medium" title="${client}">${clean}</div>`;
+        });
+        dayNotes.forEach(n => {
+          cellContent += `<div class="text-[9px] leading-tight px-1 py-0.5 rounded bg-[#EDE6DB] text-[#767A55] mb-0.5 truncate italic">${n.note.slice(0,18)}</div>`;
+        });
+        const dotA = (dayNotes.length || dayItems.length) ? `<span class="w-1 h-1 rounded-full bg-[#8B3E22] inline-block ml-0.5 mb-0.5"></span>` : '';
+
+        html += `<td class="border border-[#D6CCC0]/30 p-1 h-16 align-top cursor-pointer hover:bg-[#F5EDE4] transition-colors"
+          onclick="adminCalClick('${dateStr}','${day}')"
+          ondblclick="adminCalDayDetail('${dateStr}')">
+          <div class="flex items-center justify-center gap-0.5 mb-0.5">
+            <span class="${isToday ? 'w-5 h-5 bg-[#8B3E22] text-white rounded-full inline-flex items-center justify-center' : ''} text-[10px] font-${isToday?'bold':'medium'} text-${isToday?'white':'[#2C2416]'}">${day}</span>${dotA}
+          </div>
+          ${cellContent}
+        </td>`;
+        col++;
+        if (col % 7 === 0 && day < daysInMonth) html += `</tr><tr>`;
+      }
+      const rem = 7 - (col % 7);
+      if (rem < 7) for (let i = 0; i < rem; i++) html += `<td class="border border-[#D6CCC0]/30 p-1 h-16 bg-[#F5EDE4]/30"></td>`;
+      html += `</tr></tbody></table>`;
+      document.getElementById('admin-cal-grid').innerHTML = html;
+    }
+
+    window.adminCalNav = (dir) => { adminCalMonth += dir; if (adminCalMonth > 11) { adminCalMonth=0; adminCalYear++; } if (adminCalMonth < 0) { adminCalMonth=11; adminCalYear--; } renderAdminCal(); };
+
+    window.adminCalClick = (dateStr, day) => {
+      adminCalSel = dateStr;
+      const months = ['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+      const [y,m,d] = dateStr.split('-');
+      document.getElementById('admin-cal-date-label').textContent = `Note du ${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
+      const existing = adminCalNotes.find(n => n.date === dateStr);
+      document.getElementById('admin-cal-input').value = existing?.note || '';
+      const modal = document.getElementById('admin-cal-modal');
+      modal.classList.remove('hidden');
+      modal.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    };
+
+    window.saveAdminCalNote = async () => {
+      const sb2 = await getSB();
+      const note = document.getElementById('admin-cal-input').value.trim();
+      if (!note) return;
+      const existing = adminCalNotes.find(n => n.date === adminCalSel);
+      if (existing) {
+        await sb2.from('calendar_notes').update({ note }).eq('id', existing.id);
+      } else {
+        await sb2.from('calendar_notes').insert({ date: adminCalSel, note, created_by: session.user.id });
+      }
+      document.getElementById('admin-cal-modal').classList.add('hidden');
+      await loadAdminCalData();
+    };
+
+    loadAdminCalData();
+
+    // New client form
+    const form = document.getElementById('new-client-form');
+    document.getElementById('new-client-btn').onclick = () => form.classList.toggle('hidden');
+    document.getElementById('nc-cancel').onclick     = () => form.classList.add('hidden');
+
+    document.getElementById('nc-submit').onclick = async () => {
+      const email     = document.getElementById('nc-email').value.trim();
+      const name      = document.getElementById('nc-name').value.trim();
+      const instagram = document.getElementById('nc-instagram').value.trim().replace('@', '');
+      const phone     = document.getElementById('nc-phone').value.trim();
+      const offer     = document.getElementById('nc-offer').value;
+      const msgEl     = document.getElementById('nc-msg');
+      if (!email) { msgEl.textContent = 'Email obligatoire.'; msgEl.className = 'text-sm rounded-xl px-4 py-3 mb-3 text-red-600 bg-red-50'; return; }
+
+      // Envoyer email reset (agit comme invitation)
+      await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/espace-client/nouveau-mot-de-passe' });
+
+      // Créer/mettre à jour le profil
+      const { data: existing } = await sb.from('profiles').select('id').eq('email', email).single();
+      if (existing) {
+        await sb.from('profiles').update({ full_name: name, instagram_handle: instagram, phone, offer }).eq('email', email);
+      } else {
+        // Le profil sera créé par le trigger quand le client s'inscrira
+        // On stocke les infos en attendant via un upsert
+        await sb.from('profiles').upsert({ id: crypto.randomUUID(), email, full_name: name, instagram_handle: instagram, phone, offer, role: 'client' });
+      }
+
+      msgEl.textContent = `Invitation envoyée à ${email}.`;
+      msgEl.className = 'text-sm rounded-xl px-4 py-3 mb-3 text-green-700 bg-green-50';
+      msgEl.classList.remove('hidden');
+      loadClients();
+    };
+
+    // Switcher onglets principaux
+    window.switchMainTab = (tab) => {
+      ['clients','documents','contenus'].forEach(t => {
+        document.getElementById(`mtab-${t}-panel`).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById(`mtab-${t}`);
+        if (btn) {
+          btn.classList.toggle('bg-white', t === tab);
+          btn.classList.toggle('shadow-sm', t === tab);
+          btn.classList.toggle('text-[#2C2416]', t === tab);
+          btn.classList.toggle('text-[#2C2416]/50', t !== tab);
+        }
+      });
+      if (tab === 'documents') loadAllDocs();
+      if (tab === 'contenus')  loadAllContent();
+    };
+
+    // Charger tous les documents
+    window.loadAllDocs = async () => {
+      const sb = await getSB();
+      const { data: docs } = await sb.from('documents')
+        .select('*, profiles(full_name, email)')
+        .order('created_at', { ascending: false });
+      const el    = document.getElementById('docs-global-list');
+      const count = document.getElementById('docs-count');
+      if (!docs || !docs.length) { el.innerHTML = '<p class="text-sm text-[#2C2416]/40 italic">Aucun document envoyé.</p>'; return; }
+      if (count) count.textContent = `${docs.length} document${docs.length > 1 ? 's' : ''}`;
+      const TYPE_LABELS = { contrat:'Contrat', facture:'Facture', devis:'Devis', 'audit-instagram':'Audit Instagram', 'compte-rendu':'Compte rendu mensuel', post:'Post', reel:'Reel', carrousel:'Carrousel', planning:'Planning', audit:'Audit', autre:'Autre' };
+      el.innerHTML = docs.map(d => {
+        const client = d.profiles?.full_name || d.profiles?.email || '—';
+        const type   = TYPE_LABELS[d.type] || d.type || '—';
+        const date   = new Date(d.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+        return `<div class="bg-white rounded-xl p-4 border border-[#D6CCC0] flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl shrink-0"></iconify-icon>
+            <div class="min-w-0">
+              <a href="${d.file_url||'#'}" target="_blank" class="text-sm font-medium text-[#2C2416] hover:text-[#8B3E22] truncate block">${d.name || d.file_name || '—'}</a>
+              <p class="text-xs text-[#767A55]">${client}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <span class="text-xs px-2 py-0.5 bg-[#EDE6DB] text-[#767A55] rounded-full">${type}</span>
+            <span class="text-xs text-[#2C2416]/40">${date}</span>
+          </div>
+        </div>`;
+      }).join('');
+    };
+
+    // Charger tous les contenus à valider
+    window.loadAllContent = async () => {
+      const sb = await getSB();
+      const { data: items } = await sb.from('content_items')
+        .select('*, profiles(full_name, email)')
+        .order('created_at', { ascending: false });
+      const el    = document.getElementById('contents-global-list');
+      const count = document.getElementById('contents-count');
+      if (!items || !items.length) { el.innerHTML = '<p class="text-sm text-[#2C2416]/40 italic">Aucun contenu envoyé.</p>'; return; }
+      if (count) count.textContent = `${items.length} contenu${items.length > 1 ? 's' : ''}`;
+      el.innerHTML = items.map(item => {
+        const client  = item.profiles?.full_name || item.profiles?.email || '—';
+        const date    = new Date(item.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+        const badge   = item.status === 'approved'
+          ? '<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">Validé ✓</span>'
+          : item.status === 'rejected'
+          ? '<span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600">Refusé</span>'
+          : '<span class="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">En attente</span>';
+        const file = item.files && item.files.length && item.files[0].url
+          ? `<a href="${item.files[0].url}" target="_blank" class="text-xs text-[#8B3E22] hover:underline flex items-center gap-1 mt-1"><iconify-icon icon="solar:file-download-linear" stroke-width="1.5"></iconify-icon>${item.files[0].name||'Voir le fichier'}</a>` : '';
+        return `<div class="bg-white rounded-xl p-4 border border-[#D6CCC0]">
+          <div class="flex items-start justify-between gap-3 mb-2">
+            <div>
+              <p class="text-sm font-medium text-[#2C2416]">${item.title}</p>
+              <p class="text-xs text-[#767A55]">${client} · ${date}</p>
+              ${file}
+            </div>
+            ${badge}
+          </div>
+          ${item.description ? `<div class="bg-[#F5EDE4] rounded-lg p-3 mt-2"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Légende</p><p class="text-sm text-[#2C2416]/70 leading-relaxed">${item.description}</p></div>` : ''}
+        </div>`;
+      }).join('');
+    };
+
+    let allClients = [];
+
+    loadClients();
+    document.getElementById('refresh-btn').onclick = loadClients;
+    setInterval(loadClients, 30000);
+
+    // Recherche en temps réel
+    document.getElementById('client-search').addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      renderClients(q ? allClients.filter(c =>
+        (c.full_name||'').toLowerCase().includes(q) ||
+        (c.email||'').toLowerCase().includes(q) ||
+        (c.instagram_handle||'').toLowerCase().includes(q)
+      ) : allClients);
+    });
+
+    async function loadClients() {
+      const refreshIcon = document.querySelector('#refresh-btn iconify-icon');
+      if (refreshIcon) refreshIcon.classList.add('animate-spin');
+
+      // Charger clients + dernières activités en parallèle
+      const [{ data: clients }, { data: recentContent }, { data: recentUploads }] = await Promise.all([
+        sb.from('profiles').select('*').eq('role', 'client').order('created_at', { ascending: false }),
+        sb.from('content_items').select('client_id, status, updated_at').order('updated_at', { ascending: false }),
+        sb.from('client_uploads').select('client_id, name, created_at').order('created_at', { ascending: false }),
+      ]);
+
+      if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+
+      allClients = (clients || []).map(c => ({
+        ...c,
+        lastContent: recentContent?.find(i => i.client_id === c.id),
+        lastUpload:  recentUploads?.find(u => u.client_id === c.id),
+      }));
+
+      renderClients(allClients);
+    }
+
+    function renderClients(list) {
+      const el    = document.getElementById('clients-list');
+      const count = document.getElementById('clients-count');
+      if (count) count.textContent = `${list.length} client${list.length > 1 ? 's' : ''}`;
+
+      if (!list.length) {
+        el.innerHTML = '<p class="text-sm text-[#2C2416]/40 italic">Aucun client trouvé.</p>';
+        return;
+      }
+
+      const now = Date.now();
+      el.innerHTML = list.map(c => {
+        const createdAt = new Date(c.created_at);
+        const isNew     = (now - createdAt.getTime()) < 48 * 3600 * 1000;
+        const dateStr   = createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        // Dernière activité
+        let activity = '';
+        if (c.lastContent) {
+          const statusLabel = c.lastContent.status === 'approved' ? '✓ Contenu validé' : c.lastContent.status === 'rejected' ? '✗ Contenu refusé' : '⏳ Contenu en attente';
+          const when = new Date(c.lastContent.updated_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+          activity += `<span class="text-xs text-[#767A55]">${statusLabel} · ${when}</span>`;
+        }
+        if (c.lastUpload) {
+          const when = new Date(c.lastUpload.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+          activity += `${activity ? ' &nbsp;·&nbsp; ' : ''}<span class="text-xs text-[#767A55]">📎 ${c.lastUpload.name||'Fichier déposé'} · ${when}</span>`;
+        }
+
+        return `
+        <div class="bg-white rounded-2xl p-5 border ${isNew ? 'border-[#8B3E22]' : 'border-[#D6CCC0]'} cursor-pointer hover:border-[#8B3E22] transition-colors" onclick="openClient('${c.id}')">
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 bg-[#8B3E22]/10 rounded-full flex items-center justify-center text-[#8B3E22] font-medium text-sm shrink-0">
+                ${(c.full_name || c.email || '?')[0].toUpperCase()}
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <p class="font-medium text-[#2C2416] truncate">${c.full_name || c.email}</p>
+                  ${isNew ? '<span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full shrink-0">Nouveau</span>' : ''}
+                </div>
+                <p class="text-xs text-[#767A55] truncate">${c.email}${c.instagram_handle ? ' · @' + c.instagram_handle : ''}</p>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              ${c.offer ? `<span class="text-xs px-2 py-1 bg-[#8B3E22]/10 text-[#8B3E22] rounded-full block mb-1">${OFFER_MAP[c.offer] || c.offer}</span>` : ''}
+              <p class="text-xs text-[#2C2416]/40">Inscrit le ${dateStr}</p>
+            </div>
+          </div>
+          ${activity ? `<div class="mt-3 pt-3 border-t border-[#D6CCC0]/50 flex flex-wrap gap-2">${activity}</div>` : ''}
+        </div>`;
+      }).join('');
+    }
+
+    window.openClient = async (clientId) => {
+      document.getElementById('view-list').classList.add('hidden');
+      document.getElementById('view-client').classList.remove('hidden');
+
+      const sb = await getSB();
+      const [{ data: c }, { data: docs }, { data: content }, { data: uploads }, { data: igCred }] = await Promise.all([
+        sb.from('profiles').select('*').eq('id', clientId).single(),
+        sb.from('documents').select('*').eq('client_id', clientId).order('created_at', { ascending: false }),
+        sb.from('content_items').select('*').eq('client_id', clientId).order('created_at', { ascending: false }),
+        sb.from('client_uploads').select('*').eq('client_id', clientId).order('created_at', { ascending: false }),
+        sb.from('instagram_credentials').select('*').eq('client_id', clientId).single(),
+      ]);
+
+      const pending  = (content||[]).filter(i => i.status === 'pending').length;
+      const approved = (content||[]).filter(i => i.status === 'approved').length;
+      const rejected = (content||[]).filter(i => i.status === 'rejected').length;
+      const total    = (content||[]).length;
+
+      const statusBadge = s => s === 'approved'
+        ? '<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">Validé ✓</span>'
+        : s === 'rejected'
+        ? '<span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600">Refusé</span>'
+        : '<span class="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">En attente</span>';
+
+      document.getElementById('client-detail').innerHTML = `
+        <!-- En-tête client -->
+        <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0] mb-5">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 bg-[#8B3E22]/10 rounded-full flex items-center justify-center text-[#8B3E22] font-medium text-lg shrink-0">
+              ${(c?.full_name || c?.email || '?')[0].toUpperCase()}
+            </div>
+            <div>
+              <h2 class="text-xl text-[#2C2416] font-medium">${c?.full_name || c?.email}</h2>
+              <p class="text-sm text-[#767A55]">${c?.email} ${c?.instagram_handle ? '· @'+c.instagram_handle : ''}</p>
+            </div>
+            <div class="ml-auto shrink-0">
+              ${c?.offer ? `<span class="text-xs px-3 py-1 bg-[#8B3E22]/10 text-[#8B3E22] rounded-full">${OFFER_MAP[c.offer] || c.offer}</span>` : ''}
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="bg-[#F5EDE4] rounded-xl p-3 text-center">
+              <p class="text-2xl font-serif text-[#2C2416]">${total}</p>
+              <p class="text-xs text-[#767A55] mt-0.5">Contenus envoyés</p>
+            </div>
+            <div class="bg-yellow-50 rounded-xl p-3 text-center">
+              <p class="text-2xl font-serif text-yellow-700">${pending}</p>
+              <p class="text-xs text-yellow-600 mt-0.5">En attente</p>
+            </div>
+            <div class="bg-green-50 rounded-xl p-3 text-center">
+              <p class="text-2xl font-serif text-green-700">${approved}</p>
+              <p class="text-xs text-green-600 mt-0.5">Validés</p>
+            </div>
+            <div class="bg-[#EDE6DB] rounded-xl p-3 text-center">
+              <p class="text-2xl font-serif text-[#2C2416]">${uploads?.length || 0}</p>
+              <p class="text-xs text-[#767A55] mt-0.5">Fichiers reçus</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Onglets client -->
+        <div class="flex flex-wrap gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-5">
+          <button onclick="switchClientTab('contenu')"    id="ctab-contenu"    class="flex-1 py-2 text-xs font-medium rounded-lg bg-white text-[#2C2416] shadow-sm transition-all min-w-[70px]">Contenu</button>
+          <button onclick="switchClientTab('documents')"  id="ctab-documents"  class="flex-1 py-2 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] min-w-[70px]">Documents</button>
+          <button onclick="switchClientTab('infos')"      id="ctab-infos"      class="flex-1 py-2 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] min-w-[70px]">Infos</button>
+          <button onclick="switchClientTab('taches')"     id="ctab-taches"     class="flex-1 py-2 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] min-w-[70px]">Tâches</button>
+          <button onclick="switchClientTab('notes')"      id="ctab-notes"      class="flex-1 py-2 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] min-w-[70px]">Notes</button>
+          <button onclick="switchClientTab('fichiers')"   id="ctab-fichiers"   class="flex-1 py-2 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] min-w-[70px]">Fichiers</button>
+        </div>
+
+        <!-- Tab : Contenu -->
+        <div id="ctab-contenu-panel" class="space-y-4">
+          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+            <h3 class="text-sm font-medium text-[#2C2416] mb-3">Envoyer du contenu à valider</h3>
+            <!-- Tags type -->
+            <div class="mb-3">
+              <p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Type</p>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="selectContentType('post')"      id="ct-tag-post"      class="ct-tag px-3 py-1.5 rounded-full text-xs font-medium border bg-[#8B3E22] border-[#8B3E22] text-white transition-colors">Post</button>
+                <button type="button" onclick="selectContentType('reel')"      id="ct-tag-reel"      class="ct-tag px-3 py-1.5 rounded-full text-xs font-medium border border-[#D6CCC0] text-[#2C2416]/60 hover:border-[#8B3E22] hover:text-[#8B3E22] transition-colors">Reel</button>
+                <button type="button" onclick="selectContentType('carrousel')" id="ct-tag-carrousel" class="ct-tag px-3 py-1.5 rounded-full text-xs font-medium border border-[#D6CCC0] text-[#2C2416]/60 hover:border-[#8B3E22] hover:text-[#8B3E22] transition-colors">Carrousel</button>
+                <button type="button" onclick="selectContentType('planning')"  id="ct-tag-planning"  class="ct-tag px-3 py-1.5 rounded-full text-xs font-medium border border-[#D6CCC0] text-[#2C2416]/60 hover:border-[#8B3E22] hover:text-[#8B3E22] transition-colors">Calendrier éditorial</button>
+              </div>
+              <input type="hidden" id="ct-type" value="post" />
+            </div>
+            <input id="ct-title" type="text" placeholder="Titre *" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22]" />
+            <textarea id="ct-caption" placeholder="Légende / description du post Instagram" rows="3" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none"></textarea>
+            <!-- Date + heure de publication -->
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <label class="text-xs text-[#767A55] mb-1 block">Date de publication</label>
+                <input id="ct-date" type="date" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+              </div>
+              <div>
+                <label class="text-xs text-[#767A55] mb-1 block">Heure (format 24h)</label>
+                <input id="ct-time" type="time" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+              </div>
+            </div>
+            <!-- Zone fichier + preview -->
+            <div class="flex gap-3 items-start">
+              <!-- Miniature preview -->
+              <div class="w-16 h-16 rounded-xl border-2 border-dashed border-[#D6CCC0] bg-[#F5EDE4] flex items-center justify-center overflow-hidden shrink-0 relative" id="ct-preview-box">
+                <iconify-icon id="ct-preview-icon" icon="solar:image-add-linear" stroke-width="1.5" class="text-[#D6CCC0] text-2xl"></iconify-icon>
+                <img id="ct-preview-img" class="hidden absolute inset-0 w-full h-full object-cover" alt="preview" />
+                <a id="ct-preview-link" href="#" target="_blank" onclick="event.stopPropagation()"
+                   class="hidden absolute inset-0 bg-black/30 hover:bg-black/50 transition-colors">
+                  <iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-white text-lg absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></iconify-icon>
+                </a>
+              </div>
+              <!-- Input + bouton -->
+              <div class="flex-1">
+                <label class="flex items-center gap-2 px-3 py-2.5 border border-dashed border-[#D6CCC0] rounded-xl cursor-pointer hover:border-[#8B3E22] transition-colors">
+                  <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-[#767A55] text-base shrink-0"></iconify-icon>
+                  <span id="ct-file-label" class="text-xs text-[#767A55] truncate">Image, vidéo, PDF…</span>
+                  <input id="ct-file" type="file" accept="image/*,video/*,application/pdf" class="hidden" onchange="previewContentFile(this)" />
+                </label>
+                <button onclick="addContent('${clientId}')" class="mt-2 w-full py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Envoyer →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contenu envoyé avec détails complets -->
+          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-medium text-[#2C2416]">Contenu envoyé (${total})</h3>
+            </div>
+            ${content?.length ? `<div class="relative mb-3">
+              <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
+              <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'ct-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
+            </div>` : ''}
+            <div id="ct-items-box">
+            ${content?.length ? content.map(ct => {
+              let files = [];
+              try { files = Array.isArray(ct.files) ? ct.files : (ct.files ? JSON.parse(ct.files) : []); } catch(e) { files = []; }
+              const file0 = files[0];
+              const isImg = file0?.url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(file0.url);
+              // Type coloré extrait du titre [POST], [REEL]…
+              const tMatch = ct.title.match(/^\[([A-ZÉÈÀÙÂÊÎÔÛÇ\s\-]+)\]/i);
+              const tType  = tMatch ? tMatch[1].toUpperCase() : '';
+              const cleanT = ct.title.replace(/^\[[^\]]+\]\s*/, '') || ct.title;
+              const TYPE_COLORS = { 'POST':'bg-blue-100 text-blue-700', 'REEL':'bg-purple-100 text-purple-700', 'CARROUSEL':'bg-emerald-100 text-emerald-700', 'PLANNING':'bg-orange-100 text-orange-700', 'CALENDRIER ÉDITORIAL':'bg-orange-100 text-orange-700', 'AUDIT':'bg-gray-100 text-gray-500', 'AUDIT INSTAGRAM':'bg-gray-100 text-gray-500' };
+              const TYPE_HEX  = { 'POST':'#3B82F6','REEL':'#8B5CF6','CARROUSEL':'#10B981','PLANNING':'#F59E0B','CALENDRIER ÉDITORIAL':'#F59E0B','AUDIT':'#6B7280' };
+              const TYPE_ICON = { 'POST':'solar:image-linear','REEL':'solar:videocamera-linear','CARROUSEL':'solar:gallery-linear','PLANNING':'solar:calendar-linear','CALENDRIER ÉDITORIAL':'solar:calendar-linear' };
+              const TYPE_TAG  = { 'POST':'bg-blue-100 text-blue-700','REEL':'bg-purple-100 text-purple-700','CARROUSEL':'bg-emerald-100 text-emerald-700','PLANNING':'bg-orange-100 text-orange-700','CALENDRIER ÉDITORIAL':'bg-orange-100 text-orange-700','AUDIT':'bg-gray-100 text-gray-500' };
+              const tHex  = TYPE_HEX[tType]  || '#8B3E22';
+              const tIcon = TYPE_ICON[tType] || 'solar:document-text-linear';
+              const tTagC = TYPE_TAG[tType]  || 'bg-[#8B3E22]/10 text-[#8B3E22]';
+              const typeTag = tType ? `<span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${tTagC} uppercase tracking-wide">${tType}</span>` : '';
+              const schedDate = ct.scheduled_at
+                ? new Date(ct.scheduled_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) + ' · ' + new Date(ct.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
+                : new Date(ct.created_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+              const shortDesc = ct.description ? `<p class="text-xs text-[#767A55] line-clamp-2 mt-1 leading-relaxed">${ct.description.slice(0,100)}</p>` : '';
+              const captionBlock = ct.description ? `<div class="bg-[#F5EDE4] rounded-lg p-3 mb-2 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Légende</p><p class="text-sm text-[#2C2416]/75 leading-relaxed whitespace-pre-wrap">${ct.description}</p></div>` : '';
+              const feedbackBlock = ct.feedback ? `<div class="bg-yellow-50 rounded-lg p-3 border border-yellow-200 mt-2"><p class="text-xs text-yellow-700 uppercase tracking-widest mb-1">Note du client</p><p class="text-sm text-yellow-800 leading-relaxed">${ct.feedback}</p></div>` : '';
+              const fileBlock = file0?.url && !isImg ? `<a href="${file0.url}" target="_blank" class="flex items-center gap-3 p-3 bg-[#EDE6DB] rounded-xl hover:bg-[#D6CCC0] transition-colors mb-3"><iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] text-2xl shrink-0"></iconify-icon><span class="text-sm text-[#2C2416] truncate">${file0.name||'Ouvrir'}</span><iconify-icon icon="solar:arrow-right-up-linear" stroke-width="1.5" class="text-[#8B3E22] shrink-0 ml-auto"></iconify-icon></a>` : '';
+              const replyPanel = ct.status === 'rejected' ? `<div id="reply-${ct.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Envoyer une nouvelle version</p><select id="reply-type-${ct.id}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 bg-white focus:outline-none focus:border-[#8B3E22]"><option value="post">Post</option><option value="reel">Reel</option><option value="carrousel">Carrousel</option><option value="planning">Planning</option></select><textarea id="reply-caption-${ct.id}" placeholder="Nouvelle légende…" rows="3" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none"></textarea><input id="reply-file-${ct.id}" type="file" accept="image/*,video/*" class="block text-xs text-[#767A55] mb-2 cursor-pointer w-full" /><button onclick="sendReply('${ct.id}','${clientId}')" class="w-full py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Envoyer →</button></div>` : '';
+              const editPanel = `<div id="edit-${ct.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Modifier ce contenu</p><input id="edit-title-${ct.id}" type="text" value="${ct.title.replace(/"/g,'&quot;')}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] bg-white" /><textarea id="edit-caption-${ct.id}" rows="4" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none bg-white">${ct.description||''}</textarea><div class="mb-3"><p class="text-xs text-[#767A55] mb-1">Remplacer le fichier (optionnel)</p><input id="edit-file-${ct.id}" type="file" accept="image/*,video/*" class="block text-xs text-[#767A55] cursor-pointer w-full" /></div><div class="flex gap-2"><button onclick="saveContentEdit('${ct.id}','${clientId}')" class="flex-1 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer les modifications</button><button onclick="document.getElementById('edit-${ct.id}').classList.add('hidden')" class="px-4 py-2 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-sm hover:bg-[#EDE6DB] transition-colors">Annuler</button></div></div>`;
+
+              return `
+              <div class="border ${ct.status === 'rejected' ? 'border-red-200' : 'border-[#D6CCC0]'} rounded-xl mb-3 overflow-hidden" data-search="${ct.title.toLowerCase()}">
+                <div class="flex hover:bg-[#F5EDE4]/20 transition-colors">
+                  <!-- Visuel gauche — hauteur fixe pour que object-fit fonctionne -->
+                  <div onclick="toggleContentDetail('${ct.id}')" class="w-24 sm:w-32 shrink-0 overflow-hidden rounded-l-xl flex items-center justify-center cursor-pointer" style="background:${tHex}18; height:104px">
+                    ${isImg
+                      ? `<img src="${file0.url}" alt="visuel" style="width:100%;height:104px;object-fit:cover;display:block" />`
+                      : `<iconify-icon icon="${tIcon}" stroke-width="1.5" style="color:${tHex};font-size:2.5rem"></iconify-icon>`
+                    }
+                  </div>
+                  <!-- Infos droite -->
+                  <div onclick="toggleContentDetail('${ct.id}')" class="flex-1 p-4 min-w-0 cursor-pointer">
+                    <div class="flex items-start justify-between gap-2 mb-1.5">
+                      <div class="flex flex-wrap items-center gap-2 min-w-0">
+                        ${typeTag}
+                        <p class="font-semibold text-[#2C2416] text-sm truncate">${cleanT}</p>
+                      </div>
+                      <div class="flex items-center gap-1 shrink-0 ml-1" onclick="event.stopPropagation()">
+                        ${file0?.url ? `<a href="${file0.url}" target="_blank" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors" title="Ouvrir le fichier"><iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon></a>` : ''}
+                        <button onclick="toggleContentDetail('${ct.id}')" class="p-1.5 text-[#767A55] hover:bg-[#EDE6DB] rounded-lg transition-colors" title="Voir la publication">
+                          <iconify-icon icon="solar:maximize-square-2-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+                        </button>
+                        ${statusBadge(ct.status)}
+                        <iconify-icon id="chevron-${ct.id}" icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform"></iconify-icon>
+                      </div>
+                    </div>
+                    ${shortDesc}
+                    <p class="text-xs text-[#767A55] mt-1.5">${schedDate}</p>
+                  </div>
+                </div>
+                <div id="detail-${ct.id}" class="hidden border-t border-[#D6CCC0]/50 p-4">
+                  ${fileBlock}${captionBlock}${feedbackBlock}
+                  <div class="flex gap-2 mt-3 flex-wrap">
+                    <button onclick="toggleEdit('${ct.id}')" class="px-4 py-2 border border-[#8B3E22] text-[#8B3E22] rounded-full text-xs font-medium hover:bg-[#8B3E22]/10 transition-colors">✏️ Modifier</button>
+                    ${ct.status === 'rejected' ? `<button onclick="replyToRefused('${ct.id}','${clientId}')" class="px-4 py-2 border border-[#2C2416] text-[#2C2416] rounded-full text-xs font-medium hover:bg-[#EDE6DB] transition-colors">↩ Nouvelle version</button>` : ''}
+                    <button onclick="deleteContent('${ct.id}','${file0?.url ? file0.url.replace(/'/g,"\\'") : ''}','${clientId}')" class="px-4 py-2 border border-red-300 text-red-500 rounded-full text-xs font-medium hover:bg-red-50 transition-colors">🗑 Supprimer</button>
+                  </div>
+                  ${editPanel}${replyPanel}
+                </div>
+              </div>`;
+            }).join('') : '<p class="text-xs text-[#2C2416]/30 italic">Aucun contenu envoyé</p>'}
+            </div>
+          </div>
+
+          <!-- Calendrier éditorial (en bas du tab Contenu) -->
+          <div class="bg-white rounded-2xl border border-[#D6CCC0] overflow-hidden">
+            <div id="cal-main-view">
+              <div class="flex items-center justify-between p-4 border-b border-[#D6CCC0]/50">
+                <div class="flex items-center gap-2">
+                  <iconify-icon icon="solar:calendar-linear" stroke-width="1.5" class="text-[#8B3E22] text-lg"></iconify-icon>
+                  <div>
+                    <h3 class="text-sm font-medium text-[#2C2416]">Calendrier éditorial</h3>
+                    <p class="text-[10px] text-[#767A55]">Clic = détail · Double-clic = plein format</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button onclick="clientCalNav(-1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon></button>
+                  <div class="relative">
+                    <button id="client-cal-label" onclick="clientToggleMonthPicker(event)" class="text-xs font-semibold text-[#2C2416] min-w-[120px] text-center px-2 py-1 rounded-lg hover:bg-[#EDE6DB] cursor-pointer transition-colors"></button>
+                    <div id="client-month-picker" class="hidden absolute top-9 left-1/2 bg-white rounded-xl shadow-2xl border border-[#D6CCC0] p-3 z-50" style="min-width:216px;transform:translateX(-50%)">
+                      <div class="grid grid-cols-3 gap-1">
+                        ${'Janvier,Février,Mars,Avril,Mai,Juin,Juillet,Août,Septembre,Octobre,Novembre,Décembre'.split(',').map((m,i)=>`<button onclick="clientCalGoToMonth(${i},event)" class="py-2 text-xs rounded-lg hover:bg-[#8B3E22] hover:text-white transition-colors text-[#2C2416] font-medium">${m.slice(0,3)}</button>`).join('')}
+                      </div>
+                    </div>
+                  </div>
+                  <button onclick="clientCalNav(1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon></button>
+                  <button onclick="clientCalOpenNoteForm()" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors ml-1" title="Ajouter une note"><iconify-icon icon="solar:pen-linear" stroke-width="1.5"></iconify-icon></button>
+                </div>
+              </div>
+              <div class="p-4 overflow-x-auto" id="client-cal-grid"></div>
+              <div id="client-cal-note-modal" class="hidden mx-4 mb-4 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30">
+                <p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Ajouter / modifier une note</p>
+                <input id="client-cal-date-picker" type="date" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white mb-2" />
+                <textarea id="client-cal-input" rows="2" placeholder="Votre note…" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none bg-white mb-2"></textarea>
+                <div class="flex gap-2">
+                  <button onclick="saveClientCalNote()" class="px-4 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
+                  <button onclick="document.getElementById('client-cal-note-modal').classList.add('hidden')" class="px-4 py-1.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs hover:bg-[#EDE6DB] transition-colors">Annuler</button>
+                </div>
+              </div>
+            </div>
+            <!-- Vue jour plein format -->
+            <div id="cal-fullday-view" class="hidden p-6">
+              <button onclick="closeClientCalFullDay()" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors mb-5">
+                <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon> Retour au calendrier
+              </button>
+              <h3 id="cal-fullday-title" class="text-xl font-medium text-[#2C2416] mb-5"></h3>
+              <div id="cal-fullday-content" class="space-y-4"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab : Documents, contrats, factures -->
+        <div id="ctab-documents-panel" class="hidden space-y-4">
+          <!-- Formulaire dépôt -->
+          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+            <h3 class="text-sm font-medium text-[#2C2416] mb-3">Déposer un document</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+              <input id="doc-name" type="text" placeholder="Nom du document *" class="px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+              <select id="doc-type" onchange="toggleDocTypeOther('doc-type','doc-type-custom')" class="px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white">
+                <option value="contrat">Contrat</option>
+                <option value="facture">Facture</option>
+                <option value="devis">Devis</option>
+                <option value="audit-instagram">Audit Instagram</option>
+                <option value="compte-rendu">Compte rendu mensuel</option>
+                <option value="autre">Autre document…</option>
+              </select>
+            </div>
+            <input id="doc-type-custom" type="text" placeholder="Précisez le type de document" class="hidden w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] mb-1" />
+            <div class="flex gap-3 items-end">
+              <input id="doc-file" type="file" class="flex-1 text-xs text-[#767A55] cursor-pointer" />
+              <button onclick="uploadDoc('${clientId}')" class="px-5 py-2.5 bg-[#2C2416] text-white rounded-xl text-sm font-medium hover:bg-[#8B3E22] transition-colors shrink-0">Déposer</button>
+            </div>
+          </div>
+
+          <!-- Liste des documents déposés -->
+          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+            <h3 class="text-sm font-medium text-[#2C2416] mb-3">Documents déposés (${docs?.length||0})</h3>
+            ${docs?.length ? `<div class="relative mb-3">
+              <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
+              <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'doc-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
+            </div>` : ''}
+            <div id="doc-items-box">
+            ${docs?.length ? docs.map(d => {
+              const label   = d.name || d.file_name || 'Document';
+              const typeMap = { contrat:'Contrat', facture:'Facture', devis:'Devis', 'audit-instagram':'Audit Instagram', 'compte-rendu':'Compte rendu mensuel', autre:'Autre' };
+              const type    = typeMap[d.type] || d.type || '';
+              const date    = new Date(d.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+              const isImg   = d.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(d.file_url);
+              const safeUrl = (d.file_url||'').replace(/'/g,"\\'");
+              return `
+              <div class="border-b border-[#D6CCC0]/40 last:border-0 pb-3 mb-3 last:mb-0 last:pb-0" data-search="${label.toLowerCase()} ${(d.type||'').toLowerCase()}">
+                <div class="flex items-center gap-3">
+                  ${isImg
+                    ? `<a href="${d.file_url}" target="_blank" class="w-10 h-10 rounded-lg overflow-hidden shrink-0 hover:opacity-80 transition-opacity"><img src="${d.file_url}" class="w-full h-full object-cover" /></a>`
+                    : `<div class="w-10 h-10 bg-[#8B3E22]/10 rounded-lg flex items-center justify-center shrink-0"><iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl"></iconify-icon></div>`
+                  }
+                  <div class="flex-1 min-w-0">
+                    <a href="${d.file_url||'#'}" target="_blank" class="text-sm font-medium text-[#2C2416] hover:text-[#8B3E22] transition-colors truncate block">${label}</a>
+                    <p class="text-xs text-[#767A55]">${type ? type + ' · ' : ''}${date}</p>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    ${d.file_url ? `<a href="${d.file_url}" target="_blank" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors" title="Ouvrir">
+                      <iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+                    </a>` : ''}
+                    <button onclick="toggleDocEdit('${d.id}')" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors" title="Modifier">
+                      <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+                    </button>
+                    <button onclick="deleteDoc('${d.id}','${safeUrl}','${clientId}')" class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Supprimer">
+                      <iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+                    </button>
+                  </div>
+                </div>
+                <!-- Formulaire d'édition inline -->
+                <div id="doc-edit-${d.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30">
+                  <p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Modifier ce document</p>
+                  ${(() => {
+                    const PRED = ['contrat','facture','devis','audit-instagram','compte-rendu','autre'];
+                    const selVal   = PRED.includes(d.type) ? d.type : 'autre';
+                    const custVal  = (!PRED.includes(d.type) && d.type) ? d.type.replace(/"/g,'&quot;') : '';
+                    const showCust = selVal === 'autre';
+                    return `
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                    <input id="doc-edit-name-${d.id}" type="text" value="${label.replace(/"/g,'&quot;')}" class="px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" placeholder="Nom du document" />
+                    <select id="doc-edit-type-${d.id}" onchange="toggleDocTypeOther('doc-edit-type-${d.id}','doc-edit-type-custom-${d.id}')" class="px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white">
+                      <option value="contrat"         ${selVal==='contrat'?'selected':''}>Contrat</option>
+                      <option value="facture"         ${selVal==='facture'?'selected':''}>Facture</option>
+                      <option value="devis"           ${selVal==='devis'?'selected':''}>Devis</option>
+                      <option value="audit-instagram" ${selVal==='audit-instagram'?'selected':''}>Audit Instagram</option>
+                      <option value="compte-rendu"    ${selVal==='compte-rendu'?'selected':''}>Compte rendu mensuel</option>
+                      <option value="autre"           ${selVal==='autre'?'selected':''}>Autre document…</option>
+                    </select>
+                  </div>
+                  <input id="doc-edit-type-custom-${d.id}" type="text" value="${custVal}" placeholder="Précisez le type" class="${showCust ? '' : 'hidden'} w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white mb-2" />`;
+                  })()}
+                  <div class="mb-3">
+                    <p class="text-xs text-[#767A55] mb-1">Remplacer le fichier (optionnel)</p>
+                    <input id="doc-edit-file-${d.id}" type="file" class="block text-xs text-[#767A55] cursor-pointer w-full" />
+                  </div>
+                  <div class="flex gap-2">
+                    <button onclick="saveDocEdit('${d.id}','${safeUrl}','${clientId}')" class="flex-1 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">
+                      Enregistrer
+                    </button>
+                    <button onclick="toggleDocEdit('${d.id}')" class="px-4 py-2 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-sm hover:bg-[#EDE6DB] transition-colors">
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              </div>`;
+            }).join('') : '<p class="text-xs text-[#2C2416]/30 italic">Aucun document déposé</p>'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab : Infos client -->
+        <div id="ctab-infos-panel" class="hidden bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+          <h3 class="text-base font-medium text-[#2C2416] mb-5">Informations du client</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Nom complet</label>
+              <input id="ci-name"  type="text" value="${c?.full_name||''}" class="w-full px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" /></div>
+            <div><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Téléphone</label>
+              <input id="ci-phone" type="tel" value="${c?.phone||''}" class="w-full px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" /></div>
+            <div><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Instagram</label>
+              <input id="ci-insta" type="text" value="${c?.instagram_handle||''}" class="w-full px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" /></div>
+            <div><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Offre</label>
+              <select id="ci-offer" class="w-full px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white">
+                <option value="">—</option>
+                <option value="audit" ${c?.offer==='audit'?'selected':''}>Audit Instagram</option>
+                <option value="pack" ${c?.offer==='pack'?'selected':''}>Pack Contenu</option>
+                <option value="mensuel" ${c?.offer==='mensuel'?'selected':''}>Accompagnement Mensuel</option>
+              </select></div>
+          </div>
+          ${igCred?.password ? `
+          <div class="sm:col-span-2">
+            <label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Mot de passe Instagram</label>
+            <div class="flex items-center gap-2">
+              <input id="ci-ig-pwd-display" type="password" value="${igCred.password.replace(/"/g,'&quot;')}" readonly class="flex-1 px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm bg-[#F5EDE4]/50 text-[#2C2416]" />
+              <button onclick="document.getElementById('ci-ig-pwd-display').type=document.getElementById('ci-ig-pwd-display').type==='password'?'text':'password'" class="p-2.5 border border-[#D6CCC0] rounded-xl text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] transition-colors" title="Afficher/masquer">
+                <iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+              </button>
+            </div>
+            <p class="text-[10px] text-[#767A55] mt-1">Mis à jour le ${new Date(igCred.updated_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}</p>
+          </div>` : `
+          <div class="sm:col-span-2">
+            <p class="text-xs text-[#767A55] italic">Aucun mot de passe Instagram enregistré par ce client.</p>
+          </div>`}
+          <div id="ci-msg" class="hidden text-sm rounded-xl px-4 py-3 mb-3 sm:col-span-2"></div>
+          <button onclick="saveClientInfo('${clientId}')" class="px-6 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
+        </div>
+
+        <!-- Tab : Tâches -->
+        <div id="ctab-taches-panel" class="hidden space-y-4">
+          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-8 h-8 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+                <iconify-icon icon="solar:checklist-minimalistic-linear" stroke-width="1.5" class="text-base text-[#8B3E22]"></iconify-icon>
+              </div>
+              <h3 class="text-sm font-medium text-[#2C2416]">Tâches partagées</h3>
+            </div>
+            <div id="admin-tasks-list" class="space-y-1.5 mb-4">
+              <p class="text-xs text-[#2C2416]/30 italic">Chargement…</p>
+            </div>
+            <div class="flex gap-2">
+              <input id="admin-new-task-input" type="text" placeholder="Ajouter une tâche…"
+                onkeydown="if(event.key==='Enter') addAdminTask('${clientId}')"
+                class="flex-1 px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+              <button onclick="addAdminTask('${clientId}')" class="px-4 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab : Notes -->
+        <div id="ctab-notes-panel" class="hidden space-y-4">
+          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+            <h3 class="text-sm font-medium text-[#2C2416] mb-1">Notes du client</h3>
+            <p class="text-xs text-[#767A55] mb-3">Messages envoyés par le client depuis son espace.</p>
+            <div id="admin-client-notes-feed" class="space-y-2.5 max-h-52 overflow-y-auto pr-1">
+              <p class="text-xs text-[#2C2416]/30 italic">Chargement…</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+            <h3 class="text-sm font-medium text-[#2C2416] mb-1">Mes notes sur ce client</h3>
+            <p class="text-xs text-[#767A55] mb-3">Visible uniquement par toi — préférences, contexte, remarques sur la collaboration.</p>
+            <textarea id="notes-client" rows="4" placeholder="Ex: préfère WhatsApp, publie le mardi, cible 25-40 ans…" class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none">${c?.notes||''}</textarea>
+          </div>
+          <div class="bg-[#EDE6DB] rounded-2xl p-5">
+            <h3 class="text-sm font-medium text-[#2C2416] mb-1">Notes personnelles</h3>
+            <p class="text-xs text-[#767A55] mb-3">Tes réflexions privées, idées de contenu, retours internes.</p>
+            <textarea id="notes-admin" rows="4" placeholder="Idées de posts, prochains thèmes, retours internes…" class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] bg-white text-sm focus:outline-none focus:border-[#8B3E22] resize-none">${c?.admin_notes||''}</textarea>
+          </div>
+          <div id="notes-msg" class="hidden text-sm rounded-xl px-4 py-3"></div>
+          <button onclick="saveNotes('${clientId}')" class="px-6 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer les notes</button>
+        </div>
+
+        <!-- Tab : Fichiers reçus -->
+        <div id="ctab-fichiers-panel" class="hidden bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+          <h3 class="text-sm font-medium text-[#2C2416] mb-3">Fichiers déposés par le client (${uploads?.length||0})</h3>
+          ${uploads?.length ? `<div class="relative mb-3">
+            <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
+            <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'file-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
+          </div>` : ''}
+          <div id="file-items-box" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            ${uploads?.length ? uploads.map(u => {
+              const isImg = u.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(u.file_url);
+              const date  = new Date(u.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+              const deleteBtn = `<button onclick="event.stopPropagation();deleteUpload('${u.id}','${(u.file_url||'').replace(/'/g,"\\'")}', '${clientId}')"
+                class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0" title="Supprimer">
+                <iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+              </button>`;
+              return isImg
+                ? `<div class="relative group" data-search="${u.name.toLowerCase()}">
+                     <a href="${u.file_url}" target="_blank" class="block">
+                       <div class="rounded-xl overflow-hidden bg-[#EDE6DB] aspect-square mb-1 hover:opacity-90 transition-opacity">
+                         <img src="${u.file_url}" alt="${u.name}" class="w-full h-full object-cover" />
+                       </div>
+                       <p class="text-xs text-[#2C2416]/60 truncate pr-6">${u.name} · ${date}</p>
+                     </a>
+                     <div class="absolute top-1 right-1">${deleteBtn}</div>
+                   </div>`
+                : `<div class="flex items-center gap-3 p-3 bg-[#EDE6DB] rounded-xl" data-search="${u.name.toLowerCase()}">
+                     <a href="${u.file_url||'#'}" target="_blank" class="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+                       <iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] text-2xl shrink-0"></iconify-icon>
+                       <div class="min-w-0">
+                         <p class="text-sm text-[#2C2416] truncate">${u.name}</p>
+                         <p class="text-xs text-[#767A55]">${date}</p>
+                       </div>
+                     </a>
+                     ${deleteBtn}
+                   </div>`;
+            }).join('') : '<p class="text-xs text-[#2C2416]/30 italic">Aucun fichier reçu</p>'}
+          </div>
+        </div>
+
+      `;
+    };
+
+    // Supprimer un document
+    window.deleteDoc = async (docId, fileUrl, clientId) => {
+      if (!confirm('Supprimer ce document ? Le client ne pourra plus y accéder.')) return;
+      const sb = await getSB();
+      try {
+        const url = new URL(fileUrl);
+        const pathParts = url.pathname.split('/documents/');
+        if (pathParts[1]) await sb.storage.from('documents').remove([decodeURIComponent(pathParts[1])]);
+      } catch(e) {}
+      await sb.from('documents').delete().eq('id', docId);
+      await window.openClient(clientId);
+      switchClientTab('documents');
+    };
+
+    // Switcher d'onglets client
+    window.switchClientTab = (tab) => {
+      ['contenu','documents','infos','taches','notes','fichiers'].forEach(t => {
+        const panel = document.getElementById(`ctab-${t}-panel`);
+        if (panel) panel.classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById(`ctab-${t}`);
+        if (btn) {
+          btn.classList.toggle('bg-white', t === tab);
+          btn.classList.toggle('shadow-sm', t === tab);
+          btn.classList.toggle('text-[#2C2416]', t === tab);
+          btn.classList.toggle('text-[#2C2416]/50', t !== tab);
+        }
+      });
+      if (tab === 'contenu') loadClientCal();
+      if (tab === 'taches')  loadAdminTasks(window._currentAdminClientId);
+      if (tab === 'notes')   loadAdminClientNotes(window._currentAdminClientId);
+    };
+
+    // Sauvegarder infos client
+    window.saveClientInfo = async (clientId) => {
+      const sb  = await getSB();
+      const msg = document.getElementById('ci-msg');
+      const { error } = await sb.from('profiles').update({
+        full_name:        document.getElementById('ci-name').value.trim(),
+        phone:            document.getElementById('ci-phone').value.trim(),
+        instagram_handle: document.getElementById('ci-insta').value.trim().replace('@',''),
+        offer:            document.getElementById('ci-offer').value,
+      }).eq('id', clientId);
+      msg.className = `text-sm rounded-xl px-4 py-3 mb-3 ${error ? 'text-red-600 bg-red-50' : 'text-green-700 bg-green-50'}`;
+      msg.textContent = error ? 'Erreur.' : 'Informations mises à jour ✓';
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 3000);
+    };
+
+    // Sauvegarder notes
+    // Supprimer un fichier client (DB + Storage)
+    window.deleteUpload = async (uploadId, fileUrl, clientId) => {
+      if (!confirm('Supprimer ce fichier ? Cette action est irréversible.')) return;
+      const sb = await getSB();
+      // Extraire le path du fichier dans le bucket
+      try {
+        const url = new URL(fileUrl);
+        const pathParts = url.pathname.split('/client-uploads/');
+        if (pathParts[1]) {
+          await sb.storage.from('client-uploads').remove([decodeURIComponent(pathParts[1])]);
+        }
+      } catch(e) {}
+      await sb.from('client_uploads').delete().eq('id', uploadId);
+      await window.openClient(clientId);
+    };
+
+    // Répondre à un contenu refusé (envoyer nouvelle version)
+    window.replyToRefused = (contentId, clientId) => {
+      const panel = document.getElementById('reply-' + contentId);
+      if (panel) panel.classList.toggle('hidden');
+    };
+
+    window.sendReply = async (contentId, clientId) => {
+      const sb      = await getSB();
+      const type    = document.getElementById('reply-type-' + contentId).value;
+      const caption = document.getElementById('reply-caption-' + contentId).value.trim();
+      const file    = document.getElementById('reply-file-' + contentId).files?.[0];
+      let fileUrl = '', fileName = '';
+      if (file) {
+        const path = `${clientId}/${Date.now()}-${file.name}`;
+        const { data } = await sb.storage.from('content').upload(path, file);
+        if (data) { fileUrl = sb.storage.from('content').getPublicUrl(path).data.publicUrl; fileName = file.name; }
+      }
+      // Créer un nouvel item en réponse
+      await sb.from('content_items').insert({
+        client_id: clientId,
+        title: `[${type.toUpperCase()}] Nouvelle version`,
+        description: caption,
+        status: 'pending',
+        files: fileUrl ? [{ url: fileUrl, name: fileName }] : [],
+      });
+      await window.openClient(clientId);
+    };
+
+    window.toggleContentDetail = (id) => {
+      const detail  = document.getElementById('detail-' + id);
+      const chevron = document.getElementById('chevron-' + id);
+      if (!detail) return;
+      detail.classList.toggle('hidden');
+      chevron.classList.toggle('rotate-180');
+    };
+
+    window.toggleEdit = (id) => {
+      const panel = document.getElementById('edit-' + id);
+      if (panel) panel.classList.toggle('hidden');
+    };
+
+    window.saveContentEdit = async (contentId, clientId) => {
+      const sb    = await getSB();
+      const title = document.getElementById('edit-title-' + contentId)?.value.trim();
+      const desc  = document.getElementById('edit-caption-' + contentId)?.value.trim();
+      const file  = document.getElementById('edit-file-' + contentId)?.files?.[0];
+
+      const update = { title, description: desc, updated_at: new Date().toISOString() };
+
+      if (file) {
+        const path = `${clientId}/${Date.now()}-${file.name}`;
+        const { data } = await sb.storage.from('content').upload(path, file);
+        if (data) {
+          const url = sb.storage.from('content').getPublicUrl(path).data.publicUrl;
+          update.files = [{ url, name: file.name }];
+        }
+      }
+
+      const { error } = await sb.from('content_items').update(update).eq('id', contentId);
+      if (error) { alert('Erreur lors de la sauvegarde.'); return; }
+      await window.openClient(clientId);
+    };
+
+    window.filterBySearch = (input, containerId) => {
+      const q = input.value.trim().toLowerCase();
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.querySelectorAll('[data-search]').forEach(el => {
+        el.style.display = (el.dataset.search || '').includes(q) ? '' : 'none';
+      });
+    };
+
+    window.selectContentType = (type) => {
+      document.getElementById('ct-type').value = type;
+      document.querySelectorAll('.ct-tag').forEach(btn => {
+        const active = btn.id === 'ct-tag-' + type;
+        btn.classList.toggle('bg-[#8B3E22]',     active);
+        btn.classList.toggle('border-[#8B3E22]', active);
+        btn.classList.toggle('text-white',        active);
+        btn.classList.toggle('border-[#D6CCC0]', !active);
+        btn.classList.toggle('text-[#2C2416]/60',!active);
+      });
+    };
+
+    window.previewContentFile = (input) => {
+      const file     = input.files?.[0];
+      const img      = document.getElementById('ct-preview-img');
+      const icon     = document.getElementById('ct-preview-icon');
+      const link     = document.getElementById('ct-preview-link');
+      const label    = document.getElementById('ct-file-label');
+      if (!file) {
+        img.classList.add('hidden'); img.src = '';
+        icon.classList.remove('hidden');
+        link.classList.add('hidden'); link.href = '#';
+        label.textContent = 'Image, vidéo, PDF…';
+        return;
+      }
+      label.textContent = file.name.length > 22 ? file.name.slice(0,22)+'…' : file.name;
+      const objectUrl = URL.createObjectURL(file);
+      link.href = objectUrl;
+      link.classList.remove('hidden');
+      if (file.type.startsWith('image/')) {
+        img.src = objectUrl;
+        img.classList.remove('hidden');
+        icon.classList.add('hidden');
+      } else {
+        img.classList.add('hidden');
+        icon.setAttribute('icon', file.type.includes('video') ? 'solar:videocamera-add-linear' : 'solar:file-text-linear');
+        icon.classList.remove('hidden');
+        icon.style.color = '#8B3E22';
+      }
+    };
+
+    window.toggleDocTypeOther = (selectId, inputId) => {
+      const sel = document.getElementById(selectId);
+      const inp = document.getElementById(inputId);
+      if (!sel || !inp) return;
+      inp.classList.toggle('hidden', sel.value !== 'autre');
+      if (sel.value === 'autre') inp.focus();
+    };
+
+    window.deleteContent = async (contentId, fileUrl, clientId) => {
+      if (!confirm('Supprimer ce contenu ? Le client ne pourra plus y accéder.')) return;
+      const sb = await getSB();
+      try {
+        if (fileUrl) {
+          const url = new URL(fileUrl);
+          const parts = url.pathname.split('/content/');
+          if (parts[1]) await sb.storage.from('content').remove([decodeURIComponent(parts[1])]);
+        }
+      } catch(e) {}
+      await sb.from('content_items').delete().eq('id', contentId);
+      await window.openClient(clientId);
+    };
+
+    window.toggleDocEdit = (id) => {
+      const panel = document.getElementById('doc-edit-' + id);
+      if (panel) panel.classList.toggle('hidden');
+    };
+
+    window.saveDocEdit = async (docId, oldFileUrl, clientId) => {
+      const sb   = await getSB();
+      const name = document.getElementById('doc-edit-name-' + docId)?.value.trim();
+      let   type = document.getElementById('doc-edit-type-' + docId)?.value;
+      if (type === 'autre') {
+        const custom = document.getElementById('doc-edit-type-custom-' + docId)?.value.trim();
+        if (custom) type = custom;
+      }
+      const file = document.getElementById('doc-edit-file-' + docId)?.files?.[0];
+
+      const update = { name, type, updated_at: new Date().toISOString() };
+
+      if (file) {
+        // Upload du nouveau fichier
+        const path = `${clientId}/${Date.now()}-${file.name}`;
+        const { data } = await sb.storage.from('documents').upload(path, file);
+        if (data) {
+          update.file_url = sb.storage.from('documents').getPublicUrl(path).data.publicUrl;
+          // Supprimer l'ancien fichier du bucket
+          try {
+            const url = new URL(oldFileUrl);
+            const parts = url.pathname.split('/documents/');
+            if (parts[1]) await sb.storage.from('documents').remove([decodeURIComponent(parts[1])]);
+          } catch(e) {}
+        }
+      }
+
+      const { error } = await sb.from('documents').update(update).eq('id', docId);
+      if (error) { alert('Erreur lors de la sauvegarde.'); return; }
+      await window.openClient(clientId);
+      window.switchClientTab('documents');
+    };
+
+    window.saveNotes = async (clientId) => {
+      const sb  = await getSB();
+      const msg = document.getElementById('notes-msg');
+      const { error } = await sb.from('profiles').update({
+        notes:       document.getElementById('notes-client').value,
+        admin_notes: document.getElementById('notes-admin').value,
+      }).eq('id', clientId);
+      msg.className = `text-sm rounded-xl px-4 py-3 ${error ? 'text-red-600 bg-red-50' : 'text-green-700 bg-green-50'}`;
+      msg.textContent = error ? 'Erreur.' : 'Notes enregistrées ✓';
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 3000);
+    };
+
+    document.getElementById('back-btn').onclick = () => {
+      document.getElementById('view-client').classList.add('hidden');
+      document.getElementById('view-list').classList.remove('hidden');
+    };
+
+    window.addContent = async (clientId) => {
+      const sb      = await getSB();
+      const type    = document.getElementById('ct-type').value;
+      const title   = document.getElementById('ct-title').value.trim();
+      const caption = document.getElementById('ct-caption').value.trim();
+      const file    = document.getElementById('ct-file').files?.[0];
+      if (!title) return alert('Titre obligatoire');
+
+      let fileUrl = '';
+      let fileName = '';
+      if (file) {
+        const path = `${clientId}/${Date.now()}-${file.name}`;
+        const { data } = await sb.storage.from('content').upload(path, file);
+        if (data) {
+          fileUrl  = sb.storage.from('content').getPublicUrl(path).data.publicUrl;
+          fileName = file.name;
+        }
+      }
+
+      const dateVal = document.getElementById('ct-date').value;
+      const timeVal = document.getElementById('ct-time').value || '12:00';
+      const scheduledAt = dateVal ? new Date(`${dateVal}T${timeVal}`).toISOString() : null;
+
+      await sb.from('content_items').insert({
+        client_id:    clientId,
+        title:        `[${type.toUpperCase()}] ${title}`,
+        description:  caption,
+        status:       'pending',
+        files:        fileUrl ? [{ url: fileUrl, name: fileName }] : [],
+        scheduled_at: scheduledAt,
+      });
+
+      document.getElementById('ct-title').value   = '';
+      document.getElementById('ct-caption').value = '';
+      document.getElementById('ct-file').value    = '';
+      document.getElementById('ct-date').value    = '';
+      document.getElementById('ct-time').value    = '';
+      window.previewContentFile(document.getElementById('ct-file'));
+      await window.openClient(clientId);
+    };
+
+    const CONTENT_TYPES = ['post', 'reel', 'carrousel', 'planning', 'audit'];
+
+    window.uploadDoc = async (clientId) => {
+      const sb   = await getSB();
+      const name = document.getElementById('doc-name').value.trim();
+      let   type = document.getElementById('doc-type').value;
+      if (type === 'autre') {
+        const custom = document.getElementById('doc-type-custom')?.value.trim();
+        if (custom) type = custom;
+      }
+      const file = document.getElementById('doc-file').files?.[0];
+      if (!name) return alert('Nom obligatoire');
+
+      let fileUrl = '';
+      if (file) {
+        const bucket = CONTENT_TYPES.includes(type) ? 'content' : 'documents';
+        const path   = `${clientId}/${Date.now()}-${file.name}`;
+        const { data, error } = await sb.storage.from(bucket).upload(path, file);
+        if (error) { alert('Erreur upload : ' + error.message); return; }
+        if (data) fileUrl = sb.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+      }
+
+      if (CONTENT_TYPES.includes(type)) {
+        // → Contenu à valider
+        await sb.from('content_items').insert({
+          client_id:   clientId,
+          title:       name,
+          description: `Type : ${type}`,
+          status:      'pending',
+          files:       fileUrl ? [{ url: fileUrl, name: file?.name }] : [],
+        });
+      } else {
+        // → Documents / Factures
+        await sb.from('documents').insert({ client_id: clientId, name, type, file_url: fileUrl });
+      }
+      // Rechargement automatique de la vue client après envoi
+      await window.openClient(clientId);
+    };
+
+    // ─── Calendrier fiche client ──────────────────────────────────────────────
+    const CAL_COLORS = { 'POST':'#3B82F6','REEL':'#8B5CF6','CARROUSEL':'#10B981','PLANNING':'#F59E0B','AUDIT':'#6B7280' };
+    let clientCalYear  = new Date().getFullYear();
+    let clientCalMonth = new Date().getMonth();
+    let clientCalSel   = null;
+    let _clientCalClientId = null;
+    let _clientCalData = { approved: [], notes: [] };
+
+    // ─── Événements français ──────────────────────────────────────────────────
+    function getEasterDate(y) {
+      const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25);
+      const g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4;
+      const l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451);
+      return new Date(y,Math.floor((h+l-7*m+114)/31)-1,((h+l-7*m+114)%31)+1);
+    }
+    function getFrEvents(y) {
+      const ev={};
+      const add=(m,d,n)=>{ const k=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; if(!ev[k])ev[k]=[]; ev[k].push(n); };
+      const addD=(dt,n)=>add(dt.getMonth()+1,dt.getDate(),n);
+      add(1,1,'🥂 Jour de l\'an'); add(5,1,'🏛 Fête du Travail'); add(5,8,'🕊 Victoire 45');
+      add(7,14,'🎆 Fête Nationale'); add(8,15,'⛪ Assomption'); add(11,1,'🕯 Toussaint');
+      add(11,11,'🕊 Armistice'); add(12,25,'🎄 Noël');
+      const pa=getEasterDate(y);
+      addD(pa,'🐣 Pâques');
+      const lpa=new Date(pa); lpa.setDate(pa.getDate()+1); addD(lpa,'🐣 Lundi Pâques');
+      const asc=new Date(pa); asc.setDate(pa.getDate()+39); addD(asc,'✝ Ascension');
+      const pen=new Date(pa); pen.setDate(pa.getDate()+49); addD(pen,'🕊 Pentecôte');
+      const lpe=new Date(pa); lpe.setDate(pa.getDate()+50); addD(lpe,'🕊 Lundi Pentecôte');
+      add(1,7,'👑 Épiphanie'); add(2,14,'❤️ St-Valentin'); add(3,8,'💜 Journée Femme');
+      add(4,1,'🐟 Poisson d\'avril'); add(10,31,'🎃 Halloween'); add(12,6,'🎅 St-Nicolas'); add(12,31,'🥂 Réveillon');
+      // Fête des Mères = dernier dim. mai
+      function lastSun(mo){const d=new Date(y,mo+1,0);d.setDate(d.getDate()-d.getDay());return d;}
+      function firstSun(mo){const d=new Date(y,mo,1);while(d.getDay()!==0)d.setDate(d.getDate()+1);return d;}
+      function nthSun(mo,n){const d=firstSun(mo);d.setDate(d.getDate()+(n-1)*7);return d;}
+      function nthFri(mo,n){const d=new Date(y,mo,1);while(d.getDay()!==5)d.setDate(d.getDate()+1);d.setDate(d.getDate()+(n-1)*7);return d;}
+      const fmt=(dt)=>`${y}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+      const fm=lastSun(4);
+      addD(fmt(fm)===fmt(pen)?firstSun(5):fm,'💐 Fête des Mères');
+      addD(nthSun(5,3),'👔 Fête des Pères');
+      addD(nthFri(10,4),'🛍 Black Friday');
+      add(11,1,'🛍 Toussaint'); // override kept
+      return ev;
+    }
+
+    window.clientToggleMonthPicker = (e) => {
+      e.stopPropagation();
+      document.getElementById('client-month-picker')?.classList.toggle('hidden');
+    };
+    window.clientCalGoToMonth = (m, e) => {
+      if(e) e.stopPropagation();
+      clientCalMonth = m;
+      document.getElementById('client-month-picker')?.classList.add('hidden');
+      renderClientCal();
+    };
+    document.addEventListener('click', () => document.getElementById('client-month-picker')?.classList.add('hidden'));
+
+    async function loadClientCal() {
+      const sb2 = await getSB();
+      const cid = _clientCalClientId;
+      if (!cid) return;
+      const [{ data: approved }, { data: notes }] = await Promise.all([
+        sb2.from('content_items').select('id,title,scheduled_at,updated_at,files').eq('client_id', cid).eq('status','approved'),
+        sb2.from('calendar_notes').select('*').eq('client_id', cid),
+      ]);
+      _clientCalData = { approved: approved||[], notes: notes||[] };
+      renderClientCal();
+    }
+
+    function renderClientCal() {
+      const label = document.getElementById('client-cal-label');
+      const grid  = document.getElementById('client-cal-grid');
+      if (!label || !grid) return;
+      const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+      label.textContent = `${months[clientCalMonth]} ${clientCalYear}`;
+      const frEvents = getFrEvents(clientCalYear);
+      const firstDay    = new Date(clientCalYear, clientCalMonth, 1).getDay();
+      const startOffset = (firstDay === 0 ? 6 : firstDay - 1);
+      const daysInMonth = new Date(clientCalYear, clientCalMonth+1, 0).getDate();
+      const days = ['Lu','Ma','Me','Je','Ve','Sa','Di'];
+
+      let html = `<table class="w-full border-collapse text-xs table-fixed"><thead><tr>`;
+      days.forEach(d => { html += `<th class="py-1.5 text-center text-[#767A55] font-medium text-[10px] uppercase tracking-widest">${d}</th>`; });
+      html += `</tr></thead><tbody><tr>`;
+
+      let col = 0;
+      for (let i = 0; i < startOffset; i++) { html += `<td class="border border-[#D6CCC0]/30 p-1 h-16 bg-[#F5EDE4]/30"></td>`; col++; }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr  = `${clientCalYear}-${String(clientCalMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const isToday  = dateStr === new Date().toISOString().slice(0,10);
+        // Utiliser scheduled_at en priorité, sinon updated_at
+        const dayItems = _clientCalData.approved.filter(a => {
+          const d = (a.scheduled_at || a.updated_at || '').slice(0,10);
+          return d === dateStr;
+        });
+        const dayNotes = _clientCalData.notes.filter(n => n.date === dateStr);
+
+        let cell = '';
+        dayItems.forEach(a => {
+          const tMatch = a.title.match(/^\[([A-Z\s\-]+)\]/i);
+          const tType  = tMatch ? tMatch[1].toUpperCase() : '';
+          const color  = CAL_COLORS[tType] || '#8B3E22';
+          const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'').slice(0,16);
+          // Heure si scheduled_at
+          const heure  = a.scheduled_at ? ' · ' + new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+          cell += `<div style="background:${color}15;color:${color};border-left:2px solid ${color}" class="text-[9px] leading-tight px-1 py-0.5 rounded-r mb-0.5 truncate font-medium">${clean}${heure}</div>`;
+        });
+        dayNotes.forEach(n => {
+          cell += `<div class="text-[9px] px-1 py-0.5 rounded bg-[#EDE6DB] text-[#767A55] mb-0.5 truncate italic">${n.note.slice(0,18)}</div>`;
+        });
+        const dotC = (dayNotes.length || dayItems.length) ? `<span class="w-1 h-1 rounded-full bg-[#8B3E22] inline-block ml-0.5 mb-0.5"></span>` : '';
+        const dayFrEvents = (frEvents[dateStr] || []);
+        const evCell = dayFrEvents.map(e => `<div style="font-size:8px;color:#8B3E22;line-height:1.3;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e}</div>`).join('');
+
+        html += `<td class="border border-[#D6CCC0]/30 p-1 align-top cursor-pointer hover:bg-[#F5EDE4] transition-colors ${dayFrEvents.length ? 'bg-[#FFF8F5]' : ''}"
+          style="height:72px"
+          onclick="clientCalCellClick('${dateStr}')"
+          ondblclick="clientCalDayDetail('${dateStr}')">
+          <div class="flex items-center justify-center gap-0.5 mb-0.5">
+            <span class="${isToday?'w-5 h-5 bg-[#8B3E22] text-white rounded-full inline-flex items-center justify-center':''} text-[10px] font-${isToday?'bold':'medium'} text-${isToday?'white':'[#2C2416]'}">${day}</span>${dotC}
+          </div>
+          ${cell}${evCell}
+        </td>`;
+        col++;
+        if (col % 7 === 0 && day < daysInMonth) html += `</tr><tr>`;
+      }
+      const rem = 7 - (col % 7); if (rem < 7) for (let i=0;i<rem;i++) html += `<td class="border border-[#D6CCC0]/30 p-1 h-16 bg-[#F5EDE4]/30"></td>`;
+      html += `</tr></tbody></table>`;
+      grid.innerHTML = html;
+    }
+
+    window.clientCalNav = (dir) => { clientCalMonth += dir; if (clientCalMonth>11){clientCalMonth=0;clientCalYear++;} if (clientCalMonth<0){clientCalMonth=11;clientCalYear--;} renderClientCal(); };
+
+    // Clic simple = détail (desktop et mobile)
+    window.clientCalCellClick = (dateStr) => { window.clientCalDayDetail(dateStr); };
+
+    // Crayon dans le header → formulaire note avec date picker
+    window.clientCalOpenNoteForm = () => {
+      const today = new Date().toISOString().slice(0,10);
+      const picker = document.getElementById('client-cal-date-picker');
+      picker.value = clientCalSel || today;
+      document.getElementById('client-cal-input').value = '';
+      const ex = _clientCalData.notes.find(n => n.date === picker.value);
+      if (ex) document.getElementById('client-cal-input').value = ex.note;
+      picker.onchange = () => {
+        const e2 = _clientCalData.notes.find(n => n.date === picker.value);
+        document.getElementById('client-cal-input').value = e2?.note || '';
+      };
+      const modal = document.getElementById('client-cal-note-modal');
+      modal.classList.remove('hidden');
+      modal.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    };
+
+    window.clientCalDayDetail = (dateStr) => {
+      const dayItems = _clientCalData.approved.filter(a => (a.scheduled_at||a.updated_at||'').slice(0,10) === dateStr);
+      const dayNotes = _clientCalData.notes.filter(n => n.date === dateStr);
+      const [y,m,d] = dateStr.split('-');
+      const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+      const FDAY_HEX  = { 'POST':'#3B82F6','REEL':'#8B5CF6','CARROUSEL':'#10B981','PLANNING':'#F59E0B','CALENDRIER ÉDITORIAL':'#F59E0B','AUDIT':'#6B7280' };
+      const FDAY_ICON = { 'POST':'solar:image-linear','REEL':'solar:videocamera-linear','CARROUSEL':'solar:gallery-linear','PLANNING':'solar:calendar-linear','CALENDRIER ÉDITORIAL':'solar:calendar-linear' };
+      let html = '';
+      dayItems.forEach(a => {
+        const tMatch = a.title.match(/^\[([A-Z\s\-]+)\]/i);
+        const tType  = tMatch ? tMatch[1].toUpperCase() : '';
+        const color  = FDAY_HEX[tType] || '#8B3E22';
+        const icon   = FDAY_ICON[tType] || 'solar:document-text-linear';
+        const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'');
+        let files = []; try { files = Array.isArray(a.files) ? a.files : JSON.parse(a.files||'[]'); } catch(e){}
+        const isImgF = files[0]?.url && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(files[0].url);
+        const heure  = a.scheduled_at ? new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+        html += `<div class="flex overflow-hidden rounded-2xl border border-[#D6CCC0]">
+          <div class="w-32 sm:w-48 shrink-0 flex items-center justify-center" style="background:${color}15; min-height:120px">
+            ${isImgF ? `<img src="${files[0].url}" class="w-full h-full object-cover" style="min-height:120px" />` : `<iconify-icon icon="${icon}" stroke-width="1.5" style="color:${color}" class="text-5xl"></iconify-icon>`}
+          </div>
+          <div class="flex-1 p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span style="background:${color}20;color:${color}" class="text-xs font-bold px-2 py-0.5 rounded-full">${tType||'—'}</span>
+              ${heure ? `<span class="text-xs text-[#767A55] font-medium">🕐 ${heure}</span>` : ''}
+            </div>
+            <p class="text-base font-semibold text-[#2C2416] mb-2">${clean}</p>
+            ${a.description ? `<p class="text-sm text-[#2C2416]/70 leading-relaxed">${a.description}</p>` : ''}
+            ${files[0]?.url ? `<a href="${files[0].url}" target="_blank" class="inline-flex items-center gap-1.5 mt-3 text-xs text-[#8B3E22] hover:underline"><iconify-icon icon="solar:eye-linear" stroke-width="1.5"></iconify-icon> Voir le fichier</a>` : ''}
+          </div>
+        </div>`;
+      });
+      dayNotes.forEach(n => {
+        html += `<div class="p-4 rounded-2xl bg-[#EDE6DB] border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Note</p><p class="text-sm text-[#2C2416]/80 italic leading-relaxed">${n.note}</p></div>`;
+      });
+      if (!html) html = '<p class="text-sm text-[#2C2416]/40 italic">Aucune publication programmée ce jour.</p>';
+      document.getElementById('cal-fullday-title').textContent = `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
+      document.getElementById('cal-fullday-content').innerHTML = html;
+      document.getElementById('cal-main-view').classList.add('hidden');
+      document.getElementById('cal-fullday-view').classList.remove('hidden');
+      document.getElementById('cal-fullday-view').scrollIntoView({ behavior:'smooth', block:'start' });
+    };
+
+    window.closeClientCalFullDay = () => {
+      document.getElementById('cal-fullday-view').classList.add('hidden');
+      document.getElementById('cal-main-view').classList.remove('hidden');
+    };
+
+    window.saveClientCalNote = async () => {
+      const sb2 = await getSB();
+      const note = document.getElementById('client-cal-input').value.trim();
+      const date = document.getElementById('client-cal-date-picker').value || clientCalSel;
+      if (!note || !date) return;
+      const existing = _clientCalData.notes.find(n => n.date === date);
+      if (existing) {
+        await sb2.from('calendar_notes').update({ note }).eq('id', existing.id);
+      } else {
+        await sb2.from('calendar_notes').insert({ date, note, client_id: _clientCalClientId, created_by: session.user.id });
+      }
+      document.getElementById('client-cal-note-modal').classList.add('hidden');
+      await loadClientCal();
+    };
+
+    // Stocker le clientId courant pour le calendrier et les tâches
+    const _origOpenClient = window.openClient;
+    window.openClient = async (clientId) => {
+      _clientCalClientId = clientId;
+      window._currentAdminClientId = clientId;
+      clientCalYear  = new Date().getFullYear();
+      clientCalMonth = new Date().getMonth();
+      await _origOpenClient(clientId);
+    };
+
+    // ─── Tâches admin ──────────────────────────────────────────────────────────
+    window.loadAdminTasks = async (clientId) => {
+      if (!clientId) return;
+      const sb2 = await getSB();
+      const { data } = await sb2.from('tasks').select('*').eq('client_id', clientId).order('created_at', { ascending: true });
+      const el = document.getElementById('admin-tasks-list');
+      if (!el) return;
+      if (!data || !data.length) { el.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucune tâche</p>'; return; }
+      el.innerHTML = data.map(t => {
+        const title = t.title.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return `<div class="flex items-center gap-3 py-2 border-b border-[#D6CCC0]/30 last:border-0">
+          <button onclick="adminToggleTask('${t.id}',${t.done},'${clientId}')" class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${t.done ? 'bg-[#8B3E22] border-[#8B3E22]' : 'border-[#D6CCC0] hover:border-[#8B3E22]'}">
+            ${t.done ? '<iconify-icon icon="solar:check-linear" stroke-width="2.5" class="text-white" style="font-size:9px"></iconify-icon>' : ''}
+          </button>
+          <span class="text-sm flex-1 ${t.done ? 'line-through text-[#2C2416]/40' : 'text-[#2C2416]'}">${title}</span>
+          <button onclick="adminDeleteTask('${t.id}','${clientId}')" class="text-[#D6CCC0] hover:text-red-400 transition-colors shrink-0">
+            <iconify-icon icon="solar:close-circle-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+          </button>
+        </div>`;
+      }).join('');
+    };
+    window.addAdminTask = async (clientId) => {
+      const sb2 = await getSB();
+      const input = document.getElementById('admin-new-task-input');
+      const title = input?.value.trim();
+      if (!title) return;
+      await sb2.from('tasks').insert({ client_id: clientId, title });
+      if (input) input.value = '';
+      await window.loadAdminTasks(clientId);
+    };
+    window.adminToggleTask = async (id, done, clientId) => {
+      const sb2 = await getSB();
+      await sb2.from('tasks').update({ done: !done }).eq('id', id);
+      await window.loadAdminTasks(clientId);
+    };
+    window.adminDeleteTask = async (id, clientId) => {
+      const sb2 = await getSB();
+      await sb2.from('tasks').delete().eq('id', id);
+      await window.loadAdminTasks(clientId);
+    };
+
+    // ─── Fil notes client (admin) ──────────────────────────────────────────────
+    window.loadAdminClientNotes = async (clientId) => {
+      if (!clientId) return;
+      const sb2 = await getSB();
+      const { data } = await sb2.from('client_notes').select('*').eq('client_id', clientId).order('created_at', { ascending: false }).limit(30);
+      const feed = document.getElementById('admin-client-notes-feed');
+      if (!feed) return;
+      if (!data || !data.length) { feed.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucune note envoyée par ce client</p>'; return; }
+      feed.innerHTML = data.map(n => {
+        const d = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+        const txt = n.note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return `<div class="bg-[#EDE6DB] rounded-xl rounded-tr-sm px-4 py-3">
+          <p class="text-sm text-[#2C2416] leading-relaxed">${txt}</p>
+          <p class="text-[10px] text-[#767A55] mt-1.5">${d}</p>
+        </div>`;
+      }).join('');
+    };
+
+  });
+</script>
