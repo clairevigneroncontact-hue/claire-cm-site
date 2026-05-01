@@ -1614,6 +1614,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     // ─── Drag-and-drop calendrier ─────────────────────────────────────────────
     let _calDragItemId   = null;
     let _calDragItemTime = '00:00';
+    let _calDragGhost    = null;
     let _touchLongTimer  = null;
     let _touchGhost      = null;
     let _touchDragActive = false;
@@ -1634,12 +1635,40 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       _calDragItemId = id; _calDragItemTime = time || '00:00';
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', id);
+
+      // Ghost personnalisé qui suit la souris
+      const src = e.currentTarget;
+      _calDragGhost = src.cloneNode(true);
+      Object.assign(_calDragGhost.style, {
+        position:'fixed', zIndex:'9999', pointerEvents:'none',
+        top: (e.clientY - 12) + 'px', left: (e.clientX - 50) + 'px',
+        opacity:'0.92', transform:'scale(1.08) rotate(-1.5deg)',
+        boxShadow:'0 8px 24px rgba(0,0,0,0.3)', borderRadius:'4px',
+        minWidth:'90px', maxWidth:'180px', padding:'3px 8px',
+        transition:'none', cursor:'grabbing',
+      });
+      document.body.appendChild(_calDragGhost);
+
+      // Masquer le ghost natif du navigateur
+      const blank = new Image();
+      blank.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+      e.dataTransfer.setDragImage(blank, 0, 0);
+
       e.stopPropagation();
     };
     window.calDragEnd = () => {
       _calDragItemId = null;
       document.querySelectorAll('[data-cal-date]').forEach(el => el.style.background = '');
+      if (_calDragGhost) { _calDragGhost.remove(); _calDragGhost = null; }
     };
+
+    // Faire suivre le ghost à la souris pendant le drag
+    document.addEventListener('drag', (e) => {
+      if (!_calDragGhost) return;
+      if (e.clientX === 0 && e.clientY === 0) return;
+      _calDragGhost.style.left = (e.clientX - 50) + 'px';
+      _calDragGhost.style.top  = (e.clientY - 12) + 'px';
+    });
     window.calDragOver = (e) => {
       if (!_calDragItemId) return;
       e.preventDefault(); e.stopPropagation();
