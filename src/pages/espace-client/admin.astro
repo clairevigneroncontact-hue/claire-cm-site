@@ -1873,10 +1873,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const ta = document.getElementById('admin-reply-input');
       const note = ta?.value.trim();
       if (!note) return;
-      const { error } = await sb2.from('client_notes').insert({ client_id: clientId, note, from_admin: true });
+
+      // Tentative avec from_admin:true, fallback sans si la colonne n'existe pas encore
+      let { error } = await sb2.from('client_notes').insert({ client_id: clientId, note, from_admin: true });
+      if (error && error.message?.includes('from_admin')) {
+        const res = await sb2.from('client_notes').insert({ client_id: clientId, note });
+        error = res.error;
+      }
+
       if (!error) {
         ta.value = '';
         await window.loadAdminClientNotes(clientId);
+        showAdminToast('✅ Note envoyée au client');
+      } else {
+        showAdminToast('❌ Erreur : ' + (error.message || 'impossible d\'envoyer'));
       }
     };
 
