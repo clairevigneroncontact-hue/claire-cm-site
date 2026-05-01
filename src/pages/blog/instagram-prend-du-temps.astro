@@ -1,0 +1,136 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
+import BackArrow from '../../components/BackArrow.astro';
+
+const calendarLink = 'https://cal.com/claire-vigneron-k5okcq/30min?user=claire-vigneron-k5okcq&overlayCalendar=true';
+---
+
+<BaseLayout
+  title='"Ça ne marche pas" — ce que personne ne vous dit sur Instagram — Claire Vigneron'
+  description="Vous publiez depuis quelques semaines et les clients ne se bousculent pas. Normal. Voici la vérité sur le temps réel que prend Instagram pour convertir."
+>
+  <Nav />
+
+  <article class="pt-28 md:pt-32 pb-16 md:pb-20 px-6 bg-[#F5EDE4]">
+    <div class="max-w-2xl mx-auto">
+
+      <!-- Retour -->
+      <a href="/blog" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors mb-8">
+        <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon>
+        Retour au blog
+      </a>
+
+      <!-- En-tête -->
+      <div class="mb-10">
+        <span class="text-xs font-medium uppercase tracking-widest text-[#767A55] block mb-4">Mindset · 6 min de lecture</span>
+        <h1 class="text-3xl md:text-5xl text-[#2C2416] tracking-tight leading-tight mb-6">
+          "Ça ne marche pas" — ce que personne ne vous dit sur le temps que prend Instagram
+        </h1>
+        <p class="text-lg md:text-xl text-[#2C2416]/60 font-light leading-relaxed">
+          Vous publiez depuis quelques semaines et les clients ne se bousculent pas. Vous commencez à douter. Normal. Voici la vérité sur le temps réel que prend Instagram pour convertir — et pourquoi la plupart des gens abandonnent trop tôt.
+        </p>
+      </div>
+
+      <!-- Contenu -->
+      <div class="space-y-8 text-[#2C2416]/80 font-light leading-relaxed text-lg">
+
+        <p>
+          C'est la phrase que j'entends le plus souvent, à peu près 3 semaines après qu'un client a commencé à publier régulièrement : <em>"Je ne vois pas de résultats. Est-ce que ça marche vraiment ?"</em>
+        </p>
+
+        <p>
+          Et je comprends la frustration. Vous avez investi du temps, de l'énergie, peut-être de l'argent. Vous publiez du contenu soigné. Vous y croyez. Et pourtant, votre téléphone ne sonne pas davantage.
+        </p>
+
+        <p>
+          Voici ce que personne ne vous dit clairement.
+        </p>
+
+        <!-- Encart chiffres -->
+        <div class="bg-[#2C2416] rounded-2xl p-6 md:p-8 text-[#F5EDE4]">
+          <p class="text-xs uppercase tracking-widest text-[#767A55] mb-4">La réalité des chiffres</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="text-center">
+              <p class="text-4xl font-serif text-[#8B3E22] mb-1">3-6</p>
+              <p class="text-sm text-[#F5EDE4]/60">mois avant les premiers résultats mesurables</p>
+            </div>
+            <div class="text-center">
+              <p class="text-4xl font-serif text-[#8B3E22] mb-1">7</p>
+              <p class="text-sm text-[#F5EDE4]/60">points de contact en moyenne avant qu'un prospect passe à l'action</p>
+            </div>
+            <div class="text-center">
+              <p class="text-4xl font-serif text-[#8B3E22] mb-1">1-2</p>
+              <p class="text-sm text-[#F5EDE4]/60">ans pour construire une communauté vraiment engagée</p>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="text-2xl text-[#2C2416] tracking-tight pt-2">Instagram n'est pas une machine à clients immédiats</h2>
+
+        <p>
+          Instagram est un outil de construction de confiance. Pas une publicité Google. Pas un coup de téléphone à froid. C'est un endroit où les gens vous découvrent, vous observent, apprennent à vous connaître — et décident, parfois des mois plus tard, de faire appel à vous.
+        </p>
+
+        <p>
+          Ce processus s'appelle le <strong>nurturing</strong>. Un prospect peut vous suivre pendant 6 mois avant de vous envoyer un message. Il a vu 30 de vos posts. Il a liké une story. Il a montré votre compte à quelqu'un. Et un jour, il a besoin de ce que vous faites — et il pense à vous en premier.
+        </p>
+
+        <h2 class="text-2xl text-[#2C2416] tracking-tight">Les 3 peurs qui font abandonner trop tôt</h2>
+
+        <div class="space-y-5">
+          <div class="bg-[#EDE6DB] rounded-xl p-5">
+            <p class="font-medium text-[#2C2416] mb-2">Peur n°1 : "Personne ne m'écoute"</p>
+            <p class="text-base">Quand on commence, les statistiques sont décourageantes. 12 vues. 3 likes. Un abonné par semaine. Mais ce que les chiffres ne montrent pas : ces 12 personnes ont vraiment regardé votre contenu. Et si parmi elles il y a votre prochain client idéal ?</p>
+          </div>
+          <div class="bg-[#EDE6DB] rounded-xl p-5">
+            <p class="font-medium text-[#2C2416] mb-2">Peur n°2 : "Ce que je fais ne m'intéresse pas les autres"</p>
+            <p class="text-base">Cette peur est universelle, et presque toujours fausse. Le problème n'est jamais votre métier — c'est souvent la façon dont vous le présentez. Les coulisses de n'importe quel savoir-faire, montré avec authenticité, intéressent.</p>
+          </div>
+          <div class="bg-[#EDE6DB] rounded-xl p-5">
+            <p class="font-medium text-[#2C2416] mb-2">Peur n°3 : "J'aurais dû voir des résultats"</p>
+            <p class="text-base">Le délai moyen entre le premier post et le premier client venu d'Instagram ? Entre 3 et 9 mois selon les secteurs. Ce n'est pas un échec — c'est le calendrier normal de la confiance.</p>
+          </div>
+        </div>
+
+        <div class="border-l-4 border-[#8B3E22] pl-6 py-2">
+          <p class="text-[#2C2416]/70 italic">
+            "La plupart des comptes qui fonctionnent aujourd'hui ont eu une période de silence de 6 à 18 mois. Ce qui fait la différence, c'est d'avoir continué quand rien ne semblait se passer."
+          </p>
+          <p class="text-sm text-[#767A55] mt-2">— Claire Vigneron</p>
+        </div>
+
+        <h2 class="text-2xl text-[#2C2416] tracking-tight">Ce qui aide à tenir sur la durée</h2>
+
+        <p>
+          La régularité bat l'inspiration. Un post moyen publié chaque semaine vaut mieux qu'un post parfait publié une fois par mois. L'algorithme récompense la constance. Et vos abonnés aussi.
+        </p>
+
+        <p>
+          Célébrez les micro-victoires : un premier commentaire d'un inconnu, un DM, quelqu'un qui partage votre post. Ces signaux précèdent toujours les résultats commerciaux.
+        </p>
+
+        <p>
+          Et si vous vous sentez seule face à cette constance à tenir, c'est exactement là qu'un accompagnement peut aider. Pas pour "booster" artificiellement vos chiffres — mais pour ne pas vous retrouver à devoir décider quoi publier chaque semaine quand vous avez un métier entier à gérer par ailleurs.
+        </p>
+
+      </div>
+
+      <!-- CTA -->
+      <div class="mt-14 pt-10 border-t border-[#D6CCC0]">
+        <p class="text-sm text-[#767A55] uppercase tracking-widest mb-4">Vous voulez tenir sur la durée ?</p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="/offres#mensuel" class="px-6 py-3 bg-[#8B3E22] text-[#F5EDE4] rounded-full font-medium hover:bg-[#6B2E1A] transition-colors text-center">
+            Voir l'accompagnement mensuel
+          </a>
+          <a href={calendarLink} target="_blank" rel="noopener" class="px-6 py-3 border border-[#D6CCC0] text-[#2C2416] rounded-full font-medium hover:bg-[#EDE6DB] transition-colors text-center">
+            Réserver un appel gratuit
+          </a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <Footer />
+</BaseLayout>

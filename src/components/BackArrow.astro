@@ -1,0 +1,12 @@
+---
+interface Props {
+  href?: string;
+  label?: string;
+}
+const { href = '/', label = 'Accueil' } = Astro.props;
+---
+
+<a href={href} class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors mb-8">
+  <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon>
+  {label}
+</a>

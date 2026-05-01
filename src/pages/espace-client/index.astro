@@ -1,0 +1,259 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Espace client — Claire Vigneron" hideChatWidget={true}>
+  <div class="min-h-screen bg-[#2C2416] flex flex-col items-center justify-center px-6 py-12">
+
+    <a href="/" class="text-2xl font-serif tracking-tight text-[#F5EDE4] mb-12">
+      Claire Vigneron <span class="text-[#767A55]">·</span> CM
+    </a>
+
+    <div class="w-full max-w-md bg-[#F5EDE4] rounded-3xl p-8 md:p-10 shadow-2xl">
+
+      <!-- Onglets -->
+      <div class="flex gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-8">
+        <button id="tab-login"   class="flex-1 py-2 text-sm font-medium rounded-lg bg-white text-[#2C2416] shadow-sm transition-all">Connexion</button>
+        <button id="tab-signup"  class="flex-1 py-2 text-sm font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416]">Créer un compte</button>
+      </div>
+
+      <!-- Login -->
+      <div id="view-login">
+        <div class="mb-6">
+          <h1 class="text-2xl text-[#2C2416] tracking-tight mb-1">Bon retour</h1>
+          <p class="text-[#2C2416]/60 font-light text-sm">Connectez-vous à votre espace personnel.</p>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">Email</label>
+            <input id="login-email" type="email" placeholder="votre@email.com"
+              class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] bg-white text-[#2C2416] focus:outline-none focus:border-[#8B3E22] transition-colors text-sm" />
+          </div>
+          <div>
+            <label class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">Mot de passe</label>
+            <input id="login-password" type="password" placeholder="••••••••"
+              class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] bg-white text-[#2C2416] focus:outline-none focus:border-[#8B3E22] transition-colors text-sm" />
+          </div>
+          <div id="login-error" class="hidden text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3"></div>
+          <button id="login-btn" class="w-full py-4 bg-[#8B3E22] text-[#F5EDE4] rounded-xl font-medium hover:bg-[#6B2E1A] transition-colors">
+            Accéder à mon espace →
+          </button>
+
+          <!-- Séparateur -->
+          <div class="flex items-center gap-3 my-1">
+            <div class="flex-1 h-px bg-[#D6CCC0]"></div>
+            <span class="text-xs text-[#2C2416]/40">ou</span>
+            <div class="flex-1 h-px bg-[#D6CCC0]"></div>
+          </div>
+
+          <button id="google-login-btn" class="w-full py-3 border border-[#D6CCC0] bg-white rounded-xl text-sm font-medium text-[#2C2416] hover:bg-[#EDE6DB] transition-colors flex items-center justify-center gap-3">
+            <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+              <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
+              <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+              <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
+            </svg>
+            Continuer avec Google
+          </button>
+        </div>
+
+        <button id="show-reset" class="block w-full text-center text-xs text-[#2C2416]/40 hover:text-[#8B3E22] transition-colors mt-4">
+          Mot de passe oublié ?
+        </button>
+      </div>
+
+      <!-- Créer un compte -->
+      <div id="view-signup" class="hidden">
+        <div class="mb-6">
+          <h1 class="text-2xl text-[#2C2416] tracking-tight mb-1">Créer mon espace</h1>
+          <p class="text-[#2C2416]/60 font-light text-sm">Accédez à votre espace client sécurisé.</p>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">Prénom & Nom</label>
+            <input id="signup-name" type="text" placeholder="Marie Dupont"
+              class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] bg-white text-[#2C2416] focus:outline-none focus:border-[#8B3E22] text-sm" />
+          </div>
+          <div>
+            <label class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">Email</label>
+            <input id="signup-email" type="email" placeholder="votre@email.com"
+              class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] bg-white text-[#2C2416] focus:outline-none focus:border-[#8B3E22] text-sm" />
+          </div>
+          <div>
+            <label class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">Mot de passe</label>
+            <input id="signup-password" type="password" placeholder="Minimum 6 caractères"
+              class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] bg-white text-[#2C2416] focus:outline-none focus:border-[#8B3E22] text-sm" />
+          </div>
+          <div>
+            <label class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">Confirmer le mot de passe</label>
+            <input id="signup-confirm" type="password" placeholder="••••••••"
+              class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] bg-white text-[#2C2416] focus:outline-none focus:border-[#8B3E22] text-sm" />
+          </div>
+          <div id="signup-error" class="hidden text-sm rounded-xl px-4 py-3"></div>
+          <button id="signup-btn" class="w-full py-4 bg-[#8B3E22] text-[#F5EDE4] rounded-xl font-medium hover:bg-[#6B2E1A] transition-colors">
+            Créer mon espace →
+          </button>
+
+          <div class="flex items-center gap-3 my-1">
+            <div class="flex-1 h-px bg-[#D6CCC0]"></div>
+            <span class="text-xs text-[#2C2416]/40">ou</span>
+            <div class="flex-1 h-px bg-[#D6CCC0]"></div>
+          </div>
+
+          <button id="google-signup-btn" class="w-full py-3 border border-[#D6CCC0] bg-white rounded-xl text-sm font-medium text-[#2C2416] hover:bg-[#EDE6DB] transition-colors flex items-center justify-center gap-3">
+            <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+              <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
+              <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+              <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
+            </svg>
+            Créer mon compte avec Google
+          </button>
+        </div>
+      </div>
+
+      <!-- Reset -->
+      <div id="view-reset" class="hidden">
+        <button id="back-login" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors mb-6">
+          ← Retour
+        </button>
+        <h2 class="text-2xl text-[#2C2416] tracking-tight mb-2">Mot de passe oublié</h2>
+        <p class="text-sm text-[#2C2416]/60 font-light mb-6">Entrez votre email pour recevoir un lien de réinitialisation.</p>
+        <input id="reset-email" type="email" placeholder="votre@email.com"
+          class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] bg-white text-[#2C2416] focus:outline-none focus:border-[#8B3E22] text-sm mb-4" />
+        <div id="reset-msg" class="hidden text-sm rounded-xl px-4 py-3 mb-4"></div>
+        <button id="reset-btn" class="w-full py-4 bg-[#8B3E22] text-[#F5EDE4] rounded-xl font-medium hover:bg-[#6B2E1A] transition-colors">
+          Envoyer le lien
+        </button>
+      </div>
+    </div>
+
+    <a href="/" class="mt-8 text-sm text-[#F5EDE4]/40 hover:text-[#F5EDE4]/70 transition-colors">← Retour au site</a>
+  </div>
+</BaseLayout>
+
+<script is:inline>
+  const SUPABASE_URL = 'https://etubpowlffhdvnfqkjij.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_AyehSGHv6TEwFvPQIuMivg_-_mJ7zUH';
+  const ADMIN_EMAIL  = 'clairevigneron.contact@gmail.com';
+  const REDIRECT_URL = window.location.origin + '/espace-client/nouveau-mot-de-passe';
+
+  // Init Supabase via CDN
+  const { createClient } = window.supabase || {};
+
+  async function initSupabase() {
+    if (!window._sb) {
+      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js');
+      window._sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    return window._sb;
+  }
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) return resolve();
+      const s = document.createElement('script');
+      s.src = src; s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  // Vérifier session existante
+  window.addEventListener('load', async () => {
+    const sb = await initSupabase();
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      window.location.href = session.user.email === ADMIN_EMAIL
+        ? '/espace-client/admin'
+        : '/espace-client/dashboard';
+    }
+  });
+
+  // Onglets
+  function showView(view) {
+    ['login','signup','reset'].forEach(v => document.getElementById('view-'+v).classList.add('hidden'));
+    document.getElementById('view-'+view).classList.remove('hidden');
+    ['login','signup'].forEach(t => {
+      const btn = document.getElementById('tab-'+t);
+      if (btn) btn.className = `flex-1 py-2 text-sm font-medium rounded-lg transition-all ${t === view ? 'bg-white text-[#2C2416] shadow-sm' : 'text-[#2C2416]/50 hover:text-[#2C2416]'}`;
+    });
+  }
+  document.getElementById('tab-login').onclick  = () => showView('login');
+  document.getElementById('tab-signup').onclick = () => showView('signup');
+
+  // Toggle reset
+  document.getElementById('show-reset').onclick = () => showView('reset');
+  document.getElementById('back-login').onclick = () => showView('login');
+
+  // Connexion Google (login + signup)
+  async function signInWithGoogle() {
+    const sb = await initSupabase();
+    await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/espace-client/dashboard' }
+    });
+  }
+  document.getElementById('google-login-btn').onclick  = signInWithGoogle;
+  document.getElementById('google-signup-btn').onclick = signInWithGoogle;
+
+  // Login
+  document.getElementById('login-btn').onclick = async () => {
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errEl    = document.getElementById('login-error');
+    errEl.classList.add('hidden');
+    if (!email || !password) { errEl.textContent = 'Veuillez remplir tous les champs.'; errEl.classList.remove('hidden'); return; }
+    const sb = await initSupabase();
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      errEl.textContent = 'Email ou mot de passe incorrect.';
+      errEl.classList.remove('hidden');
+    } else {
+      window.location.href = email === ADMIN_EMAIL ? '/espace-client/admin' : '/espace-client/dashboard';
+    }
+  };
+
+  // Inscription
+  document.getElementById('signup-btn').onclick = async () => {
+    const name     = document.getElementById('signup-name').value.trim();
+    const email    = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const confirm  = document.getElementById('signup-confirm').value;
+    const errEl    = document.getElementById('signup-error');
+    errEl.classList.add('hidden');
+    errEl.className = 'text-sm rounded-xl px-4 py-3 text-red-600 bg-red-50';
+
+    if (!email || !password) { errEl.textContent = 'Email et mot de passe obligatoires.'; errEl.classList.remove('hidden'); return; }
+    if (password.length < 6) { errEl.textContent = 'Le mot de passe doit faire au moins 6 caractères.'; errEl.classList.remove('hidden'); return; }
+    if (password !== confirm) { errEl.textContent = 'Les mots de passe ne correspondent pas.'; errEl.classList.remove('hidden'); return; }
+
+    const sb = await initSupabase();
+    const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name } } });
+    if (error) {
+      errEl.textContent = error.message.includes('already') ? 'Un compte existe déjà avec cet email.' : 'Erreur : ' + error.message;
+      errEl.classList.remove('hidden');
+    } else {
+      // Mettre à jour le nom dans profiles
+      if (data.user && name) {
+        await sb.from('profiles').update({ full_name: name }).eq('id', data.user.id);
+      }
+      errEl.className = 'text-sm rounded-xl px-4 py-3 text-green-700 bg-green-50';
+      errEl.textContent = 'Compte créé ! Vérifiez votre email pour confirmer, puis connectez-vous.';
+      errEl.classList.remove('hidden');
+    }
+  };
+
+  // Reset password
+  document.getElementById('reset-btn').onclick = async () => {
+    const email = document.getElementById('reset-email').value.trim();
+    const msgEl = document.getElementById('reset-msg');
+    if (!email) return;
+    const sb = await initSupabase();
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: REDIRECT_URL });
+    msgEl.className = 'text-sm rounded-xl px-4 py-3 mb-4';
+    msgEl.textContent = error ? 'Erreur. Vérifiez votre email.' : 'Email envoyé ! Vérifiez votre boîte mail.';
+    msgEl.classList.add(error ? 'text-red-600 bg-red-50' : 'text-green-700 bg-green-50');
+    msgEl.classList.remove('hidden');
+  };
+</script>

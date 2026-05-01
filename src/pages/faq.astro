@@ -1,0 +1,139 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import BackArrow from '../components/BackArrow.astro';
+
+const faqs = [
+  {
+    categorie: 'Avant de démarrer',
+    questions: [
+      {
+        q: 'Travaillez-vous avec tous les secteurs d\'activité ?',
+        r: 'Je travaille avec des artisans, indépendants et petites entreprises qui ont une activité établie, une offre claire et des clients existants. Si vous démarrez tout juste ou si vous n\'avez pas encore de clients, l\'accompagnement mensuel n\'est probablement pas le bon moment — mais l\'audit ou un appel découverte peut vous aider à vous orienter.',
+      },
+      {
+        q: 'Faut-il avoir déjà un compte Instagram ?',
+        r: 'Non. Je peux accompagner aussi bien la création d\'un compte de zéro que le développement d\'un compte existant. Ce qui compte, c\'est que vous ayez une activité réelle à mettre en valeur.',
+      },
+      {
+        q: 'Dans combien de temps peut-on démarrer ?',
+        r: 'En général sous 1 à 2 semaines après la validation du devis, selon mes disponibilités du moment. N\'hésitez pas à réserver un appel pour connaître mes prochains créneaux disponibles.',
+      },
+    ],
+  },
+  {
+    categorie: 'Les offres',
+    questions: [
+      {
+        q: 'Quelle offre me correspond ?',
+        r: 'L\'audit est idéal si vous avez déjà un compte mais ne savez pas pourquoi ça ne décolle pas. Le pack contenu convient si vous voulez tester la délégation sans engagement. L\'accompagnement mensuel est fait pour ceux qui veulent déléguer entièrement sur le long terme. En cas de doute, l\'appel découverte permet de trancher ensemble.',
+      },
+      {
+        q: 'Peut-on commencer par un audit avant de passer à l\'accompagnement ?',
+        r: 'Absolument, et c\'est même souvent le meilleur point de départ. L\'audit me permet de comprendre votre compte en profondeur, et si vous passez ensuite à l\'accompagnement mensuel, il est offert dès le premier mois.',
+      },
+      {
+        q: 'L\'accompagnement mensuel est-il un engagement long terme ?',
+        r: 'L\'engagement minimum est de 3 mois. C\'est le temps minimum pour voir des résultats concrets sur Instagram. En dessous, il n\'est pas possible de mesurer l\'impact réel d\'une stratégie de contenu.',
+      },
+      {
+        q: 'Puis-je interrompre l\'accompagnement avant 3 mois ?',
+        r: 'L\'engagement de 3 mois minimum est inscrit dans le contrat. Il permet de garantir la continuité nécessaire pour voir des résultats. Passé les 3 mois, vous pouvez choisir de continuer ou de s\'arrêter à tout moment avec un préavis d\'un mois.',
+      },
+    ],
+  },
+  {
+    categorie: 'Comment ça fonctionne',
+    questions: [
+      {
+        q: 'Comment se déroule la collaboration au quotidien ?',
+        r: 'Chaque semaine, vous recevez les contenus préparés pour validation. Vous les relisez à votre rythme, faites vos retours, et après votre feu vert, je publie. En fin de mois, vous recevez un bilan avec les statistiques et les recommandations pour la suite.',
+      },
+      {
+        q: 'Est-ce que je garde le contrôle de mon compte ?',
+        r: 'Oui, entièrement. Rien n\'est publié sans votre validation préalable. Vous avez le dernier mot sur chaque contenu. Mon rôle est de créer et de proposer — pas d\'agir sans votre accord.',
+      },
+      {
+        q: 'Qui prend les photos et vidéos ?',
+        r: 'Je travaille principalement avec le contenu que vous me fournissez (photos de votre activité, de vos réalisations). Je peux également créer des visuels graphiques. Pour les photos professionnelles, une journée de shooting peut être organisée — c\'est une prestation en supplément, à définir ensemble selon vos besoins.',
+      },
+      {
+        q: 'Comment accède-t-on à l\'espace client ?',
+        r: 'Dès le démarrage de la collaboration, vous recevez un accès à votre espace client personnel. Vous y retrouvez vos contrats, factures, les contenus à valider, et tous les documents partagés dans le cadre de notre collaboration.',
+      },
+    ],
+  },
+  {
+    categorie: 'Résultats & attentes',
+    questions: [
+      {
+        q: 'Combien de temps avant de voir des résultats ?',
+        r: 'Instagram est un outil de confiance, pas de conversion immédiate. Les premiers signaux positifs (engagement, croissance de la communauté) apparaissent généralement entre 1 et 3 mois. Les premiers clients venus d\'Instagram arrivent souvent entre 3 et 9 mois, selon le secteur et la régularité.',
+      },
+      {
+        q: 'Garantissez-vous des résultats en termes de ventes ?',
+        r: 'Non, et méfiez-vous de quiconque vous le promet. Instagram est un levier de visibilité et de confiance — il amplifie votre bouche-à-oreille, mais ne remplace pas votre offre ni votre relation client. Ce que je garantis, c\'est une présence professionnelle, régulière et fidèle à votre image.',
+      },
+      {
+        q: 'Combien de posts par semaine ?',
+        r: 'Cela dépend de votre offre. Pour l\'accompagnement mensuel, le rythme habituel est de 2 à 3 posts par semaine, plus des stories régulières. L\'objectif n\'est pas de publier beaucoup, mais de publier avec intention et régularité.',
+      },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="Questions fréquentes — Claire Vigneron · Community Manager"
+  description="Toutes les réponses aux questions les plus fréquentes sur les offres, le fonctionnement et la collaboration avec Claire Vigneron, Community Manager."
+>
+  <Nav />
+
+  <section class="pt-24 md:pt-28 pb-8 px-6 bg-[#F5EDE4]">
+    <div class="max-w-3xl mx-auto">
+      <BackArrow />
+      <span class="text-xs font-medium uppercase tracking-widest text-[#767A55] mb-4 block">Support</span>
+      <h1 class="text-4xl md:text-5xl text-[#2C2416] tracking-tight mb-4">Questions fréquentes</h1>
+      <p class="text-xl text-[#2C2416]/60 font-light">Tout ce que vous voulez savoir avant de démarrer.</p>
+    </div>
+  </section>
+
+  <section class="py-10 px-6 bg-[#F5EDE4]">
+    <div class="max-w-3xl mx-auto space-y-14">
+      {faqs.map(section => (
+        <div>
+          <h2 class="text-xl md:text-2xl text-[#2C2416] tracking-tight mb-6 pb-4 border-b-2 border-[#8B3E22]/30">{section.categorie}</h2>
+          <div class="space-y-6">
+            {section.questions.map(item => (
+              <details class="group border border-[#D6CCC0] rounded-xl overflow-hidden">
+                <summary class="flex items-center justify-between gap-4 px-6 py-4 cursor-pointer list-none text-[#2C2416] font-medium hover:bg-[#EDE6DB] transition-colors">
+                  {item.q}
+                  <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#8B3E22] shrink-0 transition-transform group-open:rotate-180"></iconify-icon>
+                </summary>
+                <div class="px-6 py-4 bg-white text-[#2C2416]/70 font-light leading-relaxed border-t border-[#D6CCC0]">
+                  {item.r}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="py-16 px-6 bg-[#EDE6DB] text-center">
+    <p class="text-[#2C2416]/60 font-light mb-4">Vous n'avez pas trouvé la réponse à votre question ?</p>
+    <a
+      href="https://cal.com/claire-vigneron-k5okcq/30min?user=claire-vigneron-k5okcq&overlayCalendar=true"
+      target="_blank"
+      rel="noopener"
+      class="inline-flex items-center gap-2 px-6 py-3 bg-[#8B3E22] text-[#F5EDE4] rounded-full font-medium hover:bg-[#6B2E1A] transition-colors"
+    >
+      Réserver un appel gratuit
+      <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon>
+    </a>
+  </section>
+
+  <Footer />
+</BaseLayout>

@@ -1,0 +1,94 @@
+---
+const etapes = [
+  {
+    numero: '01',
+    titre: 'Un appel découverte gratuit',
+    texte: "On se parle 30 minutes. Vous me présentez votre activité, vos objectifs, vos doutes. Je vous donne mon analyse et on voit ensemble quelle offre correspond à votre situation. Sans engagement.",
+    icon: 'solar:phone-linear',
+  },
+  {
+    numero: '02',
+    titre: 'Vous choisissez votre offre',
+    texte: "Audit, Pack Contenu ou Accompagnement mensuel — vous choisissez selon votre besoin et votre rythme. Je vous envoie un devis clair. Vous signez, on démarre.",
+    icon: 'solar:document-text-linear',
+  },
+  {
+    numero: '03',
+    titre: 'Votre espace client',
+    texte: "Dès le démarrage, vous accédez à votre espace personnel sécurisé. Vous y retrouvez vos contrats, factures, et tout ce que nous partageons au fil de la collaboration.",
+    icon: 'solar:shield-user-linear',
+  },
+  {
+    numero: '04',
+    titre: 'Je crée, vous validez',
+    texte: "Chaque semaine, vous recevez les contenus préparés pour votre compte. Vous les relisez, faites vos retours. Après votre feu vert, je publie. Simple et transparent.",
+    icon: 'solar:check-square-linear',
+  },
+  {
+    numero: '05',
+    titre: 'On mesure et on ajuste',
+    texte: "Chaque mois, vous recevez un bilan avec les statistiques, ce qui fonctionne, et les ajustements pour le mois suivant. Votre Instagram progresse de façon mesurable.",
+    icon: 'solar:chart-linear',
+  },
+];
+---
+
+<section id="process" class="py-14 md:py-20 px-6 bg-[#EDE6DB]">
+  <div class="max-w-5xl mx-auto">
+
+    <div class="text-center mb-12 md:mb-16">
+      <span class="text-xs font-medium uppercase tracking-widest text-[#767A55] mb-3 block">Comment ça fonctionne</span>
+      <h2 class="text-3xl md:text-5xl text-[#2C2416] tracking-tight mb-4">De la première prise de contact<br class="hidden md:block" /> à votre Instagram qui tourne</h2>
+      <p class="text-[#2C2416]/60 font-light max-w-xl mx-auto">Un processus simple, transparent, pensé pour vous faire gagner du temps.</p>
+    </div>
+
+    <!-- Desktop : ligne horizontale -->
+    <div class="hidden md:flex items-start gap-0 relative">
+      <!-- Ligne de connexion -->
+      <div class="absolute top-7 left-[10%] right-[10%] h-px bg-[#D6CCC0]"></div>
+
+      {etapes.map((etape, i) => (
+        <div class="flex-1 flex flex-col items-center text-center px-3 relative">
+          <!-- Cercle numéro -->
+          <div class="w-14 h-14 bg-[#2C2416] rounded-full flex items-center justify-center mb-5 z-10 shadow-md shrink-0">
+            <iconify-icon icon={etape.icon} stroke-width="1.5" class="text-xl text-[#F5EDE4]"></iconify-icon>
+          </div>
+          <span class="text-xs text-[#8B3E22] font-medium uppercase tracking-widest mb-2">{etape.numero}</span>
+          <h3 class="text-base text-[#2C2416] tracking-tight mb-2 leading-snug font-medium">{etape.titre}</h3>
+          <p class="text-xs text-[#2C2416]/60 font-light leading-relaxed">{etape.texte}</p>
+        </div>
+      ))}
+    </div>
+
+    <!-- Mobile : vertical -->
+    <div class="md:hidden space-y-0">
+      {etapes.map((etape, i) => (
+        <div class="flex gap-5 pb-8 relative">
+          {i < etapes.length - 1 && (
+            <div class="absolute left-6 top-14 bottom-0 w-px bg-[#D6CCC0]"></div>
+          )}
+          <div class="w-12 h-12 bg-[#2C2416] rounded-full flex items-center justify-center shrink-0 z-10 shadow-md">
+            <iconify-icon icon={etape.icon} stroke-width="1.5" class="text-lg text-[#F5EDE4]"></iconify-icon>
+          </div>
+          <div class="pt-1">
+            <span class="text-xs text-[#8B3E22] font-medium uppercase tracking-widest block mb-1">{etape.numero}</span>
+            <h3 class="text-lg text-[#2C2416] tracking-tight mb-2">{etape.titre}</h3>
+            <p class="text-sm text-[#2C2416]/65 font-light leading-relaxed">{etape.texte}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div class="text-center mt-10 md:mt-14">
+      <a
+        href="https://cal.com/claire-vigneron-k5okcq/30min?user=claire-vigneron-k5okcq&overlayCalendar=true"
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center gap-2 px-7 py-3.5 bg-[#8B3E22] text-[#F5EDE4] rounded-full font-medium hover:bg-[#6B2E1A] transition-colors"
+      >
+        Démarrer par un appel gratuit
+        <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon>
+      </a>
+    </div>
+  </div>
+</section>

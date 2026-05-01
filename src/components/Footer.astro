@@ -1,54 +1,44 @@
 ---
-const exploreLinks = [
-  { label: 'Offres', href: '#offres' },
-  { label: 'Comment ça marche', href: '#process' },
-  { label: 'À propos', href: '#apropos' },
-  { label: 'Blog', href: '#' },
-];
-
+const calendarLink = 'https://cal.com/claire-vigneron-k5okcq/30min?user=claire-vigneron-k5okcq&overlayCalendar=true';
 const serviceLinks = [
-  { label: 'Audit Instagram', href: '#offres' },
-  { label: 'Pack Contenu', href: '#offres' },
-  { label: 'Accompagnement mensuel', href: '#offres' },
-  { label: 'Appel découverte', href: '#contact' },
+  { label: 'Audit Instagram', href: '/offres#audit' },
+  { label: 'Pack Contenu', href: '/offres#pack' },
+  { label: 'Accompagnement mensuel', href: '/offres#mensuel' },
+];
+const legalLinks = [
+  { label: 'Mentions légales', href: '/mentions-legales' },
+  { label: 'CGV', href: '/cgv' },
+  { label: 'CGU', href: '/cgu' },
+  { label: 'Confidentialité', href: '/confidentialite' },
+  { label: 'Accessibilité', href: '/accessibilite' },
 ];
 ---
 
-<footer class="bg-[#2C2416] text-[#F5EDE4] pt-20 pb-10 px-6 md:px-12">
-  <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-[#F5EDE4]/10 pb-16">
+<footer class="bg-[#2C2416] text-[#F5EDE4] pt-12 md:pt-16 pb-8 px-6 md:px-12">
+  <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-8 border-b border-[#F5EDE4]/10 pb-10 md:pb-12">
 
-    <!-- Marque -->
-    <div class="md:col-span-1 space-y-6">
-      <a href="/" class="text-2xl font-serif tracking-tight">
+    <!-- Marque (span 2 colonnes sur mobile) -->
+    <div class="col-span-2 md:col-span-1 space-y-4">
+      <a href="/" class="text-xl font-serif tracking-tight block">
         Claire Vigneron <span class="text-[#767A55]">·</span> CM
       </a>
-      <p class="text-[#F5EDE4]/50 text-sm leading-relaxed">
+      <p class="text-[#F5EDE4]/70 text-sm leading-relaxed">
         Community Manager spécialisée dans la valorisation du savoir-faire des artisans et indépendants.
       </p>
-      <div class="flex space-x-4">
-        <a href="#" class="w-10 h-10 border border-[#F5EDE4]/20 rounded-full flex items-center justify-center hover:bg-[#F5EDE4] hover:text-[#2C2416] transition-colors" aria-label="Instagram">
-          <iconify-icon icon="solar:camera-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+      <div class="flex space-x-3">
+        <a href="tel:0678301358" class="w-9 h-9 border border-[#F5EDE4]/20 rounded-full flex items-center justify-center hover:bg-[#F5EDE4] hover:text-[#2C2416] transition-colors" aria-label="Appeler Claire">
+          <iconify-icon icon="solar:phone-linear" stroke-width="1.5" class="text-base"></iconify-icon>
         </a>
-        <a href="mailto:clairevigneron.contact@gmail.com" class="w-10 h-10 border border-[#F5EDE4]/20 rounded-full flex items-center justify-center hover:bg-[#F5EDE4] hover:text-[#2C2416] transition-colors" aria-label="Email">
-          <iconify-icon icon="solar:letter-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+        <a href="mailto:clairevigneron.contact@gmail.com" class="w-9 h-9 border border-[#F5EDE4]/20 rounded-full flex items-center justify-center hover:bg-[#F5EDE4] hover:text-[#2C2416] transition-colors" aria-label="Email">
+          <iconify-icon icon="solar:letter-linear" stroke-width="1.5" class="text-base"></iconify-icon>
         </a>
       </div>
     </div>
 
-    <!-- Navigation -->
-    <div class="col-span-1">
-      <h5 class="font-serif text-xl mb-6 text-[#F5EDE4]/60 tracking-tight">Navigation</h5>
-      <ul class="space-y-3 text-sm text-[#F5EDE4]/50">
-        {exploreLinks.map(link => (
-          <li><a href={link.href} class="hover:text-white transition-colors">{link.label}</a></li>
-        ))}
-      </ul>
-    </div>
-
-    <!-- Services -->
-    <div class="col-span-1">
-      <h5 class="font-serif text-xl mb-6 text-[#F5EDE4]/60 tracking-tight">Offres</h5>
-      <ul class="space-y-3 text-sm text-[#F5EDE4]/50">
+    <!-- Offres -->
+    <div>
+      <h5 class="text-sm font-medium text-[#F5EDE4]/70 mb-4">Offres</h5>
+      <ul class="space-y-2.5 text-sm text-[#F5EDE4]/60">
         {serviceLinks.map(link => (
           <li><a href={link.href} class="hover:text-white transition-colors">{link.label}</a></li>
         ))}
@@ -56,28 +46,44 @@ const serviceLinks = [
     </div>
 
     <!-- Contact -->
-    <div class="col-span-1" id="contact">
-      <h5 class="font-serif text-xl mb-6 text-[#F5EDE4]/60 tracking-tight">Contact</h5>
-      <p class="text-xs text-[#F5EDE4]/40 mb-6 leading-relaxed">
-        Un projet, une question, envie de travailler ensemble ? Commençons par un appel découverte gratuit.
+    <div id="contact">
+      <h5 class="text-sm font-medium text-[#F5EDE4]/70 mb-4">Contact</h5>
+      <p class="text-sm text-[#F5EDE4]/60 mb-4 leading-relaxed">
+        Un projet ? Commençons par un appel gratuit de 30 min.
       </p>
       <a
-        href="https://calendar.app.google/3MNsKo33KBsLdFB18"
+        href={calendarLink}
         target="_blank"
         rel="noopener"
-        class="inline-block bg-[#8B3E22] text-[#F5EDE4] px-6 py-3 rounded-lg text-sm font-medium hover:bg-[#6B2E1A] transition-colors text-center w-full"
+        class="inline-block bg-[#8B3E22] text-[#F5EDE4] px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-[#6B2E1A] transition-colors"
       >
-        Réserver un appel découverte
+        Réserver un appel
       </a>
+    </div>
+
+    <!-- FAQ -->
+    <div>
+      <h5 class="text-sm font-medium text-[#F5EDE4]/70 mb-4">Support</h5>
+      <a href="/faq" class="flex items-center gap-2 text-sm text-[#F5EDE4]/60 hover:text-white transition-colors">
+        <iconify-icon icon="solar:question-circle-linear" stroke-width="1.5" class="text-[#8B3E22] text-base shrink-0"></iconify-icon>
+        Questions fréquentes
+      </a>
+    </div>
+
+    <!-- Légal & qualité -->
+    <div>
+      <h5 class="text-sm font-medium text-[#F5EDE4]/70 mb-4">Légal & qualité</h5>
+      <ul class="space-y-2 text-sm text-[#F5EDE4]/60">
+        {legalLinks.map(link => (
+          <li><a href={link.href} class="hover:text-white transition-colors">{link.label}</a></li>
+        ))}
+      </ul>
     </div>
   </div>
 
   <!-- Copyright -->
-  <div class="max-w-7xl mx-auto pt-10 flex flex-col md:flex-row justify-between items-center text-xs text-[#F5EDE4]/30">
-    <p>© 2025 Claire Vigneron · Community Manager. Tous droits réservés.</p>
-    <div class="flex space-x-6 mt-4 md:mt-0">
-      <a href="#" class="hover:text-white transition-colors">Mentions légales</a>
-      <a href="#" class="hover:text-white transition-colors">Politique de confidentialité</a>
-    </div>
+  <div class="max-w-7xl mx-auto pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-sm text-[#F5EDE4]/50">
+    <p>© 2025 Claire Vigneron · Community Manager</p>
+    <a href="/espace-client" class="hover:text-white transition-colors">Espace client</a>
   </div>
 </footer>

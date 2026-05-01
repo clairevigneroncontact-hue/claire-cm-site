@@ -77,22 +77,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     </div>
 
     <main class="max-w-6xl mx-auto px-4 md:px-6 py-10">
-      <div class="mb-6 flex flex-col sm:flex-row sm:items-end gap-4">
+      <div class="mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
         <div class="flex-1">
           <h1 id="welcome" class="text-3xl md:text-4xl text-[#2C2416] tracking-tight">Bonjour 👋</h1>
           <p id="offer-badge" class="text-[#767A55] text-sm mt-1 font-light"></p>
         </div>
-        <!-- Barre de recherche globale documents -->
-        <div class="relative w-full sm:w-72">
+        <!-- Barre de recherche globale -->
+        <div class="relative w-full sm:w-80">
           <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
-          <input id="doc-search-input" type="text" placeholder="Rechercher un document…" oninput="filterDocs(this.value)" class="w-full pl-8 pr-3 py-2.5 rounded-xl border border-[#D6CCC0] bg-white text-sm text-[#2C2416] focus:outline-none focus:border-[#8B3E22] shadow-sm" />
+          <input id="doc-search-input" type="text" placeholder="Rechercher dans mon espace…" oninput="globalSearch(this.value)" autocomplete="off"
+            class="w-full pl-8 pr-3 py-2.5 rounded-xl border border-[#D6CCC0] bg-white text-sm text-[#2C2416] focus:outline-none focus:border-[#8B3E22] shadow-sm" />
+          <!-- Panel de résultats -->
+          <div id="search-results-panel" class="hidden absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl border border-[#D6CCC0] z-50 max-h-72 overflow-y-auto">
+          </div>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
 
         <!-- Infos importantes -->
-        <div id="card-infos" class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+        <div id="card-infos" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] self-start">
           <div class="flex items-center gap-3 mb-5">
             <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
               <iconify-icon icon="solar:user-id-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
@@ -148,8 +152,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div id="uploads-list" class="mt-3 space-y-1"></div>
         </div>
 
-        <!-- Notes client - format discussion -->
-        <div id="card-notes" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] md:col-span-2 lg:col-span-3">
+        <!-- Notes client -->
+        <div id="card-notes" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] md:col-span-1 lg:col-span-2">
           <div class="flex items-center gap-3 mb-4">
             <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
               <iconify-icon icon="solar:notebook-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
@@ -175,7 +179,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </div>
 
         <!-- Tâches -->
-        <div id="card-tasks" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] md:col-span-2 lg:col-span-3">
+        <div id="card-tasks" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] md:col-span-1 lg:col-span-1">
           <div class="flex items-center gap-3 mb-4">
             <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
               <iconify-icon icon="solar:checklist-minimalistic-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
@@ -197,15 +201,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     <!-- Calendrier éditorial — en bas, pleine largeur -->
     <div class="max-w-6xl mx-auto px-4 md:px-6 pb-6">
-      <div id="card-calendar" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] mt-5">
-        <div class="flex items-center justify-between mb-4">
+      <div id="card-calendar" class="bg-white rounded-2xl p-4 md:p-6 border border-[#D6CCC0] mt-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
               <iconify-icon icon="solar:calendar-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
             </div>
             <div>
               <h2 class="text-base text-[#2C2416] font-medium">Calendrier éditorial</h2>
-              <p class="text-xs text-[#767A55] font-light hidden sm:block">Clic = détail · ✏️ = note</p>
             </div>
           </div>
           <div class="flex items-center gap-1.5">
@@ -235,9 +238,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </div>
         <!-- Vue jour plein format -->
         <div id="cal-day-modal" class="hidden mt-2">
-          <button onclick="closeDashCalFullDay()" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors mb-4">
-            <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon> Retour au calendrier
-          </button>
+          <div class="flex items-center justify-between mb-4">
+            <button onclick="closeDashCalFullDay()" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors">
+              <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon> Retour
+            </button>
+            <button id="dash-next-day-btn" onclick="dashCalGoToNext()" class="hidden items-center gap-2 text-sm font-medium text-[#8B3E22] hover:text-[#6B2E1A] bg-[#8B3E22]/10 hover:bg-[#8B3E22]/20 px-3 py-1.5 rounded-lg transition-colors">
+              Suivant <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon>
+            </button>
+          </div>
           <h4 id="cal-day-title" class="text-xl font-medium text-[#2C2416] mb-5"></h4>
           <div id="cal-day-content" class="space-y-4"></div>
         </div>
@@ -272,40 +280,40 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
   const TUTO_STEPS = [
     {
-      icon: 'solar:user-id-linear',
-      title: 'Mes informations',
-      text: 'Retrouvez ici vos informations personnelles : nom, email, téléphone et compte Instagram. Vous pouvez les modifier à tout moment dans les paramètres.',
-      card: 'card-infos'
-    },
-    {
-      icon: 'solar:document-text-linear',
-      title: 'Contrats & documents',
-      text: 'Claire y dépose vos contrats signés et tout document lié à votre collaboration. Vous pouvez les télécharger à tout moment.',
-      card: 'card-docs'
+      icon: 'solar:magnifer-linear',
+      title: 'Barre de recherche',
+      text: 'En haut à droite, cherchez n\'importe quoi : documents, contenus, tâches, notes. Les résultats s\'affichent instantanément.',
+      card: null
     },
     {
       icon: 'solar:check-square-linear',
       title: 'Contenu à valider',
-      text: 'Chaque semaine, Claire y dépose les posts créés pour vous. Vous pouvez les valider ou les refuser en un clic — rien ne sera publié sans votre accord.',
+      text: 'Claire y dépose vos posts, reels et carrousels. Cliquez pour voir le détail, puis validez ou refusez en un clic.',
       card: 'card-content'
     },
     {
-      icon: 'solar:bill-linear',
-      title: 'Factures',
-      text: 'Toutes vos factures sont disponibles ici au format PDF. Vous pouvez les télécharger à tout moment.',
-      card: 'card-invoices'
+      icon: 'solar:document-text-linear',
+      title: 'Mes documents',
+      text: 'Contrats, factures et documents déposés par Claire. Cliquez sur un fichier pour l\'ouvrir.',
+      card: 'card-docs'
     },
     {
       icon: 'solar:upload-linear',
       title: 'Déposer des fichiers',
-      text: 'Partagez ici vos photos et vidéos que Claire pourra utiliser pour créer vos contenus. Formats acceptés : images et vidéos.',
+      text: 'Partagez vos photos et vidéos que Claire utilisera pour créer vos contenus.',
       card: 'card-upload'
     },
     {
-      icon: 'solar:settings-linear',
-      title: 'Vos paramètres',
-      text: 'Via l\'icône ⚙ en haut à droite, accédez à vos paramètres : modifier vos informations, changer votre mot de passe, consulter la FAQ ou contacter le support.',
-      card: null
+      icon: 'solar:notebook-linear',
+      title: 'Notes & tâches',
+      text: 'Laissez des messages à Claire (préférences, idées) et gérez vos tâches. Tout est visible depuis son espace admin.',
+      card: 'card-notes'
+    },
+    {
+      icon: 'solar:calendar-linear',
+      title: 'Calendrier éditorial',
+      text: 'Visualisez vos publications programmées mois par mois. Cliquez sur un jour pour voir le détail. Ajoutez des notes via le ✏️.',
+      card: 'card-calendar'
     },
   ];
 
@@ -445,7 +453,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       feed.innerHTML = data.map(n => {
         const d = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
         const txt = n.note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        return `<div class="bg-[#EDE6DB] rounded-xl rounded-tr-sm px-4 py-3">
+        return `<div class="bg-[#EDE6DB] rounded-xl rounded-tr-sm px-4 py-3" data-search="${n.note.toLowerCase()}">
           <p class="text-sm text-[#2C2416] leading-relaxed">${txt}</p>
           <p class="text-[10px] text-[#767A55] mt-1.5">${d}</p>
         </div>`;
@@ -474,7 +482,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (!data || !data.length) { el.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucune tâche</p>'; return; }
       el.innerHTML = data.map(t => {
         const title = t.title.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        return `<div class="flex items-center gap-3 py-2 border-b border-[#D6CCC0]/30 last:border-0">
+        return `<div class="flex items-center gap-3 py-2 border-b border-[#D6CCC0]/30 last:border-0" data-search="${t.title.toLowerCase()}">
           <button onclick="toggleTask('${t.id}',${t.done})" class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${t.done ? 'bg-[#8B3E22] border-[#8B3E22]' : 'border-[#D6CCC0] hover:border-[#8B3E22]'}">
             ${t.done ? '<iconify-icon icon="solar:check-linear" stroke-width="2.5" class="text-white" style="font-size:9px"></iconify-icon>' : ''}
           </button>
@@ -515,8 +523,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       ].join('') || '<p class="text-xs text-[#2C2416]/30 italic">À compléter dans les paramètres</p>';
     }
 
-    // Documents
-    const { data: docs } = await sb.from('documents').select('*').eq('client_id', uid).order('created_at', { ascending: false });
+    // Documents + fichiers déposés (fusionnés)
+    const [{ data: docs }, { data: clientUploads }] = await Promise.all([
+      sb.from('documents').select('*').eq('client_id', uid).order('created_at', { ascending: false }),
+      sb.from('client_uploads').select('*').eq('client_id', uid).order('created_at', { ascending: false }),
+    ]);
     const TYPE_LABELS = {
       contrat: 'Contrat', facture: 'Facture', post: 'Post',
       reel: 'Reel', carrousel: 'Carrousel', planning: 'Planning éditorial',
@@ -540,17 +551,25 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       </a>`;
     }
 
-    // Tous les docs dans une liste unifiée avec data-search pour le filtre
-    const allDocsUnified = [...(docs||[])].sort((a,b) => new Date(b.created_at)-new Date(a.created_at));
+    // Fusionner documents + fichiers déposés
+    const uploadsAsDoc = (clientUploads||[]).map(u => ({
+      id: u.id, name: u.name, file_url: u.file_url,
+      type: 'fichier-déposé', created_at: u.created_at, _isUpload: true,
+    }));
+    const allDocsUnified = [...(docs||[]), ...uploadsAsDoc]
+      .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+    const TYPE_LABELS_FULL = { ...TYPE_LABELS, 'fichier-déposé': 'Fichier déposé' };
     window._allDocsHtml = allDocsUnified.length
       ? allDocsUnified.map(d => {
-          const label = d.name || d.file_name || 'Document';
-          const type  = TYPE_LABELS[d.type] || d.type || '';
+          const label = d.name || d.file_name || 'Fichier';
+          const type  = TYPE_LABELS_FULL[d.type] || d.type || '';
           const url   = d.file_url || '#';
+          const icon  = d._isUpload ? 'solar:upload-linear' : 'solar:file-download-linear';
           return `<a href="${url}" target="_blank" data-search="${label.toLowerCase()} ${type.toLowerCase()}"
             class="flex items-center justify-between gap-3 text-sm py-2 border-b border-[#D6CCC0]/30 last:border-0 hover:text-[#8B3E22] transition-colors">
             <div class="flex items-center gap-2 min-w-0">
-              <iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] shrink-0"></iconify-icon>
+              <iconify-icon icon="${icon}" stroke-width="1.5" class="text-[#8B3E22] shrink-0"></iconify-icon>
               <span class="truncate">${label}</span>
             </div>
             ${type ? `<span class="text-xs text-[#767A55] shrink-0 bg-[#EDE6DB] px-2 py-0.5 rounded-full">${type}</span>` : ''}
@@ -559,12 +578,99 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       : '<p class="text-xs text-[#2C2416]/30 italic">Aucun document</p>';
     document.getElementById('docs-list').innerHTML = window._allDocsHtml;
 
-    window.filterDocs = (q) => {
+    window.filterDocs = (q) => globalSearch(q);
+    window._searchResults = [];
+
+    window.globalSearch = (q) => {
       const term = q.trim().toLowerCase();
-      document.getElementById('docs-list').querySelectorAll('[data-search]').forEach(el => {
-        el.style.display = (el.dataset.search || '').includes(term) ? '' : 'none';
+      const panel = document.getElementById('search-results-panel');
+      if (!panel) return;
+
+      if (!term) {
+        panel.classList.add('hidden');
+        panel.innerHTML = '';
+        return;
+      }
+
+      const results = [];
+
+      // Docs
+      document.querySelectorAll('#docs-list [data-search]').forEach(el => {
+        if ((el.dataset.search || '').includes(term)) {
+          const label = el.querySelector('span.truncate')?.textContent?.trim() || el.dataset.search.split(' ')[0];
+          const section = el.querySelector('.rounded-full')?.textContent?.trim() || 'Document';
+          results.push({ label: label.slice(0,50), section, icon:'solar:document-text-linear', el });
+        }
       });
+
+      // Content
+      document.querySelectorAll('#content-list [data-search]').forEach(el => {
+        if ((el.dataset.search || '').includes(term)) {
+          const title = el.querySelector('p.font-medium, p.font-semibold')?.textContent?.trim() || el.dataset.search.slice(0,30);
+          const detailEl = el.querySelector('[id^="dash-detail-"]');
+          const itemId = detailEl?.id?.replace('dash-detail-','');
+          results.push({ label: title.slice(0,50), section:'Contenu', icon:'solar:check-square-linear', el, itemId });
+        }
+      });
+
+      // Tasks
+      document.querySelectorAll('#tasks-list [data-search]').forEach(el => {
+        if ((el.dataset.search || '').includes(term)) {
+          const text = el.querySelector('span.flex-1')?.textContent?.trim() || el.dataset.search;
+          results.push({ label: text.slice(0,50), section:'Tâche', icon:'solar:checklist-minimalistic-linear', el });
+        }
+      });
+
+      // Notes
+      document.querySelectorAll('#notes-feed [data-search]').forEach(el => {
+        if ((el.dataset.search || '').includes(term)) {
+          const text = el.querySelector('p.text-sm')?.textContent?.trim() || el.dataset.search;
+          results.push({ label: text.slice(0,50), section:'Note', icon:'solar:notebook-linear', el });
+        }
+      });
+
+      window._searchResults = results;
+
+      if (!results.length) {
+        panel.innerHTML = '<p class="text-sm text-[#2C2416]/40 italic p-4 text-center">Aucun résultat</p>';
+      } else {
+        panel.innerHTML = results.map((r, i) => `
+          <div onclick="window.searchGoTo(${i})"
+            class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[#F5EDE4] transition-colors border-b border-[#D6CCC0]/30 last:border-0">
+            <iconify-icon icon="${r.icon}" stroke-width="1.5" class="text-[#8B3E22] text-lg shrink-0"></iconify-icon>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm text-[#2C2416] truncate font-medium">${r.label}</p>
+              <p class="text-xs text-[#767A55]">${r.section}</p>
+            </div>
+            <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5" class="text-[#D6CCC0] shrink-0"></iconify-icon>
+          </div>`).join('');
+      }
+      panel.classList.remove('hidden');
     };
+
+    window.searchGoTo = (i) => {
+      const r = window._searchResults?.[i];
+      if (!r) return;
+      document.getElementById('search-results-panel').classList.add('hidden');
+      document.getElementById('doc-search-input').value = '';
+      if (!r.el) return;
+      // Scroll vers l'élément
+      r.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Highlight temporaire
+      r.el.style.transition = 'box-shadow 0.3s';
+      r.el.style.boxShadow = '0 0 0 3px #8B3E2240';
+      setTimeout(() => { r.el.style.boxShadow = ''; }, 2000);
+      // Ouvrir le contenu si applicable
+      if (r.itemId) setTimeout(() => window.toggleDashContent(r.itemId), 400);
+    };
+
+    // Fermer le panel en cliquant ailleurs
+    document.addEventListener('click', (e) => {
+      const inp = document.getElementById('doc-search-input');
+      const panel = document.getElementById('search-results-panel');
+      if (inp && panel && !inp.contains(e.target) && !panel.contains(e.target))
+        panel.classList.add('hidden');
+    }, true);
 
     // Contenu (tous statuts)
     const { data: allItems } = await sb.from('content_items').select('*').eq('client_id', uid).order('created_at', { ascending: false });
@@ -584,10 +690,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const tColor = TYPE_COLORS_DASH[tType] || 'bg-[#8B3E22]/10 text-[#8B3E22]';
       const typeTag = tType ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${tColor} uppercase tracking-wide shrink-0">${tType}</span>` : '';
       return `
-      <div class="border border-[#D6CCC0] rounded-xl overflow-hidden mb-3 last:mb-0">
+      <div class="border border-[#D6CCC0] rounded-xl overflow-hidden mb-3 last:mb-0" data-search="${(item.title + ' ' + (item.description||'')).toLowerCase().replace(/"/g,'').replace(/\[.*?\]/g,'').trim()}">
         <div class="flex items-center justify-between gap-2 p-3 cursor-pointer hover:bg-[#F5EDE4]/50 transition-colors" onclick="toggleDashContent('${item.id}')">
           <div class="flex items-center gap-2 min-w-0">
-            ${f0?.url && isImg ? `<img src="${f0.url}" class="w-9 h-9 rounded-lg object-cover shrink-0" />` : `<div class="w-9 h-9 bg-[#8B3E22]/10 rounded-lg flex items-center justify-center shrink-0"><iconify-icon icon="solar:image-linear" stroke-width="1.5" class="text-[#8B3E22] text-sm"></iconify-icon></div>`}
+            ${f0?.url
+              ? `<div class="w-9 h-9 rounded-lg shrink-0 overflow-hidden bg-[#8B3E22]/10 flex items-center justify-center">
+                   <img src="${f0.url}" class="w-full h-full object-cover" onerror="this.style.display='none'" />
+                 </div>`
+              : `<div class="w-9 h-9 bg-[#8B3E22]/10 rounded-lg flex items-center justify-center shrink-0"><iconify-icon icon="solar:image-linear" stroke-width="1.5" class="text-[#8B3E22] text-sm"></iconify-icon></div>`
+            }
             <div class="min-w-0">
               ${typeTag ? `<div class="mb-0.5">${typeTag}</div>` : ''}
               <p class="font-medium text-[#2C2416] text-sm truncate leading-tight">${cleanT}</p>
@@ -767,6 +878,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         })
       .subscribe();
 
+    // Realtime — tâches : mise à jour auto quand l'admin ajoute/modifie une tâche
+    sb.channel('client-tasks-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
+        if ((payload.new?.client_id || payload.old?.client_id) === uid) loadTasks();
+      })
+      .subscribe();
+
     // ─── Événements français ─────────────────────────────────────────────────
     function getEasterDate(y) {
       const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25);
@@ -778,17 +896,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const ev={};
       const add=(m,d,n)=>{ const k=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; if(!ev[k])ev[k]=[]; ev[k].push(n); };
       const addD=(dt,n)=>add(dt.getMonth()+1,dt.getDate(),n);
-      add(1,1,'🥂 Jour de l\'an'); add(5,1,'🏛 Fête du Travail'); add(5,8,'🕊 Victoire 45');
-      add(7,14,'🎆 Fête Nationale'); add(8,15,'⛪ Assomption'); add(11,1,'🕯 Toussaint');
+      add(1,1,'🥂 Jour de l\'an'); add(5,1,'🏛 Fête du Travail');
+      add(7,14,'🎆 Fête Nationale'); add(11,1,'🕯 Toussaint');
       add(11,11,'🕊 Armistice'); add(12,25,'🎄 Noël');
       const pa=getEasterDate(y);
       addD(pa,'🐣 Pâques');
       const lpa=new Date(pa); lpa.setDate(pa.getDate()+1); addD(lpa,'🐣 Lundi Pâques');
-      const asc=new Date(pa); asc.setDate(pa.getDate()+39); addD(asc,'✝ Ascension');
-      const pen=new Date(pa); pen.setDate(pa.getDate()+49); addD(pen,'🕊 Pentecôte');
-      const lpe=new Date(pa); lpe.setDate(pa.getDate()+50); addD(lpe,'🕊 Lundi Pentecôte');
-      add(1,7,'👑 Épiphanie'); add(2,14,'❤️ St-Valentin'); add(3,8,'💜 Journée Femme');
-      add(4,1,'🐟 Poisson d\'avril'); add(10,31,'🎃 Halloween'); add(12,6,'🎅 St-Nicolas'); add(12,31,'🥂 Réveillon');
+      const asc=new Date(pa); asc.setDate(pa.getDate()+39);
+      const pen=new Date(pa); pen.setDate(pa.getDate()+49);
+      const lpe=new Date(pa); lpe.setDate(pa.getDate()+50);
+      add(2,14,'❤️ St-Valentin'); add(3,8,'💜 Journée Femme');
+      add(4,1,'🐟 Poisson d\'avril'); add(10,31,'🎃 Halloween'); add(12,31,'🥂 Réveillon');
       function lastSun(mo){const d=new Date(y,mo+1,0);d.setDate(d.getDate()-d.getDay());return d;}
       function firstSun(mo){const d=new Date(y,mo,1);while(d.getDay()!==0)d.setDate(d.getDate()+1);return d;}
       function nthSun(mo,n){const d=firstSun(mo);d.setDate(d.getDate()+(n-1)*7);return d;}
@@ -833,7 +951,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     async function loadCalData() {
       const sb2 = await getSB();
       const [{ data: approved }, { data: notes }] = await Promise.all([
-        sb2.from('content_items').select('id,title,scheduled_at,updated_at,files').eq('client_id', uid).eq('status','approved'),
+        sb2.from('content_items').select('id,title,description,scheduled_at,updated_at,files').eq('client_id', uid).eq('status','approved'),
         sb2.from('calendar_notes').select('*').eq('client_id', uid),
       ]);
       calApproved = approved || [];
@@ -850,12 +968,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
       const days = ['Lu','Ma','Me','Je','Ve','Sa','Di'];
 
-      let html = `<table class="w-full border-collapse text-xs table-fixed"><thead><tr>`;
-      days.forEach(d => { html += `<th class="py-1.5 text-center text-[#767A55] font-medium text-[10px] uppercase tracking-widest">${d}</th>`; });
+      let html = `<table class="w-full border-collapse table-fixed"><thead><tr>`;
+      days.forEach(d => { html += `<th class="py-2 text-center text-[#767A55] font-semibold text-xs uppercase tracking-wide">${d}</th>`; });
       html += `</tr></thead><tbody><tr>`;
 
       let col = 0;
-      for (let i = 0; i < startOffset; i++) { html += `<td class="border border-[#D6CCC0]/30 p-1 h-16 align-top bg-[#F5EDE4]/30"></td>`; col++; }
+      for (let i = 0; i < startOffset; i++) { html += `<td class="border border-[#D6CCC0]/30 p-1 bg-[#F5EDE4]/30" style="height:90px"></td>`; col++; }
 
       for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
@@ -870,7 +988,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           const color  = TYPE_COLORS_CAL[tType] || '#8B3E22';
           const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'').slice(0,18);
           const heure  = a.scheduled_at ? ' ' + new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
-          cellContent += `<div style="background:${color}15;color:${color};border-left:2px solid ${color}" class="text-[9px] leading-tight px-1 py-0.5 rounded-r mb-0.5 truncate font-medium">${clean}${heure}</div>`;
+          cellContent += `<div style="background:${color}15;color:${color};border-left:2px solid ${color};font-size:11px;font-weight:600;line-height:1.4;padding:1px 3px;border-radius:0 3px 3px 0;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${clean}${heure}</div>`;
         });
         dayNotes.forEach(n => {
           cellContent += `<div class="text-[9px] leading-tight px-1 py-0.5 rounded bg-[#EDE6DB] text-[#767A55] mb-0.5 truncate italic">${n.note.slice(0,20)}</div>`;
@@ -878,14 +996,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const hasDot = (dayNotes.length || dayApproved.length) ? `<span class="w-1 h-1 rounded-full bg-[#8B3E22] inline-block ml-0.5 mb-0.5 shrink-0"></span>` : '';
 
         const dayFrEv = (frEvents[dateStr] || []);
-        const evHtml  = dayFrEv.map(e => `<div style="font-size:8px;color:#8B3E22;line-height:1.3;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e}</div>`).join('');
+        const evHtml = dayFrEv.map(e => `<div style="font-size:10px;color:#8B3E22;line-height:1.4;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500">${e}</div>`).join('');
 
         html += `<td class="border border-[#D6CCC0]/30 p-1 align-top cursor-pointer hover:bg-[#F5EDE4] transition-colors ${dayFrEv.length ? 'bg-[#FFF8F5]' : ''}"
-          style="height:72px"
+          style="height:90px"
           onclick="calCellClick('${dateStr}')"
           ondblclick="calDayDetail('${dateStr}')">
-          <div class="flex items-center justify-center gap-0.5 mb-0.5">
-            <span class="${isToday ? 'w-5 h-5 bg-[#8B3E22] text-white rounded-full inline-flex items-center justify-center' : ''} text-[10px] font-${isToday?'bold':'medium'} text-${isToday?'white':'[#2C2416]'}">${day}</span>${hasDot}
+          <div class="flex items-center justify-center gap-0.5 mb-1">
+            <span class="${isToday ? 'w-6 h-6 bg-[#8B3E22] text-white rounded-full inline-flex items-center justify-center' : ''}" style="font-size:13px;font-weight:${isToday?'700':'500'};color:${isToday?'white':'#2C2416'}">${day}</span>${hasDot}
           </div>
           ${cellContent}${evHtml}
         </td>`;
@@ -899,6 +1017,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     }
 
     window.calNav = (dir) => { calMonth += dir; if (calMonth > 11) { calMonth=0; calYear++; } if (calMonth < 0) { calMonth=11; calYear--; } renderCal(); };
+
+    let _dashFullDayDate = null;
+
+    function getNextDashContentDate(after) {
+      const dates = new Set([
+        ...calApproved.map(a => (a.scheduled_at||a.updated_at||'').slice(0,10)),
+        ...calNotes.map(n => n.date)
+      ]);
+      return [...dates].filter(d => d > after).sort()[0] || null;
+    }
+
+    window.dashCalGoToNext = () => {
+      const next = getNextDashContentDate(_dashFullDayDate);
+      if (next) window.calDayDetail(next);
+    };
 
     const isTouch = () => window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 
@@ -926,6 +1059,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     window.calDayDetail = (dateStr) => {
+      _dashFullDayDate = dateStr;
       const dayItems = calApproved.filter(a => (a.scheduled_at||a.updated_at||'').slice(0,10) === dateStr);
       const dayNotes = calNotes.filter(n => n.date === dateStr);
       const [y,m,d] = dateStr.split('-');
@@ -942,17 +1076,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         let files = []; try { files = Array.isArray(a.files) ? a.files : JSON.parse(a.files||'[]'); } catch(e){}
         const isImgF = files[0]?.url && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(files[0].url);
         const heure  = a.scheduled_at ? new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
-        html += `<div class="flex overflow-hidden rounded-2xl border border-[#D6CCC0]">
-          <div class="w-28 sm:w-40 shrink-0 flex items-center justify-center" style="background:${color}15; min-height:110px">
-            ${isImgF ? `<img src="${files[0].url}" class="w-full h-full object-cover" style="min-height:110px" />` : `<iconify-icon icon="${icon}" stroke-width="1.5" style="color:${color}" class="text-4xl"></iconify-icon>`}
+        html += `<div class="rounded-2xl border border-[#D6CCC0] overflow-hidden">
+          <!-- En-tête : type + heure -->
+          <div class="flex items-center justify-between px-4 py-3 border-b border-[#D6CCC0]/50 bg-[#F5EDE4]/30">
+            <span style="background:${color}20;color:${color}" class="text-xs font-bold px-2.5 py-1 rounded-full">${tType||'—'}</span>
+            ${heure ? `<div class="flex items-center gap-1.5 text-sm font-semibold text-[#2C2416]"><iconify-icon icon="solar:clock-circle-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>${heure}</div>` : ''}
           </div>
-          <div class="flex-1 p-4">
-            <div class="flex items-center gap-2 mb-2">
-              <span style="background:${color}20;color:${color}" class="text-xs font-bold px-2 py-0.5 rounded-full">${tType||'—'}</span>
-              ${heure ? `<span class="text-xs text-[#767A55] font-medium">🕐 ${heure}</span>` : ''}
+          <!-- Corps -->
+          <div class="flex">
+            ${files[0]?.url ? `<div class="w-28 sm:w-40 shrink-0 overflow-hidden" style="background:${color}10;min-height:130px"><img src="${files[0].url}" style="width:100%;height:100%;object-fit:cover;min-height:130px;display:block" onerror="this.style.display='none'" /></div>` : ''}
+            <div class="flex-1 p-4">
+              <p class="text-base font-semibold text-[#2C2416] mb-2">${clean}</p>
+              ${a.description ? `<div class="bg-[#F5EDE4] rounded-xl p-3 border border-[#D6CCC0] mt-2"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Légende</p><p class="text-sm text-[#2C2416]/80 leading-relaxed whitespace-pre-wrap">${a.description}</p></div>` : '<p class="text-xs text-[#2C2416]/30 italic mt-1">Aucune description</p>'}
             </div>
-            <p class="text-base font-semibold text-[#2C2416] mb-1">${clean}</p>
-            ${a.description ? `<p class="text-sm text-[#2C2416]/70 leading-relaxed">${a.description}</p>` : ''}
           </div>
         </div>`;
       });
@@ -963,6 +1099,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       // Basculer vers la vue plein format
       document.getElementById('cal-day-title').textContent = `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
       document.getElementById('cal-day-content').innerHTML = html;
+      // Flèche "Suivant"
+      const nextD = getNextDashContentDate(dateStr);
+      const nBtn = document.getElementById('dash-next-day-btn');
+      if (nBtn) { nBtn.classList.toggle('hidden', !nextD); nBtn.classList.toggle('inline-flex', !!nextD); }
       document.getElementById('cal-note-modal').classList.add('hidden');
       document.getElementById('cal-grid-view').classList.add('hidden');
       document.getElementById('cal-day-modal').classList.remove('hidden');

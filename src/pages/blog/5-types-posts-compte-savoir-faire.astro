@@ -1,0 +1,140 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
+import BackArrow from '../../components/BackArrow.astro';
+
+const calendarLink = 'https://cal.com/claire-vigneron-k5okcq/30min?user=claire-vigneron-k5okcq&overlayCalendar=true';
+
+const posts = [
+  {
+    numero: '01',
+    titre: 'Les coulisses de votre métier',
+    description: "Montrez ce que les gens ne voient jamais : la préparation, le processus, les outils, les gestes précis. Ce type de contenu humanise votre activité et crée de la proximité avec votre audience.",
+    exemples: ["Un timelapse d'une pièce en cours de fabrication", "Les étapes de préparation avant une prestation", "Votre espace de travail au quotidien"],
+    tag: 'Coulisses',
+  },
+  {
+    numero: '02',
+    titre: 'Avant / Après',
+    description: "L'un des formats les plus efficaces pour démontrer votre expertise. La transformation visuelle parle d'elle-même et donne envie. Elle rassure aussi les prospects hésitants.",
+    exemples: ["Un meuble restauré", "Un résultat avant/après soin", "Un espace réaménagé"],
+    tag: 'Résultats',
+  },
+  {
+    numero: '03',
+    titre: 'Les témoignages clients',
+    description: "La preuve sociale est le levier de confiance le plus puissant sur Instagram. Un avis sincère, bien mis en valeur, vaut mieux que n'importe quel discours commercial.",
+    exemples: ["Une capture d'écran d'un message reçu", "Une citation d'avis Google mise en visuel", "Un retour client filmé en story"],
+    tag: 'Confiance',
+  },
+  {
+    numero: '04',
+    titre: 'Le contenu éducatif',
+    description: "Partager votre savoir, c'est asseoir votre expertise. Vos abonnés apprennent quelque chose, ils vous font confiance, ils pensent à vous quand ils ont besoin de vos services.",
+    exemples: ["3 conseils pour entretenir [votre produit]", "Les erreurs à éviter avant de faire appel à un artisan", "Comment je prépare [votre prestation]"],
+    tag: 'Expertise',
+  },
+  {
+    numero: '05',
+    titre: 'Votre personnalité',
+    description: "Les gens achètent à des personnes, pas à des logos. Montrer qui vous êtes — vos valeurs, vos anecdotes, ce qui vous anime — crée une connexion émotionnelle durable.",
+    exemples: ["Pourquoi j'ai choisi ce métier", "Ce que j'aime dans mon travail au quotidien", "Une journée type dans ma semaine"],
+    tag: 'Authenticité',
+  },
+];
+---
+
+<BaseLayout
+  title="5 types de posts qui fonctionnent vraiment sur Instagram — Claire Vigneron"
+  description="Pas besoin de publier tous les jours. Il suffit de publier les bons contenus. Voici les 5 formats qui fonctionnent vraiment sur Instagram."
+>
+  <Nav />
+
+  <article class="pt-32 pb-20 px-6 bg-[#F5EDE4]">
+    <div class="max-w-2xl mx-auto">
+
+      <div class="mb-12">
+        <a href="/blog" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors mb-8">
+          <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon>
+          Retour au blog
+        </a>
+        <span class="text-xs font-medium uppercase tracking-widest text-[#767A55] block mb-4">Contenu · 6 min de lecture</span>
+        <h1 class="text-4xl md:text-5xl text-[#2C2416] tracking-tight leading-tight mb-6">
+          5 types de posts qui fonctionnent vraiment sur Instagram
+        </h1>
+        <p class="text-xl text-[#2C2416]/60 font-light leading-relaxed">
+          Pas besoin de publier tous les jours. Il suffit de publier les bons contenus. Voici les 5 formats qui génèrent de l'engagement et attirent de vrais clients.
+        </p>
+      </div>
+
+      <div class="space-y-6 text-[#2C2416]/80 font-light leading-relaxed text-lg mb-12">
+        <p>
+          Quand on accompagne des artisans et indépendants, la question qui revient le plus souvent est : <em>"Mais je publie quoi ?"</em> C'est souvent ce blocage qui explique l'irrégularité — pas le manque de temps, pas le manque de contenu, mais le manque de direction.
+        </p>
+        <p>
+          Voici les 5 types de publications qui performent vraiment sur un compte savoir-faire — avec des exemples concrets pour chacun.
+        </p>
+      </div>
+
+      <!-- Les 5 types -->
+      <div class="space-y-10 mb-12">
+        {posts.map(post => (
+          <div class="border-t border-[#D6CCC0] pt-8">
+            <div class="flex items-start gap-4 mb-4">
+              <span class="text-4xl font-serif text-[#8B3E22]/30 leading-none shrink-0">{post.numero}</span>
+              <div>
+                <span class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-1">{post.tag}</span>
+                <h2 class="text-2xl text-[#2C2416] tracking-tight">{post.titre}</h2>
+              </div>
+            </div>
+            <p class="text-[#2C2416]/75 leading-relaxed mb-5">{post.description}</p>
+            <div class="bg-[#EDE6DB] rounded-xl p-5">
+              <p class="text-xs uppercase tracking-widest text-[#767A55] mb-3 font-medium">Exemples concrets</p>
+              <ul class="space-y-2">
+                {post.exemples.map(ex => (
+                  <li class="flex items-start gap-2 text-sm text-[#2C2416]/70">
+                    <iconify-icon icon="solar:check-circle-linear" stroke-width="1.5" class="text-[#8B3E22] text-base shrink-0 mt-0.5"></iconify-icon>
+                    {ex}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class="space-y-6 text-[#2C2416]/80 font-light leading-relaxed text-lg">
+        <div class="border-t border-[#D6CCC0] pt-8">
+          <h2 class="text-2xl text-[#2C2416] tracking-tight mb-4">La clé : varier les formats</h2>
+          <p>
+            Ces 5 types de posts ne s'excluent pas — ils se complètent. Une bonne stratégie de contenu alterne entre démonstration d'expertise, preuve sociale et contenus de proximité. L'objectif est que votre abonné vous découvre, vous fasse confiance, puis passe à l'action.
+          </p>
+          <p class="mt-4">
+            Si vous ne savez pas par où commencer, choisissez un type par semaine et testez pendant un mois. Les résultats vous guideront vers ce qui résonne le mieux avec votre audience.
+          </p>
+        </div>
+
+        <div class="border-l-4 border-[#8B3E22] pl-6 py-2">
+          <p class="text-[#2C2416]/70 italic">
+            "Le meilleur contenu n'est pas le plus créatif. C'est celui qui répond exactement à ce que votre client cherche au moment où il le cherche."
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-16 pt-10 border-t border-[#D6CCC0]">
+        <p class="text-sm text-[#767A55] uppercase tracking-widest mb-4">Vous voulez de l'aide pour créer ces contenus ?</p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="/offres#pack" class="px-6 py-3 bg-[#8B3E22] text-[#F5EDE4] rounded-full font-medium hover:bg-[#6B2E1A] transition-colors text-center">
+            Découvrir le Pack Contenu
+          </a>
+          <a href={calendarLink} target="_blank" rel="noopener" class="px-6 py-3 border border-[#D6CCC0] text-[#2C2416] rounded-full font-medium hover:bg-[#EDE6DB] transition-colors text-center">
+            Réserver un appel gratuit
+          </a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <Footer />
+</BaseLayout>

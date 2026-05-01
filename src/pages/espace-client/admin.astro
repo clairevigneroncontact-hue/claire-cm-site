@@ -335,11 +335,25 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     window.adminCalNav = (dir) => { adminCalMonth += dir; if (adminCalMonth > 11) { adminCalMonth=0; adminCalYear++; } if (adminCalMonth < 0) { adminCalMonth=11; adminCalYear--; } renderAdminCal(); };
 
+    window.adminToggleMonthPicker = (e) => { e.stopPropagation(); document.getElementById('admin-cal-month-picker')?.classList.toggle('hidden'); };
+    window.adminCalGoToMonth = (m, e) => { if(e) e.stopPropagation(); adminCalMonth = m; document.getElementById('admin-cal-month-picker')?.classList.add('hidden'); renderAdminCal(); };
+    window.adminCalOpenNoteForm = (e) => {
+      if(e) e.stopPropagation();
+      const today = new Date().toISOString().slice(0,10);
+      const picker = document.getElementById('admin-cal-date-picker');
+      if (picker) { picker.value = adminCalSel || today; picker.onchange = () => { const ex = adminCalNotes.find(n=>n.date===picker.value); document.getElementById('admin-cal-input').value = ex?.note||''; }; }
+      document.getElementById('admin-cal-input').value = '';
+      const ex = adminCalNotes.find(n=>n.date===(adminCalSel||today));
+      if(ex) document.getElementById('admin-cal-input').value = ex.note;
+      const modal = document.getElementById('admin-cal-modal');
+      modal?.classList.remove('hidden');
+    };
+    document.addEventListener('click', () => document.getElementById('admin-cal-month-picker')?.classList.add('hidden'));
+
     window.adminCalClick = (dateStr, day) => {
       adminCalSel = dateStr;
-      const months = ['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];
-      const [y,m,d] = dateStr.split('-');
-      document.getElementById('admin-cal-date-label').textContent = `Note du ${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
+      const picker = document.getElementById('admin-cal-date-picker');
+      if (picker) picker.value = dateStr;
       const existing = adminCalNotes.find(n => n.date === dateStr);
       document.getElementById('admin-cal-input').value = existing?.note || '';
       const modal = document.getElementById('admin-cal-modal');
@@ -350,16 +364,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     window.saveAdminCalNote = async () => {
       const sb2 = await getSB();
       const note = document.getElementById('admin-cal-input').value.trim();
-      if (!note) return;
-      const existing = adminCalNotes.find(n => n.date === adminCalSel);
+      const date = document.getElementById('admin-cal-date-picker')?.value || adminCalSel;
+      if (!note || !date) return;
+      const existing = adminCalNotes.find(n => n.date === date);
       if (existing) {
         await sb2.from('calendar_notes').update({ note }).eq('id', existing.id);
       } else {
-        await sb2.from('calendar_notes').insert({ date: adminCalSel, note, created_by: session.user.id });
+        await sb2.from('calendar_notes').insert({ date, note, created_by: session.user.id });
       }
       document.getElementById('admin-cal-modal').classList.add('hidden');
       await loadAdminCalData();
     };
+
 
     loadAdminCalData();
 
@@ -609,7 +625,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
 
           <!-- Stats -->
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div class="bg-[#F5EDE4] rounded-xl p-3 text-center">
               <p class="text-2xl font-serif text-[#2C2416]">${total}</p>
               <p class="text-xs text-[#767A55] mt-0.5">Contenus envoyés</p>
@@ -629,14 +645,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
         </div>
 
+        <!-- Barre de recherche globale client -->
+        <div class="relative mb-4">
+          <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-4 top-1/2 -translate-y-1/2 text-[#767A55] text-lg pointer-events-none"></iconify-icon>
+          <input type="text" id="client-global-search" placeholder="Rechercher dans ce dossier client…"
+            oninput="adminClientSearch(this.value)"
+            class="w-full pl-11 pr-4 py-3 rounded-xl border border-[#D6CCC0] bg-white text-sm text-[#2C2416] focus:outline-none focus:border-[#8B3E22] shadow-sm transition-colors" />
+        </div>
+
         <!-- Onglets client -->
-        <div class="flex flex-wrap gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-5">
-          <button onclick="switchClientTab('contenu')"    id="ctab-contenu"    class="flex-1 py-2 text-xs font-medium rounded-lg bg-white text-[#2C2416] shadow-sm transition-all min-w-[70px]">Contenu</button>
-          <button onclick="switchClientTab('documents')"  id="ctab-documents"  class="flex-1 py-2 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] min-w-[70px]">Documents</button>
-          <button onclick="switchClientTab('infos')"      id="ctab-infos"      class="flex-1 py-2 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] min-w-[70px]">Infos</button>
-          <button onclick="switchClientTab('taches')"     id="ctab-taches"     class="flex-1 py-2 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] min-w-[70px]">Tâches</button>
-          <button onclick="switchClientTab('notes')"      id="ctab-notes"      class="flex-1 py-2 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] min-w-[70px]">Notes</button>
-          <button onclick="switchClientTab('fichiers')"   id="ctab-fichiers"   class="flex-1 py-2 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] min-w-[70px]">Fichiers</button>
+        <div class="flex overflow-x-auto gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-5 scrollbar-none" style="-ms-overflow-style:none;scrollbar-width:none">
+          <button onclick="switchClientTab('contenu')"    id="ctab-contenu"    class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg bg-white text-[#2C2416] shadow-sm transition-all whitespace-nowrap">Contenu</button>
+          <button onclick="switchClientTab('documents')"  id="ctab-documents"  class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] whitespace-nowrap">Documents</button>
+          <button onclick="switchClientTab('infos')"      id="ctab-infos"      class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] whitespace-nowrap">Infos</button>
+          <button onclick="switchClientTab('notes')"      id="ctab-notes"      class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] whitespace-nowrap">Notes</button>
+          <button onclick="switchClientTab('fichiers')"   id="ctab-fichiers"   class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] whitespace-nowrap">Fichiers</button>
         </div>
 
         <!-- Tab : Contenu -->
@@ -657,7 +680,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <input id="ct-title" type="text" placeholder="Titre *" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22]" />
             <textarea id="ct-caption" placeholder="Légende / description du post Instagram" rows="3" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none"></textarea>
             <!-- Date + heure de publication -->
-            <div class="grid grid-cols-2 gap-2 mb-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
               <div>
                 <label class="text-xs text-[#767A55] mb-1 block">Date de publication</label>
                 <input id="ct-date" type="date" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
@@ -731,10 +754,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <div class="border ${ct.status === 'rejected' ? 'border-red-200' : 'border-[#D6CCC0]'} rounded-xl mb-3 overflow-hidden" data-search="${ct.title.toLowerCase()}">
                 <div class="flex hover:bg-[#F5EDE4]/20 transition-colors">
                   <!-- Visuel gauche — hauteur fixe pour que object-fit fonctionne -->
-                  <div onclick="toggleContentDetail('${ct.id}')" class="w-24 sm:w-32 shrink-0 overflow-hidden rounded-l-xl flex items-center justify-center cursor-pointer" style="background:${tHex}18; height:104px">
-                    ${isImg
-                      ? `<img src="${file0.url}" alt="visuel" style="width:100%;height:104px;object-fit:cover;display:block" />`
-                      : `<iconify-icon icon="${tIcon}" stroke-width="1.5" style="color:${tHex};font-size:2.5rem"></iconify-icon>`
+                  <div onclick="toggleContentDetail('${ct.id}')" class="w-16 sm:w-24 md:w-32 shrink-0 overflow-hidden rounded-l-xl flex items-center justify-center cursor-pointer" style="background:${tHex}18; height:90px">
+                    ${file0?.url
+                      ? `<img src="${file0.url}" alt="visuel" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`
+                      : `<iconify-icon icon="${tIcon}" stroke-width="1.5" style="color:${tHex};font-size:2rem"></iconify-icon>`
                     }
                   </div>
                   <!-- Infos droite -->
@@ -745,10 +768,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                         <p class="font-semibold text-[#2C2416] text-sm truncate">${cleanT}</p>
                       </div>
                       <div class="flex items-center gap-1 shrink-0 ml-1" onclick="event.stopPropagation()">
-                        ${file0?.url ? `<a href="${file0.url}" target="_blank" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors" title="Ouvrir le fichier"><iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon></a>` : ''}
-                        <button onclick="toggleContentDetail('${ct.id}')" class="p-1.5 text-[#767A55] hover:bg-[#EDE6DB] rounded-lg transition-colors" title="Voir la publication">
-                          <iconify-icon icon="solar:maximize-square-2-linear" stroke-width="1.5" class="text-base"></iconify-icon>
-                        </button>
+                        <a href="${file0?.url || '#'}" target="${file0?.url ? '_blank' : '_self'}"
+                          onclick="${file0?.url ? 'event.stopPropagation()' : `event.preventDefault();event.stopPropagation();toggleContentDetail('${ct.id}')`}"
+                          class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors" title="${file0?.url ? 'Voir le fichier' : 'Voir le détail'}">
+                          <iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+                        </a>
                         ${statusBadge(ct.status)}
                         <iconify-icon id="chevron-${ct.id}" icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform"></iconify-icon>
                       </div>
@@ -772,15 +796,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
 
           <!-- Calendrier éditorial (en bas du tab Contenu) -->
-          <div class="bg-white rounded-2xl border border-[#D6CCC0] overflow-hidden">
+          <div class="bg-white rounded-2xl p-4 md:p-6 border border-[#D6CCC0]">
             <div id="cal-main-view">
-              <div class="flex items-center justify-between p-4 border-b border-[#D6CCC0]/50">
-                <div class="flex items-center gap-2">
-                  <iconify-icon icon="solar:calendar-linear" stroke-width="1.5" class="text-[#8B3E22] text-lg"></iconify-icon>
-                  <div>
-                    <h3 class="text-sm font-medium text-[#2C2416]">Calendrier éditorial</h3>
-                    <p class="text-[10px] text-[#767A55]">Clic = détail · Double-clic = plein format</p>
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+                    <iconify-icon icon="solar:calendar-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
                   </div>
+                  <h2 class="text-base text-[#2C2416] font-medium">Calendrier éditorial</h2>
                 </div>
                 <div class="flex items-center gap-1.5">
                   <button onclick="clientCalNav(-1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon></button>
@@ -796,7 +819,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   <button onclick="clientCalOpenNoteForm()" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors ml-1" title="Ajouter une note"><iconify-icon icon="solar:pen-linear" stroke-width="1.5"></iconify-icon></button>
                 </div>
               </div>
-              <div class="p-4 overflow-x-auto" id="client-cal-grid"></div>
+              <div class="overflow-x-auto" id="client-cal-grid"></div>
               <div id="client-cal-note-modal" class="hidden mx-4 mb-4 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30">
                 <p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Ajouter / modifier une note</p>
                 <input id="client-cal-date-picker" type="date" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white mb-2" />
@@ -809,9 +832,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
             <!-- Vue jour plein format -->
             <div id="cal-fullday-view" class="hidden p-6">
-              <button onclick="closeClientCalFullDay()" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors mb-5">
-                <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon> Retour au calendrier
-              </button>
+              <div class="flex items-center justify-between mb-5">
+                <button onclick="closeClientCalFullDay()" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors">
+                  <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon> Retour
+                </button>
+                <button id="cal-next-day-btn" onclick="clientCalGoToNext()" class="hidden items-center gap-2 text-sm font-medium text-[#8B3E22] hover:text-[#6B2E1A] bg-[#8B3E22]/10 hover:bg-[#8B3E22]/20 px-3 py-1.5 rounded-lg transition-colors">
+                  Suivant <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon>
+                </button>
+              </div>
               <h3 id="cal-fullday-title" class="text-xl font-medium text-[#2C2416] mb-5"></h3>
               <div id="cal-fullday-content" class="space-y-4"></div>
             </div>
@@ -841,81 +869,55 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
           </div>
 
-          <!-- Liste des documents déposés -->
+          <!-- Grille documents -->
           <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
             <h3 class="text-sm font-medium text-[#2C2416] mb-3">Documents déposés (${docs?.length||0})</h3>
             ${docs?.length ? `<div class="relative mb-3">
               <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
               <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'doc-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
             </div>` : ''}
-            <div id="doc-items-box">
+            <div id="doc-items-box" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             ${docs?.length ? docs.map(d => {
               const label   = d.name || d.file_name || 'Document';
-              const typeMap = { contrat:'Contrat', facture:'Facture', devis:'Devis', 'audit-instagram':'Audit Instagram', 'compte-rendu':'Compte rendu mensuel', autre:'Autre' };
+              const typeMap = { contrat:'Contrat', facture:'Facture', devis:'Devis', 'audit-instagram':'Audit', 'compte-rendu':'CR mensuel', autre:'Autre' };
               const type    = typeMap[d.type] || d.type || '';
-              const date    = new Date(d.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
               const isImg   = d.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(d.file_url);
+              const isVid   = d.file_url && /\.(mp4|mov|avi|webm)(\?|$)/i.test(d.file_url);
+              const isPdf   = d.file_url && /\.pdf(\?|$)/i.test(d.file_url);
               const safeUrl = (d.file_url||'').replace(/'/g,"\\'");
+              const icon    = isPdf ? 'solar:file-text-linear' : 'solar:document-text-linear';
               return `
-              <div class="border-b border-[#D6CCC0]/40 last:border-0 pb-3 mb-3 last:mb-0 last:pb-0" data-search="${label.toLowerCase()} ${(d.type||'').toLowerCase()}">
-                <div class="flex items-center gap-3">
+              <div class="flex flex-col" data-search="${label.toLowerCase()} ${(d.type||'').toLowerCase()}">
+                <!-- Carré miniature cliquable -->
+                <a href="${d.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors bg-[#F5EDE4]" style="position:relative;padding-top:100%">
                   ${isImg
-                    ? `<a href="${d.file_url}" target="_blank" class="w-10 h-10 rounded-lg overflow-hidden shrink-0 hover:opacity-80 transition-opacity"><img src="${d.file_url}" class="w-full h-full object-cover" /></a>`
-                    : `<div class="w-10 h-10 bg-[#8B3E22]/10 rounded-lg flex items-center justify-center shrink-0"><iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl"></iconify-icon></div>`
+                    ? `<img src="${d.file_url}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block" />`
+                    : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:2.5rem"></iconify-icon></div>`
                   }
-                  <div class="flex-1 min-w-0">
-                    <a href="${d.file_url||'#'}" target="_blank" class="text-sm font-medium text-[#2C2416] hover:text-[#8B3E22] transition-colors truncate block">${label}</a>
-                    <p class="text-xs text-[#767A55]">${type ? type + ' · ' : ''}${date}</p>
-                  </div>
-                  <div class="flex items-center gap-1 shrink-0">
-                    ${d.file_url ? `<a href="${d.file_url}" target="_blank" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors" title="Ouvrir">
-                      <iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon>
-                    </a>` : ''}
-                    <button onclick="toggleDocEdit('${d.id}')" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors" title="Modifier">
-                      <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-base"></iconify-icon>
-                    </button>
-                    <button onclick="deleteDoc('${d.id}','${safeUrl}','${clientId}')" class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Supprimer">
-                      <iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-base"></iconify-icon>
-                    </button>
-                  </div>
+                </a>
+                <!-- Nom + type -->
+                <p class="text-xs font-medium text-[#2C2416] truncate mt-1.5">${label}</p>
+                ${type ? `<p class="text-[10px] text-[#767A55]">${type}</p>` : ''}
+                <!-- Boutons toujours visibles -->
+                <div class="flex items-center gap-1 mt-1">
+                  <button onclick="toggleDocEdit('${d.id}')" class="flex-1 py-1 text-[10px] text-[#767A55] hover:text-[#8B3E22] hover:bg-[#EDE6DB] rounded-lg transition-colors flex items-center justify-center gap-0.5">
+                    <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-xs"></iconify-icon> Modifier
+                  </button>
+                  <button onclick="deleteDoc('${d.id}','${safeUrl}','${clientId}')" class="flex-1 py-1 text-[10px] text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center gap-0.5">
+                    <iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-xs"></iconify-icon> Supprimer
+                  </button>
                 </div>
-                <!-- Formulaire d'édition inline -->
-                <div id="doc-edit-${d.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30">
-                  <p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Modifier ce document</p>
-                  ${(() => {
-                    const PRED = ['contrat','facture','devis','audit-instagram','compte-rendu','autre'];
-                    const selVal   = PRED.includes(d.type) ? d.type : 'autre';
-                    const custVal  = (!PRED.includes(d.type) && d.type) ? d.type.replace(/"/g,'&quot;') : '';
-                    const showCust = selVal === 'autre';
-                    return `
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-                    <input id="doc-edit-name-${d.id}" type="text" value="${label.replace(/"/g,'&quot;')}" class="px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" placeholder="Nom du document" />
-                    <select id="doc-edit-type-${d.id}" onchange="toggleDocTypeOther('doc-edit-type-${d.id}','doc-edit-type-custom-${d.id}')" class="px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white">
-                      <option value="contrat"         ${selVal==='contrat'?'selected':''}>Contrat</option>
-                      <option value="facture"         ${selVal==='facture'?'selected':''}>Facture</option>
-                      <option value="devis"           ${selVal==='devis'?'selected':''}>Devis</option>
-                      <option value="audit-instagram" ${selVal==='audit-instagram'?'selected':''}>Audit Instagram</option>
-                      <option value="compte-rendu"    ${selVal==='compte-rendu'?'selected':''}>Compte rendu mensuel</option>
-                      <option value="autre"           ${selVal==='autre'?'selected':''}>Autre document…</option>
-                    </select>
-                  </div>
-                  <input id="doc-edit-type-custom-${d.id}" type="text" value="${custVal}" placeholder="Précisez le type" class="${showCust ? '' : 'hidden'} w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white mb-2" />`;
-                  })()}
-                  <div class="mb-3">
-                    <p class="text-xs text-[#767A55] mb-1">Remplacer le fichier (optionnel)</p>
-                    <input id="doc-edit-file-${d.id}" type="file" class="block text-xs text-[#767A55] cursor-pointer w-full" />
-                  </div>
+                <!-- Formulaire édition -->
+                <div id="doc-edit-${d.id}" class="hidden mt-2 bg-[#F5EDE4] rounded-xl p-3 border border-[#8B3E22]/30">
+                  <input id="doc-edit-name-${d.id}" type="text" value="${label.replace(/"/g,'&quot;')}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] bg-white" />
+                  <input id="doc-edit-file-${d.id}" type="file" class="block text-xs text-[#767A55] cursor-pointer w-full mb-2" />
                   <div class="flex gap-2">
-                    <button onclick="saveDocEdit('${d.id}','${safeUrl}','${clientId}')" class="flex-1 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">
-                      Enregistrer
-                    </button>
-                    <button onclick="toggleDocEdit('${d.id}')" class="px-4 py-2 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-sm hover:bg-[#EDE6DB] transition-colors">
-                      Annuler
-                    </button>
+                    <button onclick="saveDocEdit('${d.id}','${safeUrl}','${clientId}')" class="flex-1 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A]">Enregistrer</button>
+                    <button onclick="toggleDocEdit('${d.id}')" class="px-3 py-1.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs">Annuler</button>
                   </div>
                 </div>
               </div>`;
-            }).join('') : '<p class="text-xs text-[#2C2416]/30 italic">Aucun document déposé</p>'}
+            }).join('') : '<p class="text-xs text-[#2C2416]/30 italic col-span-full">Aucun document déposé</p>'}
             </div>
           </div>
         </div>
@@ -956,86 +958,93 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <button onclick="saveClientInfo('${clientId}')" class="px-6 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
         </div>
 
-        <!-- Tab : Tâches -->
-        <div id="ctab-taches-panel" class="hidden space-y-4">
-          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-8 h-8 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
-                <iconify-icon icon="solar:checklist-minimalistic-linear" stroke-width="1.5" class="text-base text-[#8B3E22]"></iconify-icon>
-              </div>
-              <h3 class="text-sm font-medium text-[#2C2416]">Tâches partagées</h3>
-            </div>
-            <div id="admin-tasks-list" class="space-y-1.5 mb-4">
-              <p class="text-xs text-[#2C2416]/30 italic">Chargement…</p>
-            </div>
-            <div class="flex gap-2">
-              <input id="admin-new-task-input" type="text" placeholder="Ajouter une tâche…"
-                onkeydown="if(event.key==='Enter') addAdminTask('${clientId}')"
-                class="flex-1 px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
-              <button onclick="addAdminTask('${clientId}')" class="px-4 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">+</button>
-            </div>
-          </div>
-        </div>
-
         <!-- Tab : Notes -->
         <div id="ctab-notes-panel" class="hidden space-y-4">
-          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
-            <h3 class="text-sm font-medium text-[#2C2416] mb-1">Notes du client</h3>
-            <p class="text-xs text-[#767A55] mb-3">Messages envoyés par le client depuis son espace.</p>
-            <div id="admin-client-notes-feed" class="space-y-2.5 max-h-52 overflow-y-auto pr-1">
-              <p class="text-xs text-[#2C2416]/30 italic">Chargement…</p>
+          <!-- Messages du client — EN PREMIER, bien visible -->
+          <div class="bg-[#2C2416] rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-[#8B3E22] rounded-xl flex items-center justify-center">
+                  <iconify-icon icon="solar:user-speak-linear" stroke-width="1.5" class="text-white text-base"></iconify-icon>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold text-[#F5EDE4]">${(c?.full_name||'Le client').split(' ')[0]} t'a écrit</h3>
+                  <button onclick="toggleNotesHistory('${clientId}')" class="text-xs text-[#F5EDE4]/50 hover:text-[#8B3E22] transition-colors underline" id="notes-history-link">Historique →</button>
+                </div>
+              </div>
+            </div>
+            <!-- Messages non lus -->
+            <div id="admin-client-notes-feed" class="space-y-3 max-h-60 overflow-y-auto pr-1">
+              <p class="text-xs text-[#F5EDE4]/40 italic">Chargement…</p>
+            </div>
+            <!-- Historique (messages lus) -->
+            <div id="notes-history-panel" class="hidden mt-4 pt-4 border-t border-white/10">
+              <p class="text-xs text-[#F5EDE4]/40 uppercase tracking-widest mb-3">Historique</p>
+              <div id="admin-client-notes-history" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
             </div>
           </div>
-          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
-            <h3 class="text-sm font-medium text-[#2C2416] mb-1">Mes notes sur ce client</h3>
-            <p class="text-xs text-[#767A55] mb-3">Visible uniquement par toi — préférences, contexte, remarques sur la collaboration.</p>
-            <textarea id="notes-client" rows="4" placeholder="Ex: préfère WhatsApp, publie le mardi, cible 25-40 ans…" class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none">${c?.notes||''}</textarea>
+          <!-- Notes personnelles + Tâches côte à côte -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0] flex flex-col">
+              <div class="flex items-center gap-2 mb-3">
+                <iconify-icon icon="solar:notebook-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>
+                <h3 class="text-sm font-medium text-[#2C2416]">Mes notes</h3>
+              </div>
+              <p class="text-xs text-[#767A55] mb-3">Tes réflexions privées, idées de contenu.</p>
+              <textarea id="notes-admin" rows="7" placeholder="Idées de posts, prochains thèmes…" class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none flex-1">${c?.admin_notes||''}</textarea>
+              <div id="notes-msg" class="hidden text-sm rounded-xl px-4 py-2 mt-2"></div>
+              <button onclick="saveNotes('${clientId}')" class="mt-3 px-5 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors self-start">Enregistrer</button>
+            </div>
+            <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+              <div class="flex items-center gap-2 mb-3">
+                <iconify-icon icon="solar:checklist-minimalistic-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>
+                <h3 class="text-sm font-medium text-[#2C2416]">Tâches</h3>
+                <span class="text-xs text-[#767A55]">(visibles par le client)</span>
+              </div>
+              <div id="admin-tasks-list" class="space-y-2 mb-4 max-h-64 overflow-y-auto">
+                <p class="text-xs text-[#2C2416]/30 italic">Aucune tâche</p>
+              </div>
+              <div class="flex gap-2">
+                <input id="admin-task-input" type="text" placeholder="Nouvelle tâche pour le client…"
+                  onkeydown="if(event.key==='Enter') addAdminTask()"
+                  class="flex-1 px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+                <button onclick="addAdminTask()" class="px-4 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">+</button>
+              </div>
+            </div>
           </div>
-          <div class="bg-[#EDE6DB] rounded-2xl p-5">
-            <h3 class="text-sm font-medium text-[#2C2416] mb-1">Notes personnelles</h3>
-            <p class="text-xs text-[#767A55] mb-3">Tes réflexions privées, idées de contenu, retours internes.</p>
-            <textarea id="notes-admin" rows="4" placeholder="Idées de posts, prochains thèmes, retours internes…" class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] bg-white text-sm focus:outline-none focus:border-[#8B3E22] resize-none">${c?.admin_notes||''}</textarea>
-          </div>
-          <div id="notes-msg" class="hidden text-sm rounded-xl px-4 py-3"></div>
-          <button onclick="saveNotes('${clientId}')" class="px-6 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer les notes</button>
         </div>
 
-        <!-- Tab : Fichiers reçus -->
+        <!-- Tab : Fichiers reçus — grille uniforme de petits carrés -->
         <div id="ctab-fichiers-panel" class="hidden bg-white rounded-2xl p-5 border border-[#D6CCC0]">
           <h3 class="text-sm font-medium text-[#2C2416] mb-3">Fichiers déposés par le client (${uploads?.length||0})</h3>
           ${uploads?.length ? `<div class="relative mb-3">
             <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
             <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'file-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
           </div>` : ''}
-          <div id="file-items-box" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div id="file-items-box" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             ${uploads?.length ? uploads.map(u => {
               const isImg = u.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(u.file_url);
+              const isVid = u.file_url && /\.(mp4|mov|avi|webm)(\?|$)/i.test(u.file_url);
               const date  = new Date(u.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
-              const deleteBtn = `<button onclick="event.stopPropagation();deleteUpload('${u.id}','${(u.file_url||'').replace(/'/g,"\\'")}', '${clientId}')"
-                class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0" title="Supprimer">
-                <iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-base"></iconify-icon>
-              </button>`;
-              return isImg
-                ? `<div class="relative group" data-search="${u.name.toLowerCase()}">
-                     <a href="${u.file_url}" target="_blank" class="block">
-                       <div class="rounded-xl overflow-hidden bg-[#EDE6DB] aspect-square mb-1 hover:opacity-90 transition-opacity">
-                         <img src="${u.file_url}" alt="${u.name}" class="w-full h-full object-cover" />
-                       </div>
-                       <p class="text-xs text-[#2C2416]/60 truncate pr-6">${u.name} · ${date}</p>
-                     </a>
-                     <div class="absolute top-1 right-1">${deleteBtn}</div>
-                   </div>`
-                : `<div class="flex items-center gap-3 p-3 bg-[#EDE6DB] rounded-xl" data-search="${u.name.toLowerCase()}">
-                     <a href="${u.file_url||'#'}" target="_blank" class="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
-                       <iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] text-2xl shrink-0"></iconify-icon>
-                       <div class="min-w-0">
-                         <p class="text-sm text-[#2C2416] truncate">${u.name}</p>
-                         <p class="text-xs text-[#767A55]">${date}</p>
-                       </div>
-                     </a>
-                     ${deleteBtn}
-                   </div>`;
-            }).join('') : '<p class="text-xs text-[#2C2416]/30 italic">Aucun fichier reçu</p>'}
+              const fileIcon = isVid ? 'solar:videocamera-linear' : 'solar:file-download-linear';
+              return `<div class="flex flex-col" data-search="${u.name.toLowerCase()}">
+                <a href="${u.file_url||'#'}" target="_blank"
+                  class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors bg-[#F5EDE4]" style="position:relative;padding-top:100%">
+                  ${isImg
+                    ? `<img src="${u.file_url}" alt="${u.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block" />`
+                    : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${fileIcon}" stroke-width="1.5" style="color:#8B3E22;font-size:2.5rem"></iconify-icon></div>`
+                  }
+                </a>
+                <p class="text-xs text-[#2C2416]/70 truncate mt-1.5">${u.name}</p>
+                <div class="flex items-center justify-between mt-1">
+                  <p class="text-[10px] text-[#767A55]">${date}</p>
+                  <button onclick="deleteUpload('${u.id}','${(u.file_url||'').replace(/'/g,"\\'")}','${clientId}')"
+                    class="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                    <iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-xs"></iconify-icon>
+                  </button>
+                </div>
+              </div>`;
+            }).join('') : '<p class="text-xs text-[#2C2416]/30 italic col-span-full">Aucun fichier reçu</p>'}
           </div>
         </div>
 
@@ -1058,7 +1067,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     // Switcher d'onglets client
     window.switchClientTab = (tab) => {
-      ['contenu','documents','infos','taches','notes','fichiers'].forEach(t => {
+      ['contenu','documents','infos','notes','fichiers'].forEach(t => {
         const panel = document.getElementById(`ctab-${t}-panel`);
         if (panel) panel.classList.toggle('hidden', t !== tab);
         const btn = document.getElementById(`ctab-${t}`);
@@ -1070,7 +1079,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         }
       });
       if (tab === 'contenu') loadClientCal();
-      if (tab === 'taches')  loadAdminTasks(window._currentAdminClientId);
+      if (tab === 'notes') loadAdminTasks(_clientCalClientId || '');
       if (tab === 'notes')   loadAdminClientNotes(window._currentAdminClientId);
     };
 
@@ -1170,6 +1179,29 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       await window.openClient(clientId);
     };
 
+    window.adminClientSearch = (q) => {
+      const term = q.trim().toLowerCase();
+      // Cherche dans tous les panels visibles
+      ['ct-items-box','doc-items-box','file-items-box','admin-tasks-list','admin-client-notes-feed'].forEach(id => {
+        const c = document.getElementById(id);
+        if (!c) return;
+        c.querySelectorAll('[data-search]').forEach(el => {
+          el.style.display = !term || (el.dataset.search || '').includes(term) ? '' : 'none';
+        });
+      });
+      // Si une correspondance trouvée, basculer vers le bon onglet
+      if (term) {
+        const tabMap = { 'ct-items-box':'contenu','doc-items-box':'documents','file-items-box':'fichiers','admin-tasks-list':'notes','admin-client-notes-feed':'notes' };
+        for (const [id, tab] of Object.entries(tabMap)) {
+          const c = document.getElementById(id);
+          if (c && c.querySelector('[data-search]:not([style*="none"])')) {
+            window.switchClientTab(tab);
+            break;
+          }
+        }
+      }
+    };
+
     window.filterBySearch = (input, containerId) => {
       const q = input.value.trim().toLowerCase();
       const container = document.getElementById(containerId);
@@ -1218,6 +1250,66 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         icon.classList.remove('hidden');
         icon.style.color = '#8B3E22';
       }
+    };
+
+    // ─── Tâches admin (par client) ────────────────────────────────────────────
+    // ─── Tâches admin ← même table tasks que le client ──────────────────────
+    let _adminTasksClientId = null;
+
+    async function loadAdminTasks(cid) {
+      if (!cid) return;
+      _adminTasksClientId = cid;
+      const sb2 = await getSB();
+      const { data, error } = await sb2.from('tasks').select('*').eq('client_id', cid).order('created_at', { ascending: true });
+      renderAdminTasks(data || []);
+    }
+
+    function renderAdminTasks(tasks) {
+      const el = document.getElementById('admin-tasks-list');
+      if (!el) return;
+      if (!tasks.length) { el.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucune tâche</p>'; return; }
+      el.innerHTML = tasks.map(t => {
+        const title = (t.title || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return `<div class="flex items-center gap-2 p-2 rounded-xl hover:bg-[#F5EDE4] transition-colors group" data-search="${(t.title||'').toLowerCase()}">
+          <button onclick="toggleAdminTask('${t.id}',${t.done})" class="w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-colors ${t.done ? 'bg-[#8B3E22] border-[#8B3E22]' : 'border-[#D6CCC0] hover:border-[#8B3E22]'}">
+            ${t.done ? '<iconify-icon icon="solar:check-linear" stroke-width="2.5" class="text-white text-[9px]"></iconify-icon>' : ''}
+          </button>
+          <span class="flex-1 text-sm ${t.done ? 'line-through text-[#2C2416]/40' : 'text-[#2C2416]'}">${title}</span>
+          <button onclick="deleteAdminTask('${t.id}')" class="opacity-0 group-hover:opacity-100 p-0.5 text-red-400 hover:text-red-600 transition-all">
+            <iconify-icon icon="solar:close-circle-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+          </button>
+        </div>`;
+      }).join('');
+    }
+
+    window.addAdminTask = async () => {
+      const cid = _adminTasksClientId;
+      const inp = document.getElementById('admin-task-input');
+      const title = inp?.value.trim();
+      if (!title) return;
+      if (!cid) { console.error('addAdminTask: pas de clientId'); return; }
+      const sb2 = await getSB();
+      const { error } = await sb2.from('tasks').insert({ client_id: cid, title });
+      if (!error) {
+        inp.value = '';
+        inp.focus();
+        await loadAdminTasks(cid);
+      } else {
+        console.error('Erreur tâche:', error);
+        alert('Erreur : ' + error.message);
+      }
+    };
+
+    window.toggleAdminTask = async (id, done) => {
+      const sb2 = await getSB();
+      await sb2.from('tasks').update({ done: !done }).eq('id', id);
+      await loadAdminTasks(_adminTasksClientId);
+    };
+
+    window.deleteAdminTask = async (id) => {
+      const sb2 = await getSB();
+      await sb2.from('tasks').delete().eq('id', id);
+      await loadAdminTasks(_adminTasksClientId);
     };
 
     window.toggleDocTypeOther = (selectId, inputId) => {
@@ -1284,7 +1376,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const sb  = await getSB();
       const msg = document.getElementById('notes-msg');
       const { error } = await sb.from('profiles').update({
-        notes:       document.getElementById('notes-client').value,
         admin_notes: document.getElementById('notes-admin').value,
       }).eq('id', clientId);
       msg.className = `text-sm rounded-xl px-4 py-3 ${error ? 'text-red-600 bg-red-50' : 'text-green-700 bg-green-50'}`;
@@ -1397,18 +1488,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const ev={};
       const add=(m,d,n)=>{ const k=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; if(!ev[k])ev[k]=[]; ev[k].push(n); };
       const addD=(dt,n)=>add(dt.getMonth()+1,dt.getDate(),n);
-      add(1,1,'🥂 Jour de l\'an'); add(5,1,'🏛 Fête du Travail'); add(5,8,'🕊 Victoire 45');
-      add(7,14,'🎆 Fête Nationale'); add(8,15,'⛪ Assomption'); add(11,1,'🕯 Toussaint');
+      add(1,1,'🥂 Jour de l\'an'); add(5,1,'🏛 Fête du Travail');
+      add(7,14,'🎆 Fête Nationale'); add(11,1,'🕯 Toussaint');
       add(11,11,'🕊 Armistice'); add(12,25,'🎄 Noël');
       const pa=getEasterDate(y);
       addD(pa,'🐣 Pâques');
       const lpa=new Date(pa); lpa.setDate(pa.getDate()+1); addD(lpa,'🐣 Lundi Pâques');
-      const asc=new Date(pa); asc.setDate(pa.getDate()+39); addD(asc,'✝ Ascension');
-      const pen=new Date(pa); pen.setDate(pa.getDate()+49); addD(pen,'🕊 Pentecôte');
-      const lpe=new Date(pa); lpe.setDate(pa.getDate()+50); addD(lpe,'🕊 Lundi Pentecôte');
-      add(1,7,'👑 Épiphanie'); add(2,14,'❤️ St-Valentin'); add(3,8,'💜 Journée Femme');
-      add(4,1,'🐟 Poisson d\'avril'); add(10,31,'🎃 Halloween'); add(12,6,'🎅 St-Nicolas'); add(12,31,'🥂 Réveillon');
-      // Fête des Mères = dernier dim. mai
+      const asc=new Date(pa); asc.setDate(pa.getDate()+39);
+      const pen=new Date(pa); pen.setDate(pa.getDate()+49);
+      const lpe=new Date(pa); lpe.setDate(pa.getDate()+50);
+      add(2,14,'❤️ St-Valentin'); add(3,8,'💜 Journée Femme');
+      add(4,1,'🐟 Poisson d\'avril'); add(10,31,'🎃 Halloween'); add(12,31,'🥂 Réveillon');
       function lastSun(mo){const d=new Date(y,mo+1,0);d.setDate(d.getDate()-d.getDay());return d;}
       function firstSun(mo){const d=new Date(y,mo,1);while(d.getDay()!==0)d.setDate(d.getDate()+1);return d;}
       function nthSun(mo,n){const d=firstSun(mo);d.setDate(d.getDate()+(n-1)*7);return d;}
@@ -1418,7 +1508,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       addD(fmt(fm)===fmt(pen)?firstSun(5):fm,'💐 Fête des Mères');
       addD(nthSun(5,3),'👔 Fête des Pères');
       addD(nthFri(10,4),'🛍 Black Friday');
-      add(11,1,'🛍 Toussaint'); // override kept
       return ev;
     }
 
@@ -1438,11 +1527,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const sb2 = await getSB();
       const cid = _clientCalClientId;
       if (!cid) return;
-      const [{ data: approved }, { data: notes }] = await Promise.all([
-        sb2.from('content_items').select('id,title,scheduled_at,updated_at,files').eq('client_id', cid).eq('status','approved'),
+      const [{ data: allContent }, { data: notes }] = await Promise.all([
+        sb2.from('content_items').select('id,title,status,description,scheduled_at,updated_at,files').eq('client_id', cid),
         sb2.from('calendar_notes').select('*').eq('client_id', cid),
       ]);
-      _clientCalData = { approved: approved||[], notes: notes||[] };
+      // Garder approuvés dans 'approved' pour compatibilité, mais aussi tous dans 'all'
+      _clientCalData = {
+        approved: (allContent||[]).filter(a => a.status === 'approved'),
+        pending:  (allContent||[]).filter(a => a.status === 'pending'),
+        rejected: (allContent||[]).filter(a => a.status === 'rejected'),
+        notes:    notes||[],
+      };
       renderClientCal();
     }
 
@@ -1458,46 +1553,49 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const daysInMonth = new Date(clientCalYear, clientCalMonth+1, 0).getDate();
       const days = ['Lu','Ma','Me','Je','Ve','Sa','Di'];
 
-      let html = `<table class="w-full border-collapse text-xs table-fixed"><thead><tr>`;
-      days.forEach(d => { html += `<th class="py-1.5 text-center text-[#767A55] font-medium text-[10px] uppercase tracking-widest">${d}</th>`; });
+      let html = `<table class="w-full border-collapse table-fixed"><thead><tr>`;
+      days.forEach(d => { html += `<th class="py-2 text-center text-[#767A55] font-semibold text-xs uppercase tracking-wide">${d}</th>`; });
       html += `</tr></thead><tbody><tr>`;
 
       let col = 0;
-      for (let i = 0; i < startOffset; i++) { html += `<td class="border border-[#D6CCC0]/30 p-1 h-16 bg-[#F5EDE4]/30"></td>`; col++; }
+      for (let i = 0; i < startOffset; i++) { html += `<td class="border border-[#D6CCC0]/30 p-1 bg-[#F5EDE4]/30" style="height:90px"></td>`; col++; }
 
       for (let day = 1; day <= daysInMonth; day++) {
         const dateStr  = `${clientCalYear}-${String(clientCalMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
         const isToday  = dateStr === new Date().toISOString().slice(0,10);
-        // Utiliser scheduled_at en priorité, sinon updated_at
-        const dayItems = _clientCalData.approved.filter(a => {
-          const d = (a.scheduled_at || a.updated_at || '').slice(0,10);
-          return d === dateStr;
-        });
+        const dayApproved = _clientCalData.approved.filter(a => (a.scheduled_at||a.updated_at||'').slice(0,10) === dateStr);
+        const dayPending  = (_clientCalData.pending||[]).filter(a => (a.scheduled_at||a.created_at||'').slice(0,10) === dateStr);
         const dayNotes = _clientCalData.notes.filter(n => n.date === dateStr);
 
         let cell = '';
-        dayItems.forEach(a => {
+        // Contenus validés — couleur par type
+        dayApproved.forEach(a => {
           const tMatch = a.title.match(/^\[([A-Z\s\-]+)\]/i);
           const tType  = tMatch ? tMatch[1].toUpperCase() : '';
           const color  = CAL_COLORS[tType] || '#8B3E22';
           const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'').slice(0,16);
-          // Heure si scheduled_at
           const heure  = a.scheduled_at ? ' · ' + new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
-          cell += `<div style="background:${color}15;color:${color};border-left:2px solid ${color}" class="text-[9px] leading-tight px-1 py-0.5 rounded-r mb-0.5 truncate font-medium">${clean}${heure}</div>`;
+          cell += `<div style="background:${color}15;color:${color};border-left:2px solid ${color};font-size:11px;line-height:1.4;padding:1px 3px;border-radius:0 3px 3px 0;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:600">${clean}${heure}</div>`;
+        });
+        // Contenus en attente — jaune/ambre
+        dayPending.forEach(a => {
+          const clean = a.title.replace(/^\[[^\]]+\]\s*/,'').slice(0,16);
+          const heure = a.scheduled_at ? ' · ' + new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+          cell += `<div style="background:#FEF3C715;color:#D97706;border-left:2px dashed #D97706;font-size:11px;line-height:1.4;padding:1px 3px;border-radius:0 3px 3px 0;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:500">⏳ ${clean}${heure}</div>`;
         });
         dayNotes.forEach(n => {
           cell += `<div class="text-[9px] px-1 py-0.5 rounded bg-[#EDE6DB] text-[#767A55] mb-0.5 truncate italic">${n.note.slice(0,18)}</div>`;
         });
-        const dotC = (dayNotes.length || dayItems.length) ? `<span class="w-1 h-1 rounded-full bg-[#8B3E22] inline-block ml-0.5 mb-0.5"></span>` : '';
+        const dotC = (dayNotes.length || dayApproved.length || dayPending.length) ? `<span class="w-1.5 h-1.5 rounded-full bg-[#8B3E22] inline-block ml-0.5 mb-0.5"></span>` : '';
         const dayFrEvents = (frEvents[dateStr] || []);
-        const evCell = dayFrEvents.map(e => `<div style="font-size:8px;color:#8B3E22;line-height:1.3;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e}</div>`).join('');
+        const evCell = dayFrEvents.map(e => `<div style="font-size:10px;color:#8B3E22;line-height:1.4;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500">${e}</div>`).join('');
 
         html += `<td class="border border-[#D6CCC0]/30 p-1 align-top cursor-pointer hover:bg-[#F5EDE4] transition-colors ${dayFrEvents.length ? 'bg-[#FFF8F5]' : ''}"
-          style="height:72px"
+          style="height:90px"
           onclick="clientCalCellClick('${dateStr}')"
           ondblclick="clientCalDayDetail('${dateStr}')">
-          <div class="flex items-center justify-center gap-0.5 mb-0.5">
-            <span class="${isToday?'w-5 h-5 bg-[#8B3E22] text-white rounded-full inline-flex items-center justify-center':''} text-[10px] font-${isToday?'bold':'medium'} text-${isToday?'white':'[#2C2416]'}">${day}</span>${dotC}
+          <div class="flex items-center justify-center gap-0.5 mb-1">
+            <span class="${isToday?'w-6 h-6 bg-[#8B3E22] text-white rounded-full inline-flex items-center justify-center':''}" style="font-size:13px;font-weight:${isToday?'700':'500'};color:${isToday?'white':'#2C2416'}">${day}</span>${dotC}
           </div>
           ${cell}${evCell}
         </td>`;
@@ -1510,6 +1608,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     }
 
     window.clientCalNav = (dir) => { clientCalMonth += dir; if (clientCalMonth>11){clientCalMonth=0;clientCalYear++;} if (clientCalMonth<0){clientCalMonth=11;clientCalYear--;} renderClientCal(); };
+
+    let _clientFullDayDate = null;
+
+    function getNextClientContentDate(after) {
+      const dates = new Set([
+        ..._clientCalData.approved.map(a => (a.scheduled_at||a.updated_at||'').slice(0,10)),
+        ...(_clientCalData.pending||[]).map(a => (a.scheduled_at||a.created_at||'').slice(0,10)),
+        ..._clientCalData.notes.map(n => n.date)
+      ]);
+      return [...dates].filter(d => d > after).sort()[0] || null;
+    }
+
+    window.clientCalGoToNext = () => {
+      const next = getNextClientContentDate(_clientFullDayDate);
+      if (next) window.clientCalDayDetail(next);
+    };
 
     // Clic simple = détail (desktop et mobile)
     window.clientCalCellClick = (dateStr) => { window.clientCalDayDetail(dateStr); };
@@ -1532,7 +1646,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     window.clientCalDayDetail = (dateStr) => {
-      const dayItems = _clientCalData.approved.filter(a => (a.scheduled_at||a.updated_at||'').slice(0,10) === dateStr);
+      _clientFullDayDate = dateStr;
+      const dayApproved = _clientCalData.approved.filter(a => (a.scheduled_at||a.updated_at||'').slice(0,10) === dateStr);
+      const dayPending  = (_clientCalData.pending||[]).filter(a => (a.scheduled_at||a.created_at||'').slice(0,10) === dateStr);
+      const dayItems = [...dayApproved, ...dayPending];
       const dayNotes = _clientCalData.notes.filter(n => n.date === dateStr);
       const [y,m,d] = dateStr.split('-');
       const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
@@ -1548,19 +1665,39 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         let files = []; try { files = Array.isArray(a.files) ? a.files : JSON.parse(a.files||'[]'); } catch(e){}
         const isImgF = files[0]?.url && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(files[0].url);
         const heure  = a.scheduled_at ? new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
-        html += `<div class="flex overflow-hidden rounded-2xl border border-[#D6CCC0]">
-          <div class="w-32 sm:w-48 shrink-0 flex items-center justify-center" style="background:${color}15; min-height:120px">
-            ${isImgF ? `<img src="${files[0].url}" class="w-full h-full object-cover" style="min-height:120px" />` : `<iconify-icon icon="${icon}" stroke-width="1.5" style="color:${color}" class="text-5xl"></iconify-icon>`}
-          </div>
-          <div class="flex-1 p-4">
-            <div class="flex items-center gap-2 mb-2">
-              <span style="background:${color}20;color:${color}" class="text-xs font-bold px-2 py-0.5 rounded-full">${tType||'—'}</span>
-              ${heure ? `<span class="text-xs text-[#767A55] font-medium">🕐 ${heure}</span>` : ''}
+        const isPending = a.status === 'pending';
+        const reschedDate = (a.scheduled_at||'').slice(0,10);
+        const reschedTime = (a.scheduled_at||'').slice(11,16);
+        html += `<div class="rounded-2xl border ${isPending ? 'border-amber-300 bg-amber-50/30' : 'border-[#D6CCC0]'} overflow-hidden">
+          <!-- En-tête : type + heure -->
+          <div class="flex items-center justify-between px-4 py-3 border-b ${isPending ? 'border-amber-200 bg-amber-50' : 'border-[#D6CCC0]/50 bg-[#F5EDE4]/30'}">
+            <div class="flex items-center gap-2">
+              <span style="background:${color}20;color:${color}" class="text-xs font-bold px-2.5 py-1 rounded-full">${tType||'—'}</span>
+              ${isPending ? '<span class="text-xs text-amber-600 font-medium">⏳ En attente de validation</span>' : '<span class="text-xs text-green-600 font-medium">✓ Validé</span>'}
             </div>
-            <p class="text-base font-semibold text-[#2C2416] mb-2">${clean}</p>
-            ${a.description ? `<p class="text-sm text-[#2C2416]/70 leading-relaxed">${a.description}</p>` : ''}
-            ${files[0]?.url ? `<a href="${files[0].url}" target="_blank" class="inline-flex items-center gap-1.5 mt-3 text-xs text-[#8B3E22] hover:underline"><iconify-icon icon="solar:eye-linear" stroke-width="1.5"></iconify-icon> Voir le fichier</a>` : ''}
+            <div class="flex items-center gap-2">
+              ${heure ? `<div class="flex items-center gap-1.5 text-sm font-semibold text-[#2C2416]"><iconify-icon icon="solar:clock-circle-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>${heure}</div>` : ''}
+              ${!isPending ? `<button onclick="event.stopPropagation();document.getElementById('reschedule-${a.id}').classList.toggle('hidden')" class="text-xs px-2.5 py-1 rounded-lg bg-[#8B3E22]/10 text-[#8B3E22] hover:bg-[#8B3E22]/20 transition-colors font-medium shrink-0">✏️ Reprogrammer</button>` : ''}
+            </div>
           </div>
+          <!-- Corps : image + infos -->
+          <div class="flex">
+            ${files[0]?.url ? `<div class="w-28 sm:w-40 shrink-0 overflow-hidden" style="background:${color}10;min-height:140px"><img src="${files[0].url}" style="width:100%;height:100%;object-fit:cover;min-height:140px;display:block" onerror="this.style.display='none'" /></div>` : ''}
+            <div class="flex-1 p-4">
+              <p class="text-base font-semibold text-[#2C2416] mb-2">${clean}</p>
+              ${a.description ? `<div class="bg-white rounded-xl p-3 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Légende / description</p><p class="text-sm text-[#2C2416]/80 leading-relaxed whitespace-pre-wrap">${a.description}</p></div>` : '<p class="text-xs text-[#2C2416]/30 italic">Aucune description</p>'}
+              ${files[0]?.url ? `<a href="${files[0].url}" target="_blank" class="inline-flex items-center gap-1.5 mt-3 text-xs text-[#8B3E22] hover:underline font-medium"><iconify-icon icon="solar:eye-linear" stroke-width="1.5"></iconify-icon>Voir le fichier en grand</a>` : ''}
+            </div>
+          </div>
+          ${!isPending ? `<div id="reschedule-${a.id}" class="hidden border-t border-[#D6CCC0]/50 px-4 py-3 bg-[#F5EDE4]/50">
+            <p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Reprogrammer la publication</p>
+            <div class="flex flex-wrap items-end gap-2">
+              <div><label class="text-xs text-[#767A55] block mb-1">Nouvelle date</label><input id="reschedule-date-${a.id}" type="date" value="${reschedDate}" class="px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" /></div>
+              <div><label class="text-xs text-[#767A55] block mb-1">Heure (24h)</label><input id="reschedule-time-${a.id}" type="time" value="${reschedTime}" class="px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" /></div>
+              <button onclick="saveReschedule('${a.id}')" class="px-4 py-2 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
+              <button onclick="document.getElementById('reschedule-${a.id}').classList.add('hidden')" class="px-4 py-2 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs hover:bg-[#EDE6DB] transition-colors">Annuler</button>
+            </div>
+          </div>` : ''}
         </div>`;
       });
       dayNotes.forEach(n => {
@@ -1569,6 +1706,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (!html) html = '<p class="text-sm text-[#2C2416]/40 italic">Aucune publication programmée ce jour.</p>';
       document.getElementById('cal-fullday-title').textContent = `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
       document.getElementById('cal-fullday-content').innerHTML = html;
+      // Flèche "Suivant"
+      const nextDate = getNextClientContentDate(dateStr);
+      const nextBtn = document.getElementById('cal-next-day-btn');
+      if (nextBtn) { nextBtn.classList.toggle('hidden', !nextDate); nextBtn.classList.toggle('inline-flex', !!nextDate); }
       document.getElementById('cal-main-view').classList.add('hidden');
       document.getElementById('cal-fullday-view').classList.remove('hidden');
       document.getElementById('cal-fullday-view').scrollIntoView({ behavior:'smooth', block:'start' });
@@ -1577,6 +1718,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     window.closeClientCalFullDay = () => {
       document.getElementById('cal-fullday-view').classList.add('hidden');
       document.getElementById('cal-main-view').classList.remove('hidden');
+    };
+
+    window.saveReschedule = async (contentId) => {
+      const sb2 = await getSB();
+      const dateVal = document.getElementById('reschedule-date-' + contentId)?.value;
+      const timeVal = document.getElementById('reschedule-time-' + contentId)?.value;
+      if (!dateVal) { showAdminToast('⚠️ Sélectionne une date'); return; }
+      const scheduledAt = timeVal ? dateVal + 'T' + timeVal + ':00' : dateVal + 'T00:00:00';
+      const { error } = await sb2.from('content_items').update({ scheduled_at: scheduledAt }).eq('id', contentId);
+      if (!error) {
+        showAdminToast('✅ Date de publication mise à jour');
+        await loadClientCal();
+        window.clientCalDayDetail(dateVal);
+      } else {
+        showAdminToast('❌ Erreur lors de la mise à jour');
+      }
     };
 
     window.saveClientCalNote = async () => {
@@ -1601,8 +1758,37 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       window._currentAdminClientId = clientId;
       clientCalYear  = new Date().getFullYear();
       clientCalMonth = new Date().getMonth();
+      _adminTasksClientId = clientId; // S'assurer que l'ID est défini AVANT le rendu
       await _origOpenClient(clientId);
+      // Charger calendrier et tâches dès l'ouverture
+      await loadClientCal();
+      await loadAdminTasks(clientId);
     };
+
+    // Realtime — tâches : mise à jour auto quand le client coche/ajoute une tâche
+    sb.channel('admin-tasks-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
+        const cid = payload.new?.client_id || payload.old?.client_id;
+        if (cid && cid === _adminTasksClientId) loadAdminTasks(_adminTasksClientId);
+      })
+      .subscribe();
+
+    // Realtime — messages client : nouvelle note visible immédiatement
+    sb.channel('admin-client-notes-sync')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'client_notes' }, (payload) => {
+        if (payload.new?.client_id === window._currentAdminClientId)
+          window.loadAdminClientNotes(window._currentAdminClientId);
+      })
+      .subscribe();
+
+    // Mise à jour automatique du calendrier quand un client valide un contenu
+    sb.channel('admin-content-approved')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'content_items' }, async (payload) => {
+        if (payload.new?.status === 'approved' && payload.new?.client_id === _clientCalClientId) {
+          await loadClientCal();
+        }
+      })
+      .subscribe();
 
     // ─── Tâches admin ──────────────────────────────────────────────────────────
     window.loadAdminTasks = async (clientId) => {
@@ -1649,18 +1835,54 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     window.loadAdminClientNotes = async (clientId) => {
       if (!clientId) return;
       const sb2 = await getSB();
-      const { data } = await sb2.from('client_notes').select('*').eq('client_id', clientId).order('created_at', { ascending: false }).limit(30);
-      const feed = document.getElementById('admin-client-notes-feed');
+      const { data } = await sb2.from('client_notes').select('*').eq('client_id', clientId).order('created_at', { ascending: false }).limit(50);
+      const feed    = document.getElementById('admin-client-notes-feed');
+      const history = document.getElementById('admin-client-notes-history');
+      const histLink = document.getElementById('notes-history-link');
       if (!feed) return;
-      if (!data || !data.length) { feed.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucune note envoyée par ce client</p>'; return; }
-      feed.innerHTML = data.map(n => {
-        const d = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+
+      const unread = (data||[]).filter(n => !n.read_at);
+      const read   = (data||[]).filter(n => !!n.read_at);
+
+      const renderNote = (n, showCheck) => {
+        const d   = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
         const txt = n.note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        return `<div class="bg-[#EDE6DB] rounded-xl rounded-tr-sm px-4 py-3">
-          <p class="text-sm text-[#2C2416] leading-relaxed">${txt}</p>
-          <p class="text-[10px] text-[#767A55] mt-1.5">${d}</p>
+        return `<div class="bg-white/10 rounded-xl px-4 py-3 border border-white/10 flex gap-3 items-start">
+          <div class="flex-1 min-w-0">
+            <p class="text-sm text-[#F5EDE4] leading-relaxed">${txt}</p>
+            <p class="text-xs text-[#F5EDE4]/50 mt-1.5">${d}</p>
+          </div>
+          ${showCheck ? `<button onclick="markNoteRead('${n.id}','${clientId}')" class="shrink-0 w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center hover:border-[#8B3E22] hover:bg-[#8B3E22]/30 transition-colors" title="Marquer comme lu"><iconify-icon icon="solar:check-linear" stroke-width="2.5" class="text-white/60 text-xs"></iconify-icon></button>` : ''}
         </div>`;
-      }).join('');
+      };
+
+      feed.innerHTML = unread.length
+        ? unread.map(n => renderNote(n, true)).join('')
+        : '<p class="text-sm text-[#F5EDE4]/40 italic">Tous les messages ont été lus ✓</p>';
+
+      if (history) {
+        history.innerHTML = read.length
+          ? read.map(n => renderNote(n, false)).join('')
+          : '<p class="text-xs text-[#F5EDE4]/30 italic">Aucun message archivé</p>';
+      }
+      if (histLink) {
+        histLink.textContent = read.length ? `Historique (${read.length}) →` : 'Historique →';
+      }
+    };
+
+    window.markNoteRead = async (noteId, clientId) => {
+      const sb2 = await getSB();
+      await sb2.from('client_notes').update({ read_at: new Date().toISOString() }).eq('id', noteId);
+      await window.loadAdminClientNotes(clientId);
+    };
+
+    window.toggleNotesHistory = (clientId) => {
+      const panel = document.getElementById('notes-history-panel');
+      if (panel) {
+        panel.classList.toggle('hidden');
+        const btn = document.getElementById('notes-history-link');
+        if (btn) btn.textContent = panel.classList.contains('hidden') ? btn.textContent.replace('↑','→') : btn.textContent.replace('→','↑');
+      }
     };
 
   });

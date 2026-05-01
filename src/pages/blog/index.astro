@@ -1,0 +1,93 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
+import BackArrow from '../../components/BackArrow.astro';
+
+const articles = [
+  {
+    slug: 'artisans-sous-estiment-instagram',
+    categorie: 'Stratégie',
+    titre: 'Pourquoi les artisans sous-estiment leur Instagram — et comment y remédier',
+    extrait: "Vous faites un travail remarquable. Vos clients sont satisfaits. Mais en ligne, c'est le silence. Voici pourquoi, et surtout comment changer ça.",
+    lecture: '5 min',
+    image: '/blog-artisans.jpg',
+  },
+  {
+    slug: '5-types-posts-compte-savoir-faire',
+    categorie: 'Contenu',
+    titre: '5 types de posts qui fonctionnent vraiment sur Instagram',
+    extrait: "Pas besoin de publier tous les jours. Il suffit de publier les bons contenus. Voici les 5 formats qui génèrent de l'engagement et attirent de vrais clients.",
+    lecture: '6 min',
+    image: '/workspace.jpg',
+  },
+  {
+    slug: 'confier-instagram-ce-que-ca-change',
+    categorie: 'Community Management',
+    titre: 'Confier son Instagram : ce que ça change (et ce que ça ne change pas)',
+    extrait: "Déléguer sa communication, ça fait peur. On a peur de perdre sa voix, son identité. Voici ce qui change vraiment — et ce qui reste entièrement le vôtre.",
+    lecture: '5 min',
+    image: '/blog-confier.jpg',
+  },
+  {
+    slug: 'instagram-prend-du-temps',
+    categorie: 'Mindset',
+    titre: '"Ça ne marche pas" — ce que personne ne vous dit sur le temps que prend Instagram',
+    extrait: "Vous publiez depuis quelques semaines et les clients ne se bousculent pas. Normal. Voici la vérité sur le temps réel que prend Instagram pour convertir.",
+    lecture: '6 min',
+    image: '/blog-temps.jpg',
+  },
+];
+---
+
+<BaseLayout
+  title="Blog — Claire Vigneron · Community Manager"
+  description="Conseils Instagram pour artisans et indépendants : stratégie de contenu, community management, visibilité locale."
+>
+  <Nav />
+
+  <section class="pt-24 md:pt-28 pb-16 px-6 bg-[#F5EDE4]">
+    <div class="max-w-4xl mx-auto">
+      <BackArrow />
+      <span class="text-xs font-medium uppercase tracking-widest text-[#767A55] mb-4 block">Ressources</span>
+      <h1 class="text-4xl md:text-6xl text-[#2C2416] tracking-tight mb-4">Le blog</h1>
+      <p class="text-xl text-[#2C2416]/60 font-light">Stratégie Instagram pour artisans et indépendants.</p>
+    </div>
+  </section>
+
+  <section class="py-16 px-6 bg-[#F5EDE4]">
+    <div class="max-w-4xl mx-auto space-y-0">
+      {articles.map((article, i) => (
+        <a
+          href={`/blog/${article.slug}`}
+          class="group flex flex-col sm:flex-row gap-6 py-10 border-t border-[#D6CCC0] hover:bg-[#EDE6DB] -mx-6 px-6 transition-colors duration-300"
+        >
+          {article.image && (
+            <div class="sm:w-36 md:w-44 shrink-0">
+              <div class="aspect-[4/3] rounded-xl overflow-hidden bg-[#EDE6DB]">
+                <img src={article.image} alt={article.titre} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+              </div>
+            </div>
+          )}
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="text-xs uppercase tracking-widest text-[#767A55] font-medium">{article.categorie}</span>
+              <span class="text-xs text-[#2C2416]/40">{article.lecture} de lecture</span>
+            </div>
+            <h2 class="text-xl md:text-2xl text-[#2C2416] tracking-tight mb-2 group-hover:text-[#8B3E22] transition-colors leading-tight">
+              {article.titre}
+            </h2>
+            <p class="text-[#2C2416]/60 font-light leading-relaxed text-sm mb-4">{article.extrait}</p>
+            <span class="inline-flex items-center text-sm font-medium text-[#8B3E22] gap-2">
+              Lire l'article
+              <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5" class="group-hover:translate-x-1 transition-transform"></iconify-icon>
+            </span>
+          </div>
+        </a>
+      ))}
+      <div class="border-t border-[#D6CCC0]"></div>
+    </div>
+  </section>
+
+  <Footer />
+</BaseLayout>

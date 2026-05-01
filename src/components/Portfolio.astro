@@ -1,56 +1,65 @@
 ---
-const highlights = [
-  'Comptes Instagram artisans & créateurs',
-  'Avant / après — résultats mesurables',
-  'Contenus adaptés à chaque savoir-faire',
+const projets = [
+  {
+    client: 'Bahati Body Sculpt',
+    secteur: 'Bien-être · Drainage lymphatique',
+    mission: 'Création et lancement du compte Instagram',
+    duree: '3 mois',
+    image: '/projets/bahati/bahati-02.png',
+  },
+  {
+    client: 'Transakauto',
+    secteur: 'Revente automobile · Angers & Tours',
+    mission: 'Création et développement du compte Instagram',
+    duree: '1 an',
+    image: '/projets/transakauto/transak-01.png',
+  },
+  {
+    client: 'Garage automobile',
+    secteur: 'Carrosserie · Mécanique',
+    mission: 'Calendrier éditorial et stratégie de contenu',
+    duree: '1 mois',
+    image: '/projets/garage/garage-01.png',
+  },
 ];
 ---
 
-<section class="py-20 px-6 md:px-12 border-t border-[#D6CCC0] bg-[#EDE6DB]">
-  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
+<section class="py-12 md:py-20 px-6 md:px-12 border-t border-[#D6CCC0] bg-[#EDE6DB]">
+  <div class="max-w-7xl mx-auto">
 
-    <!-- Texte -->
-    <div class="md:w-1/2 space-y-6">
-      <h3 class="text-4xl md:text-5xl text-[#2C2416] tracking-tight">Avant / Après</h3>
-      <p class="text-lg text-[#2C2416]/70 leading-relaxed">
-        Chaque compte raconte une transformation. Un artisan invisible qui devient visible. Un savoir-faire qui trouve enfin ses clients. Les résultats avant/après arrivent prochainement.
-      </p>
-      <ul class="space-y-3 pt-4">
-        {highlights.map(item => (
-          <li class="flex items-center text-[#2C2416]/80">
-            <iconify-icon icon="solar:check-circle-linear" stroke-width="1.5" class="mr-3 text-lg text-[#767A55]"></iconify-icon>
-            {item}
-          </li>
-        ))}
-      </ul>
-      <div class="pt-6">
-        <a
-          href="#contact"
-          class="px-8 py-3 bg-transparent border border-[#2C2416] text-[#2C2416] rounded-full hover:bg-[#2C2416] hover:text-[#F5EDE4] transition-all duration-300 inline-block"
-        >
-          Me contacter
+    <div class="flex flex-col md:flex-row justify-between items-end mb-14 gap-6">
+      <div>
+        <span class="text-xs font-medium uppercase tracking-widest text-[#767A55] mb-3 block">Références clients</span>
+        <h3 class="text-4xl md:text-5xl text-[#2C2416] tracking-tight">Projets réalisés</h3>
+      </div>
+      <a href="/a-propos#projets" class="text-[#2C2416] border-b border-[#2C2416] pb-1 hover:opacity-60 transition-opacity shrink-0">
+        Voir le détail →
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+      {projets.map(projet => (
+        <a href="/a-propos" class="group block bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div class="aspect-[4/5] overflow-hidden bg-[#F5EDE4]">
+            <img
+              src={projet.image}
+              alt={`${projet.client} — réalisation`}
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+            />
+          </div>
+          <div class="p-6">
+            <span class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">{projet.secteur}</span>
+            <h4 class="text-xl text-[#2C2416] tracking-tight mb-1">{projet.client}</h4>
+            <p class="text-sm text-[#2C2416]/60 font-light mb-4">{projet.mission}</p>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-[#8B3E22] font-medium">{projet.duree}</span>
+              <span class="text-xs text-[#2C2416]/40 group-hover:text-[#8B3E22] transition-colors">Voir le projet →</span>
+            </div>
+          </div>
         </a>
-      </div>
+      ))}
     </div>
 
-    <!-- Mockup carte -->
-    <div class="md:w-1/2 relative">
-      <div class="aspect-[4/3] bg-white rounded-xl shadow-lg border border-[#D6CCC0] p-8 flex flex-col justify-between rotate-2 hover:rotate-0 transition-transform duration-500">
-        <div class="flex justify-between items-start">
-          <div class="w-1/3 h-4 bg-[#EDE6DB] rounded"></div>
-          <div class="w-8 h-8 bg-[#F5EDE4] rounded-full border border-[#D6CCC0]"></div>
-        </div>
-        <div class="space-y-4">
-          <div class="w-full h-px bg-[#EDE6DB]"></div>
-          <div class="w-3/4 h-3 bg-[#EDE6DB] rounded"></div>
-          <div class="w-5/6 h-3 bg-[#EDE6DB] rounded"></div>
-          <div class="w-2/3 h-3 bg-[#EDE6DB] rounded"></div>
-        </div>
-        <div class="flex justify-between items-center mt-8">
-          <div class="px-4 py-2 bg-[#8B3E22] text-white text-xs rounded">Avant / Après</div>
-          <span class="text-[#D6CCC0] text-4xl font-serif italic">Bientôt.</span>
-        </div>
-      </div>
-    </div>
   </div>
 </section>

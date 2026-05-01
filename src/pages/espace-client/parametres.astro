@@ -1,0 +1,313 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Paramètres — Espace client" hideChatWidget={true}>
+
+  <div id="loading" class="min-h-screen bg-[#2C2416] flex items-center justify-center">
+    <p class="text-[#F5EDE4]/50 text-sm">Chargement…</p>
+  </div>
+
+  <div id="page" class="hidden min-h-screen bg-[#F5EDE4]">
+    <header class="bg-[#2C2416] px-6 py-4 flex items-center justify-between">
+      <a href="/espace-client/dashboard" class="flex items-center gap-2 text-[#F5EDE4]/70 hover:text-white transition-colors text-sm">
+        <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon>
+        Mon espace
+      </a>
+      <a href="/" class="text-base font-serif text-[#F5EDE4] tracking-tight">Claire Vigneron <span class="text-[#767A55]">·</span> CM</a>
+      <button id="logout-btn" class="text-xs text-[#F5EDE4]/40 hover:text-white uppercase tracking-widest transition-colors">Déconnexion</button>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 md:px-6 py-10">
+
+      <h1 class="text-3xl text-[#2C2416] tracking-tight mb-8">Paramètres</h1>
+
+      <!-- Onglets -->
+      <div class="flex gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-8 overflow-x-auto">
+        <button data-tab="compte"   class="tab-btn flex-1 py-2.5 text-sm font-medium rounded-lg bg-white text-[#2C2416] shadow-sm transition-all whitespace-nowrap px-4">Mon compte</button>
+        <button data-tab="aide"     class="tab-btn flex-1 py-2.5 text-sm font-medium rounded-lg text-[#2C2416]/50 transition-all whitespace-nowrap px-4 hover:text-[#2C2416]">FAQ & Aide</button>
+        <button data-tab="support"  class="tab-btn flex-1 py-2.5 text-sm font-medium rounded-lg text-[#2C2416]/50 transition-all whitespace-nowrap px-4 hover:text-[#2C2416]">Support</button>
+      </div>
+
+      <!-- Tab : Mon compte -->
+      <div id="tab-compte" class="space-y-6">
+
+        <!-- Mes informations -->
+        <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+          <h2 class="text-lg text-[#2C2416] font-medium mb-5">Mes informations</h2>
+          <div class="space-y-4">
+            <div>
+              <label class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">Prénom & Nom</label>
+              <input id="p-name"      type="text"  class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+            </div>
+            <div>
+              <label class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">Email</label>
+              <input id="p-email"     type="email" class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm bg-[#F5EDE4]/50 text-[#2C2416]/50 cursor-not-allowed" disabled />
+            </div>
+            <div>
+              <label class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">Téléphone</label>
+              <input id="p-phone"     type="tel"   class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+            </div>
+            <div>
+              <label class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">Compte Instagram</label>
+              <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#767A55] text-sm">@</span>
+                <input id="p-instagram" type="text" class="w-full pl-8 pr-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+              </div>
+            </div>
+            <div>
+              <label class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">Mot de passe Instagram</label>
+              <p class="text-xs text-[#767A55] mb-2">Uniquement accessible par Claire — ne sera jamais affiché ici.</p>
+              <div class="relative">
+                <iconify-icon icon="solar:lock-keyhole-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-base pointer-events-none"></iconify-icon>
+                <input id="p-ig-pwd" type="password" placeholder="••••••••" autocomplete="new-password" class="w-full pl-9 pr-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+              </div>
+              <p id="ig-pwd-saved" class="hidden text-xs text-green-700 mt-1">Mot de passe Instagram enregistré ✓</p>
+            </div>
+            <div id="info-msg" class="hidden text-sm rounded-xl px-4 py-3"></div>
+            <button id="save-info" class="w-full py-3 bg-[#8B3E22] text-[#F5EDE4] rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">
+              Enregistrer les modifications
+            </button>
+          </div>
+        </div>
+
+        <!-- Modifier mot de passe -->
+        <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+          <h2 class="text-lg text-[#2C2416] font-medium mb-5">Modifier mon mot de passe</h2>
+          <div class="space-y-4">
+            <div>
+              <label class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">Nouveau mot de passe</label>
+              <input id="new-pwd"  type="password" placeholder="Minimum 6 caractères" class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+            </div>
+            <div>
+              <label class="text-xs uppercase tracking-widest text-[#767A55] font-medium block mb-2">Confirmer</label>
+              <input id="conf-pwd" type="password" placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+            </div>
+            <div id="pwd-msg" class="hidden text-sm rounded-xl px-4 py-3"></div>
+            <button id="save-pwd" class="w-full py-3 bg-[#2C2416] text-[#F5EDE4] rounded-xl text-sm font-medium hover:bg-[#8B3E22] transition-colors">
+              Changer le mot de passe
+            </button>
+          </div>
+        </div>
+
+        <!-- Gérer mes communications -->
+        <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+          <h2 class="text-lg text-[#2C2416] font-medium mb-2">Gérer mes communications</h2>
+          <p class="text-sm text-[#2C2416]/50 font-light mb-5">Choisissez comment Claire vous contacte.</p>
+          <div class="space-y-3">
+            {[
+              { id: 'notif-email', label: 'Recevoir les contenus à valider par email' },
+              { id: 'notif-bilan', label: 'Recevoir le bilan mensuel par email' },
+            ].map(item => (
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id={item.id} checked class="w-4 h-4 accent-[#8B3E22]" />
+                <span class="text-sm text-[#2C2416]/70">{item.label}</span>
+              </label>
+            ))}
+          </div>
+          <p class="text-xs text-[#767A55] mt-4">Ces préférences sont enregistrées automatiquement.</p>
+        </div>
+      </div>
+
+      <!-- Tab : FAQ & Aide -->
+      <div id="tab-aide" class="hidden space-y-4">
+        <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0] mb-4">
+          <h2 class="text-lg text-[#2C2416] font-medium mb-4">Comment ça fonctionne ?</h2>
+          <div class="space-y-4 text-sm text-[#2C2416]/70 font-light">
+            {[
+              ['Comment valider un contenu ?', 'Dans votre espace, la section "Contenu à valider" affiche les posts préparés par Claire. Cliquez sur ✓ Valider pour approuver, ou ✗ Refuser pour demander des modifications.'],
+              ['Comment déposer des photos ?', 'Dans la section "Déposer des fichiers", cliquez sur la zone de dépôt pour sélectionner vos photos ou vidéos. Elles seront transmises à Claire automatiquement.'],
+              ['Où trouver mes factures ?', 'Toutes vos factures sont disponibles dans la section "Factures" de votre tableau de bord. Cliquez sur une facture pour la télécharger.'],
+              ['Puis-je modifier mes informations ?', 'Oui, rendez-vous dans Paramètres → Mon compte pour mettre à jour vos informations personnelles.'],
+            ].map(([q, a]) => (
+              <div class="border-b border-[#D6CCC0] pb-4 last:border-0">
+                <p class="font-medium text-[#2C2416] mb-1">{q}</p>
+                <p>{a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <a href="/faq" target="_blank" class="flex items-center justify-between bg-[#EDE6DB] rounded-2xl p-5 hover:bg-[#D6CCC0]/40 transition-colors group">
+          <div>
+            <p class="font-medium text-[#2C2416]">FAQ complète</p>
+            <p class="text-sm text-[#2C2416]/50 font-light">Toutes les questions fréquentes sur les offres et la collaboration</p>
+          </div>
+          <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl group-hover:translate-x-1 transition-transform"></iconify-icon>
+        </a>
+      </div>
+
+      <!-- Tab : Support -->
+      <div id="tab-support" class="hidden space-y-4">
+
+        <!-- Contacter le support -->
+        <div class="bg-[#2C2416] rounded-2xl p-6">
+          <h2 class="text-lg text-[#F5EDE4] font-medium mb-4">Contacter le support</h2>
+          <div class="space-y-3">
+            <a href="mailto:clairevigneron.contact@gmail.com" class="flex items-center gap-3 text-sm text-[#F5EDE4]/70 hover:text-white transition-colors">
+              <iconify-icon icon="solar:letter-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl shrink-0"></iconify-icon>
+              clairevigneron.contact@gmail.com
+            </a>
+            <a href="https://wa.me/33678301358" target="_blank" class="flex items-center gap-3 text-sm text-[#F5EDE4]/70 hover:text-white transition-colors">
+              <iconify-icon icon="solar:phone-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl shrink-0"></iconify-icon>
+              06 78 30 13 58 — WhatsApp
+            </a>
+          </div>
+        </div>
+
+        <!-- Liens légaux -->
+        <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+          <h2 class="text-lg text-[#2C2416] font-medium mb-4">Documents légaux</h2>
+          <div class="space-y-3">
+            {[
+              ['Politique de confidentialité', '/confidentialite'],
+              ['Conditions Générales de Vente (CGV)', '/cgv'],
+              ['Conditions Générales d\'Utilisation (CGU)', '/cgu'],
+              ['Mentions légales', '/mentions-legales'],
+              ['Accessibilité', '/accessibilite'],
+            ].map(([label, href]) => (
+              <a href={href} target="_blank" class="flex items-center justify-between text-sm text-[#2C2416]/70 hover:text-[#8B3E22] transition-colors py-1 border-b border-[#D6CCC0]/50 last:border-0">
+                {label}
+                <iconify-icon icon="solar:arrow-right-up-linear" stroke-width="1.5" class="text-base shrink-0"></iconify-icon>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <!-- Supprimer le compte -->
+        <div class="bg-red-50 rounded-2xl p-6 border border-red-100">
+          <h2 class="text-base font-medium text-red-700 mb-2">Supprimer mon compte</h2>
+          <p class="text-sm text-red-600/70 font-light mb-4">Cette action est irréversible. Toutes vos données seront supprimées définitivement.</p>
+          <button id="delete-account" class="px-5 py-2.5 border border-red-300 text-red-600 rounded-full text-sm hover:bg-red-100 transition-colors">
+            Demander la suppression du compte
+          </button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</BaseLayout>
+
+<script is:inline>
+  const SUPABASE_URL = 'https://etubpowlffhdvnfqkjij.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_AyehSGHv6TEwFvPQIuMivg_-_mJ7zUH';
+  const ADMIN_EMAIL  = 'clairevigneron.contact@gmail.com';
+
+  function loadScript(src) {
+    return new Promise(resolve => {
+      if (document.querySelector(`script[src="${src}"]`)) return resolve();
+      const s = document.createElement('script'); s.src = src; s.onload = resolve; document.head.appendChild(s);
+    });
+  }
+  async function getSB() {
+    if (!window._sb) {
+      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js');
+      window._sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    return window._sb;
+  }
+
+  // Onglets
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+      document.getElementById('tab-' + target).classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('bg-white', b.dataset.tab === target);
+        b.classList.toggle('shadow-sm', b.dataset.tab === target);
+        b.classList.toggle('text-[#2C2416]', b.dataset.tab === target);
+        b.classList.toggle('text-[#2C2416]/50', b.dataset.tab !== target);
+      });
+    });
+  });
+
+  window.addEventListener('load', async () => {
+    const sb = await getSB();
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = '/espace-client'; return; }
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('page').classList.remove('hidden');
+
+    const uid = session.user.id;
+    document.getElementById('logout-btn').onclick = async () => { await sb.auth.signOut(); window.location.href = '/espace-client'; };
+
+    // Charger le profil (avec fallback sur user_metadata si nom vide)
+    const { data: p } = await sb.from('profiles').select('*').eq('id', uid).single();
+    const meta = session.user.user_metadata || {};
+    const fullName = p?.full_name || meta.full_name || meta.name || '';
+
+    document.getElementById('p-name').value      = fullName;
+    document.getElementById('p-email').value     = p?.email || session.user.email || '';
+    document.getElementById('p-phone').value     = p?.phone || meta.phone || '';
+    document.getElementById('p-instagram').value = p?.instagram_handle || meta.instagram_handle || '';
+
+    // Si le nom existe dans les métadonnées mais pas dans le profil, le sauvegarder
+    if (fullName && !p?.full_name) {
+      await sb.from('profiles').update({ full_name: fullName }).eq('id', uid);
+    }
+
+    // Sauvegarder infos (champs partiels acceptés)
+    document.getElementById('save-info').onclick = async () => {
+      const name      = document.getElementById('p-name').value.trim();
+      const phone     = document.getElementById('p-phone').value.trim();
+      const instagram = document.getElementById('p-instagram').value.trim().replace('@', '');
+      const msgEl     = document.getElementById('info-msg');
+      msgEl.classList.add('hidden');
+
+      // Construire l'objet avec uniquement les champs remplis
+      const updates = {};
+      if (name)      updates.full_name        = name;
+      if (phone)     updates.phone            = phone;
+      if (instagram) updates.instagram_handle = instagram;
+      // Si tous vides, on sauvegarde quand même (effacer les champs)
+      if (!name && !phone && !instagram) {
+        updates.full_name = ''; updates.phone = ''; updates.instagram_handle = '';
+      }
+
+      const { error } = await sb.from('profiles').update(updates).eq('id', uid);
+
+      // Sauvegarder mot de passe Instagram si renseigné
+      const igPwd = document.getElementById('p-ig-pwd').value;
+      if (igPwd) {
+        const { data: existing } = await sb.from('instagram_credentials').select('id').eq('client_id', uid).single();
+        if (existing) {
+          await sb.from('instagram_credentials').update({ password: igPwd, updated_at: new Date().toISOString() }).eq('client_id', uid);
+        } else {
+          await sb.from('instagram_credentials').insert({ client_id: uid, password: igPwd });
+        }
+        document.getElementById('ig-pwd-saved').classList.remove('hidden');
+        document.getElementById('p-ig-pwd').value = '';
+        setTimeout(() => document.getElementById('ig-pwd-saved').classList.add('hidden'), 3000);
+      }
+
+      msgEl.className = `text-sm rounded-xl px-4 py-3 ${error ? 'text-red-600 bg-red-50' : 'text-green-700 bg-green-50'}`;
+      msgEl.textContent = error
+        ? `Erreur : ${error.message || 'impossible de sauvegarder'}`
+        : 'Informations mises à jour ✓';
+      msgEl.classList.remove('hidden');
+      setTimeout(() => msgEl.classList.add('hidden'), 4000);
+    };
+
+    // Changer mot de passe
+    document.getElementById('save-pwd').onclick = async () => {
+      const pwd  = document.getElementById('new-pwd').value;
+      const conf = document.getElementById('conf-pwd').value;
+      const msgEl = document.getElementById('pwd-msg');
+      msgEl.className = 'text-sm rounded-xl px-4 py-3';
+      if (pwd !== conf) { msgEl.textContent = 'Les mots de passe ne correspondent pas.'; msgEl.classList.add('text-red-600','bg-red-50'); msgEl.classList.remove('hidden'); return; }
+      if (pwd.length < 6) { msgEl.textContent = 'Minimum 6 caractères.'; msgEl.classList.add('text-red-600','bg-red-50'); msgEl.classList.remove('hidden'); return; }
+      const { error } = await sb.auth.updateUser({ password: pwd });
+      msgEl.textContent = error ? 'Erreur : ' + error.message : 'Mot de passe mis à jour ✓';
+      msgEl.classList.add(error ? 'text-red-600 bg-red-50' : 'text-green-700 bg-green-50');
+      msgEl.classList.remove('hidden');
+    };
+
+    // Supprimer le compte
+    document.getElementById('delete-account').onclick = () => {
+      if (confirm('Êtes-vous sûr ? Cette action est irréversible.')) {
+        window.location.href = `mailto:clairevigneron.contact@gmail.com?subject=Demande de suppression de compte&body=Bonjour Claire, je souhaite supprimer mon compte client (${session.user.email}).`;
+      }
+    };
+  });
+</script>

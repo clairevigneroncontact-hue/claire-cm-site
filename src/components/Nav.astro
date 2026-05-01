@@ -1,41 +1,129 @@
 ---
 const links = [
+  { label: 'Accueil', href: '/' },
   { label: 'Offres', href: '/offres' },
   { label: 'À propos', href: '/a-propos' },
-  { label: 'Comment ça marche', href: '/#process' },
   { label: 'Contact', href: '/contact' },
+  { label: 'Blog', href: '/blog' },
 ];
+
+const pathname = Astro.url.pathname;
+function isActive(href: string) {
+  if (href === '/') return pathname === '/';
+  return pathname.startsWith(href);
+}
 ---
 
-<nav class="sticky top-0 z-50 w-full px-6 py-5 flex justify-between items-center bg-[#F5EDE4]/90 backdrop-blur-sm border-b border-[#D6CCC0]/50 transition-all duration-300">
+<nav class="sticky top-0 z-50 w-full bg-[#F5EDE4]/90 backdrop-blur-sm border-b border-[#D6CCC0]/50 transition-all duration-300">
 
-  <!-- Mobile: hamburger -->
-  <button class="md:hidden text-2xl" aria-label="Menu">
-    <iconify-icon icon="solar:hamburger-menu-linear" stroke-width="1.5"></iconify-icon>
-  </button>
+  <div class="px-6 py-5 flex justify-between items-center">
 
-  <!-- Logo -->
-  <a href="/" class="text-xl md:text-2xl font-serif tracking-tight text-[#2C2416] leading-none">
-    Claire Vigneron <span class="text-[#767A55]">·</span> CM
-  </a>
+    <!-- Logo -->
+    <a href="/" class="text-xl md:text-2xl font-serif tracking-tight text-[#2C2416] leading-none">
+      Claire Vigneron <span class="text-[#767A55]">·</span> CM
+    </a>
 
-  <!-- Desktop nav -->
-  <div class="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide text-[#2C2416]/70">
+    <!-- Desktop nav -->
+    <div class="hidden md:flex items-center space-x-7 text-sm font-medium tracking-wide">
+      {links.map(link => (
+        <a
+          href={link.href}
+          class={`transition-colors pb-0.5 ${
+            isActive(link.href)
+              ? 'text-[#8B3E22] border-b-2 border-[#8B3E22]'
+              : 'text-[#2C2416]/70 hover:text-[#2C2416]'
+          }`}
+        >
+          {link.label}
+        </a>
+      ))}
+      <a
+        href="https://cal.com/claire-vigneron-k5okcq/30min?user=claire-vigneron-k5okcq&overlayCalendar=true"
+        target="_blank"
+        rel="noopener"
+        class="ml-1 px-5 py-2.5 bg-[#8B3E22] text-[#F5EDE4] rounded-full hover:bg-[#6B2E1A] transition-colors duration-300"
+      >
+        Réserver un appel
+      </a>
+      <a
+        href="/espace-client"
+        title="Espace client"
+        class={`w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors ${isActive('/espace-client') ? 'border-[#8B3E22] bg-[#8B3E22] text-[#F5EDE4]' : 'border-[#D6CCC0] text-[#2C2416]/50 hover:border-[#8B3E22] hover:text-[#8B3E22]'}`}
+      >
+        <iconify-icon icon="solar:user-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+      </a>
+    </div>
+
+    <!-- Hamburger mobile -->
+    <button
+      id="menu-toggle"
+      class="md:hidden p-2 text-[#2C2416] rounded-lg hover:bg-[#EDE6DB] transition-colors"
+      aria-label="Menu"
+      aria-expanded="false"
+    >
+      <iconify-icon id="icon-open"  icon="solar:hamburger-menu-linear" stroke-width="1.5" class="text-2xl block"></iconify-icon>
+      <iconify-icon id="icon-close" icon="solar:close-linear"          stroke-width="1.5" class="text-2xl hidden"></iconify-icon>
+    </button>
+  </div>
+
+  <!-- Menu mobile -->
+  <div
+    id="mobile-menu"
+    class="hidden md:hidden border-t border-[#D6CCC0]/50 bg-[#F5EDE4] px-6 pb-6 pt-4 space-y-1"
+  >
     {links.map(link => (
-      <a href={link.href} class="hover:text-[#2C2416] transition-colors">{link.label}</a>
+      <a
+        href={link.href}
+        class={`mobile-link block py-3 text-lg font-light border-b border-[#D6CCC0]/40 transition-colors ${
+          isActive(link.href)
+            ? 'text-[#8B3E22] font-medium'
+            : 'text-[#2C2416]/80 hover:text-[#8B3E22]'
+        }`}
+      >
+        {link.label}
+      </a>
     ))}
     <a
-      href="https://calendar.app.google/3MNsKo33KBsLdFB18"
+      href="/espace-client"
+      class={`mobile-link block py-3 text-lg font-light border-b border-[#D6CCC0]/40 transition-colors ${
+        isActive('/espace-client')
+          ? 'text-[#8B3E22] font-medium'
+          : 'text-[#2C2416]/80 hover:text-[#8B3E22]'
+      }`}
+    >
+      Espace client
+    </a>
+    <a
+      href="https://cal.com/claire-vigneron-k5okcq/30min?user=claire-vigneron-k5okcq&overlayCalendar=true"
       target="_blank"
       rel="noopener"
-      class="ml-4 px-5 py-2.5 bg-[#8B3E22] text-[#F5EDE4] rounded-full hover:bg-[#6B2E1A] transition-colors duration-300"
+      class="mobile-link block mt-4 px-6 py-3 bg-[#8B3E22] text-[#F5EDE4] rounded-full font-medium text-center hover:bg-[#6B2E1A] transition-colors"
     >
       Réserver un appel
     </a>
   </div>
-
-  <!-- Mobile: icône -->
-  <div class="flex items-center gap-4 md:hidden">
-    <iconify-icon icon="solar:user-circle-linear" class="text-xl" stroke-width="1.5"></iconify-icon>
-  </div>
 </nav>
+
+<script>
+  const toggle    = document.getElementById('menu-toggle')!;
+  const menu      = document.getElementById('mobile-menu')!;
+  const iconOpen  = document.getElementById('icon-open')!;
+  const iconClose = document.getElementById('icon-close')!;
+
+  toggle.addEventListener('click', () => {
+    const isOpen = !menu.classList.contains('hidden');
+    menu.classList.toggle('hidden', isOpen);
+    iconOpen.classList.toggle('hidden', !isOpen);
+    iconClose.classList.toggle('hidden', isOpen);
+    toggle.setAttribute('aria-expanded', String(!isOpen));
+  });
+
+  document.querySelectorAll('.mobile-link').forEach(link => {
+    link.addEventListener('click', () => {
+      menu.classList.add('hidden');
+      iconOpen.classList.remove('hidden');
+      iconClose.classList.add('hidden');
+      toggle.setAttribute('aria-expanded', 'false');
+    });
+  });
+</script>
