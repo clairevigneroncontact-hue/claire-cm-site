@@ -1565,14 +1565,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const dayNotes = _clientCalData.notes.filter(n => n.date === dateStr);
 
         let cell = '';
-        // Contenus validés — couleur par type
+        // Contenus validés — couleur par type + draggable
         dayApproved.forEach(a => {
           const tMatch = a.title.match(/^\[([A-Z\s\-]+)\]/i);
           const tType  = tMatch ? tMatch[1].toUpperCase() : '';
           const color  = CAL_COLORS[tType] || '#8B3E22';
           const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'').slice(0,16);
           const heure  = a.scheduled_at ? ' · ' + new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
-          cell += `<div style="background:${color}15;color:${color};border-left:2px solid ${color};font-size:11px;line-height:1.4;padding:1px 3px;border-radius:0 3px 3px 0;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:600">${clean}${heure}</div>`;
+          const dragTime = (a.scheduled_at||'').slice(11,16) || '00:00';
+          cell += `<div draggable="true" data-drag-id="${a.id}" ondragstart="calDragStart(event,'${a.id}','${dragTime}')" ondragend="calDragEnd(event)" ontouchstart="calTouchStartItem(event,'${a.id}','${dragTime}',this)" style="background:${color}15;color:${color};border-left:2px solid ${color};font-size:11px;line-height:1.4;padding:1px 3px;border-radius:0 3px 3px 0;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:600;cursor:grab">${clean}${heure}</div>`;
         });
         // Contenus en attente — jaune/ambre
         dayPending.forEach(a => {
@@ -1589,7 +1590,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
         html += `<td class="border border-[#D6CCC0]/30 p-1 align-top cursor-pointer hover:bg-[#F5EDE4] transition-colors ${dayFrEvents.length ? 'bg-[#FFF8F5]' : ''}"
           style="height:90px"
-          onclick="clientCalCellClick('${dateStr}')"
+          data-cal-date="${dateStr}"
+          ondragover="calDragOver(event)"
+          ondragleave="calDragLeave(event)"
+          ondrop="calDrop(event,'${dateStr}')"
+          onclick="if(!window._calLastDrop||Date.now()-window._calLastDrop>400) clientCalCellClick('${dateStr}')"
           ondblclick="clientCalDayDetail('${dateStr}')">
           <div class="flex items-center justify-center gap-0.5 mb-1">
             <span class="${isToday?'w-6 h-6 bg-[#8B3E22] text-white rounded-full inline-flex items-center justify-center':''}" style="font-size:13px;font-weight:${isToday?'700':'500'};color:${isToday?'white':'#2C2416'}">${day}</span>${dotC}
@@ -1605,6 +1610,110 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     }
 
     window.clientCalNav = (dir) => { clientCalMonth += dir; if (clientCalMonth>11){clientCalMonth=0;clientCalYear++;} if (clientCalMonth<0){clientCalMonth=11;clientCalYear--;} renderClientCal(); };
+
+    // ─── Drag-and-drop calendrier ─────────────────────────────────────────────
+    let _calDragItemId   = null;
+    let _calDragItemTime = '00:00';
+    let _touchLongTimer  = null;
+    let _touchGhost      = null;
+    let _touchDragActive = false;
+    window._calLastDrop  = 0;
+
+    async function calMoveItem(id, time, newDate) {
+      const sb2 = await getSB();
+      const newScheduledAt = `${newDate}T${time || '00:00'}:00`;
+      const { error } = await sb2.from('content_items').update({ scheduled_at: newScheduledAt }).eq('id', id);
+      if (!error) {
+        window._calLastDrop = Date.now();
+        showAdminToast('📅 Déplacé au ' + new Date(newDate).toLocaleDateString('fr-FR', { day:'2-digit', month:'long' }));
+        await loadClientCal();
+      }
+    }
+
+    window.calDragStart = (e, id, time) => {
+      _calDragItemId = id; _calDragItemTime = time || '00:00';
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', id);
+      e.stopPropagation();
+    };
+    window.calDragEnd = () => {
+      _calDragItemId = null;
+      document.querySelectorAll('[data-cal-date]').forEach(el => el.style.background = '');
+    };
+    window.calDragOver = (e) => {
+      if (!_calDragItemId) return;
+      e.preventDefault(); e.stopPropagation();
+      e.dataTransfer.dropEffect = 'move';
+      const cell = e.currentTarget.closest('[data-cal-date]') || e.currentTarget;
+      cell.style.background = 'rgba(139,62,34,0.15)';
+    };
+    window.calDragLeave = (e) => {
+      const cell = e.currentTarget.closest('[data-cal-date]') || e.currentTarget;
+      cell.style.background = '';
+    };
+    window.calDrop = async (e, dateStr) => {
+      e.preventDefault(); e.stopPropagation();
+      const cell = e.currentTarget.closest('[data-cal-date]') || e.currentTarget;
+      cell.style.background = '';
+      if (!_calDragItemId) return;
+      await calMoveItem(_calDragItemId, _calDragItemTime, dateStr);
+      _calDragItemId = null;
+    };
+
+    // Touch long-press
+    window.calTouchStartItem = (e, id, time, el) => {
+      clearTimeout(_touchLongTimer);
+      _touchLongTimer = setTimeout(() => {
+        _calDragItemId = id; _calDragItemTime = time || '00:00'; _touchDragActive = true;
+        const rect = el.getBoundingClientRect();
+        _touchGhost = el.cloneNode(true);
+        Object.assign(_touchGhost.style, { position:'fixed', zIndex:'9999', opacity:'0.85', pointerEvents:'none',
+          left: rect.left + 'px', top: rect.top + 'px', width: rect.width + 'px',
+          padding:'4px 8px', borderRadius:'4px', fontSize:'11px', whiteSpace:'nowrap',
+          transform:'scale(1.15)', boxShadow:'0 4px 16px rgba(0,0,0,0.3)', background:'#8B3E22', color:'#fff' });
+        document.body.appendChild(_touchGhost);
+        el.style.opacity = '0.3';
+        if (navigator.vibrate) navigator.vibrate(60);
+        e.preventDefault();
+      }, 500);
+    };
+
+    document.addEventListener('touchmove', (e) => {
+      clearTimeout(_touchLongTimer);
+      if (!_touchDragActive || !_touchGhost) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      _touchGhost.style.left = (t.clientX - _touchGhost.offsetWidth / 2) + 'px';
+      _touchGhost.style.top  = (t.clientY - 16) + 'px';
+      _touchGhost.style.display = 'none';
+      const under = document.elementFromPoint(t.clientX, t.clientY);
+      _touchGhost.style.display = '';
+      document.querySelectorAll('[data-cal-date]').forEach(el => el.style.background = '');
+      const cell = under?.closest('[data-cal-date]');
+      if (cell) cell.style.background = 'rgba(139,62,34,0.15)';
+    }, { passive: false });
+
+    document.addEventListener('touchend', async (e) => {
+      clearTimeout(_touchLongTimer);
+      if (!_touchDragActive) return;
+      const t = e.changedTouches[0];
+      document.querySelectorAll('[data-cal-date]').forEach(el => el.style.background = '');
+      if (_touchGhost) _touchGhost.style.display = 'none';
+      const under = document.elementFromPoint(t.clientX, t.clientY);
+      if (_touchGhost) _touchGhost.style.display = '';
+      const cell = under?.closest('[data-cal-date]');
+      if (cell && _calDragItemId) await calMoveItem(_calDragItemId, _calDragItemTime, cell.dataset.calDate);
+      if (_touchGhost) { _touchGhost.remove(); _touchGhost = null; }
+      document.querySelectorAll('[data-drag-id]').forEach(el => el.style.opacity = '');
+      _touchDragActive = false; _calDragItemId = null;
+    });
+
+    document.addEventListener('touchcancel', () => {
+      clearTimeout(_touchLongTimer);
+      if (_touchGhost) { _touchGhost.remove(); _touchGhost = null; }
+      document.querySelectorAll('[data-drag-id]').forEach(el => el.style.opacity = '');
+      _touchDragActive = false; _calDragItemId = null;
+    });
 
     let _clientFullDayDate = null;
 
