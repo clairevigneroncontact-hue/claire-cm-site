@@ -1793,32 +1793,38 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     // ─── Tâches admin ──────────────────────────────────────────────────────────
     window.loadAdminTasks = async (clientId) => {
       if (!clientId) return;
+      _adminTasksClientId = clientId;
       const sb2 = await getSB();
       const { data } = await sb2.from('tasks').select('*').eq('client_id', clientId).order('created_at', { ascending: true });
       const el = document.getElementById('admin-tasks-list');
       if (!el) return;
       if (!data || !data.length) { el.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucune tâche</p>'; return; }
       el.innerHTML = data.map(t => {
-        const title = t.title.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        return `<div class="flex items-center gap-3 py-2 border-b border-[#D6CCC0]/30 last:border-0">
+        const title = (t.title||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return `<div class="flex items-center gap-2 p-2 rounded-xl hover:bg-[#F5EDE4] transition-colors group" data-search="${(t.title||'').toLowerCase()}">
           <button onclick="adminToggleTask('${t.id}',${t.done},'${clientId}')" class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${t.done ? 'bg-[#8B3E22] border-[#8B3E22]' : 'border-[#D6CCC0] hover:border-[#8B3E22]'}">
             ${t.done ? '<iconify-icon icon="solar:check-linear" stroke-width="2.5" class="text-white" style="font-size:9px"></iconify-icon>' : ''}
           </button>
           <span class="text-sm flex-1 ${t.done ? 'line-through text-[#2C2416]/40' : 'text-[#2C2416]'}">${title}</span>
-          <button onclick="adminDeleteTask('${t.id}','${clientId}')" class="text-[#D6CCC0] hover:text-red-400 transition-colors shrink-0">
+          <button onclick="adminDeleteTask('${t.id}','${clientId}')" class="opacity-0 group-hover:opacity-100 text-[#D6CCC0] hover:text-red-400 transition-all shrink-0">
             <iconify-icon icon="solar:close-circle-linear" stroke-width="1.5" class="text-base"></iconify-icon>
           </button>
         </div>`;
       }).join('');
     };
-    window.addAdminTask = async (clientId) => {
+    window.addAdminTask = async () => {
+      const cid = _adminTasksClientId;
+      if (!cid) return;
       const sb2 = await getSB();
-      const input = document.getElementById('admin-new-task-input');
+      const input = document.getElementById('admin-task-input');
       const title = input?.value.trim();
       if (!title) return;
-      await sb2.from('tasks').insert({ client_id: clientId, title });
-      if (input) input.value = '';
-      await window.loadAdminTasks(clientId);
+      const { error } = await sb2.from('tasks').insert({ client_id: cid, title });
+      if (!error) {
+        input.value = '';
+        input.focus();
+        await window.loadAdminTasks(cid);
+      }
     };
     window.adminToggleTask = async (id, done, clientId) => {
       const sb2 = await getSB();
