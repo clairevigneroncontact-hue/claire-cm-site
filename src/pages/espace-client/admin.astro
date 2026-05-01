@@ -1584,7 +1584,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       html += `</tr></thead><tbody><tr>`;
 
       let col = 0;
-      for (let i = 0; i < startOffset; i++) { html += `<td class="border border-[#D6CCC0]/30 p-1 bg-[#F5EDE4]/30" style="height:90px"></td>`; col++; }
+      for (let i = 0; i < startOffset; i++) { html += `<td class="border border-[#D6CCC0]/30 p-1 bg-[#F5EDE4]/30" style="height:110px"></td>`; col++; }
 
       for (let day = 1; day <= daysInMonth; day++) {
         const dateStr  = `${clientCalYear}-${String(clientCalMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
@@ -1602,23 +1602,23 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'').slice(0,16);
           const heure  = a.scheduled_at ? ' · ' + new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
           const dragTime = (a.scheduled_at||'').slice(11,16) || '00:00';
-          cell += `<div draggable="true" data-drag-id="${a.id}" ondragstart="calDragStart(event,'${a.id}','${dragTime}')" ondragend="calDragEnd(event)" ontouchstart="calTouchStartItem(event,'${a.id}','${dragTime}',this)" style="background:${color}15;color:${color};border-left:2px solid ${color};font-size:11px;line-height:1.4;padding:1px 3px;border-radius:0 3px 3px 0;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:600;cursor:grab">${clean}${heure}</div>`;
+          cell += `<div draggable="true" data-drag-id="${a.id}" ondragstart="calDragStart(event,'${a.id}','${dragTime}')" ondragend="calDragEnd(event)" ontouchstart="calTouchStartItem(event,'${a.id}','${dragTime}',this)" style="background:${color}15;color:${color};border-left:2px solid ${color};font-size:14px;line-height:1.4;padding:2px 4px;border-radius:0 4px 4px 0;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:600;cursor:grab">${clean}${heure}</div>`;
         });
         // Contenus en attente — jaune/ambre
         dayPending.forEach(a => {
           const clean = a.title.replace(/^\[[^\]]+\]\s*/,'').slice(0,16);
           const heure = a.scheduled_at ? ' · ' + new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
-          cell += `<div style="background:#FEF3C715;color:#D97706;border-left:2px dashed #D97706;font-size:11px;line-height:1.4;padding:1px 3px;border-radius:0 3px 3px 0;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:500">⏳ ${clean}${heure}</div>`;
+          cell += `<div style="background:#FEF3C715;color:#D97706;border-left:2px dashed #D97706;font-size:14px;line-height:1.4;padding:2px 4px;border-radius:0 4px 4px 0;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:500">⏳ ${clean}${heure}</div>`;
         });
         dayNotes.forEach(n => {
           cell += `<div class="text-[9px] px-1 py-0.5 rounded bg-[#EDE6DB] text-[#767A55] mb-0.5 truncate italic">${n.note.slice(0,18)}</div>`;
         });
         const dotC = (dayNotes.length || dayApproved.length || dayPending.length) ? `<span class="w-1.5 h-1.5 rounded-full bg-[#8B3E22] inline-block ml-0.5 mb-0.5"></span>` : '';
         const dayFrEvents = (frEvents[dateStr] || []);
-        const evCell = dayFrEvents.map(e => `<div style="font-size:10px;color:#8B3E22;line-height:1.4;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500">${e}</div>`).join('');
+        const evCell = dayFrEvents.map(e => `<div style="font-size:12px;color:#8B3E22;line-height:1.4;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500">${e}</div>`).join('');
 
         html += `<td class="border border-[#D6CCC0]/30 p-1 align-top cursor-pointer hover:bg-[#F5EDE4] transition-colors ${dayFrEvents.length ? 'bg-[#FFF8F5]' : ''}"
-          style="height:90px"
+          style="height:110px"
           data-cal-date="${dateStr}"
           ondragover="calDragOver(event)"
           ondragleave="calDragLeave(event)"
