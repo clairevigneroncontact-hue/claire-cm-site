@@ -689,8 +689,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <h2 class="text-xl text-[#2C2416] font-medium">${c?.full_name || c?.email}</h2>
               <p class="text-sm text-[#767A55]">${c?.email} ${c?.instagram_handle ? '· @'+c.instagram_handle : ''}</p>
             </div>
-            <div class="ml-auto shrink-0">
+            <div class="ml-auto shrink-0 flex items-center gap-2">
               ${c?.offer ? `<span class="text-xs px-3 py-1 bg-[#8B3E22]/10 text-[#8B3E22] rounded-full">${OFFER_MAP[c.offer] || c.offer}</span>` : ''}
+              <button onclick="document.getElementById('client-info-panel').classList.toggle('hidden')"
+                class="text-xs px-3 py-1.5 border border-[#D6CCC0] text-[#767A55] rounded-full hover:border-[#8B3E22] hover:text-[#8B3E22] transition-colors font-medium">
+                Infos
+              </button>
             </div>
           </div>
 
@@ -700,6 +704,34 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             ${pending ? `<span class="text-xs px-3 py-1.5 bg-yellow-50 rounded-full text-yellow-700">${pending} en attente</span>` : ''}
             ${approved ? `<span class="text-xs px-3 py-1.5 bg-green-50 rounded-full text-green-700">${approved} validé${approved>1?'s':''}</span>` : ''}
             ${uploads?.length ? `<span class="text-xs px-3 py-1.5 bg-[#EDE6DB] rounded-full text-[#767A55]">${uploads.length} fichier${uploads.length>1?'s':''} reçu${uploads.length>1?'s':''}</span>` : ''}
+          </div>
+
+          <!-- Panel infos client (masqué par défaut) -->
+          <div id="client-info-panel" class="hidden mt-4 pt-4 border-t border-[#D6CCC0]">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Nom complet</label>
+                <input id="ci-name" type="text" value="${c?.full_name||''}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" /></div>
+              <div><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Téléphone</label>
+                <input id="ci-phone" type="tel" value="${c?.phone||''}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" /></div>
+              <div><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Instagram</label>
+                <input id="ci-insta" type="text" value="${c?.instagram_handle||''}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" /></div>
+              <div><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Offre</label>
+                <select id="ci-offer" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white">
+                  <option value="">—</option>
+                  <option value="audit" ${c?.offer==='audit'?'selected':''}>Audit Instagram</option>
+                  <option value="pack" ${c?.offer==='pack'?'selected':''}>Pack Contenu</option>
+                  <option value="mensuel" ${c?.offer==='mensuel'?'selected':''}>Accompagnement Mensuel</option>
+                </select></div>
+            </div>
+            ${igCred?.password ? `<div class="mb-3"><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Mot de passe Instagram</label>
+              <div class="flex items-center gap-2">
+                <input id="ci-ig-pwd-display" type="password" value="${igCred.password.replace(/"/g,'&quot;')}" readonly class="flex-1 px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm bg-[#F5EDE4]/50" />
+                <button onclick="document.getElementById('ci-ig-pwd-display').type=document.getElementById('ci-ig-pwd-display').type==='password'?'text':'password'" class="p-2 border border-[#D6CCC0] rounded-xl text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] transition-colors">
+                  <iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+                </button>
+              </div></div>` : ''}
+            <div id="ci-msg" class="hidden text-sm rounded-xl px-4 py-3 mb-3"></div>
+            <button onclick="saveClientInfo('${clientId}')" class="px-5 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
           </div>
         </div>
 
@@ -715,7 +747,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <div class="flex overflow-x-auto gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-5 scrollbar-none" style="-ms-overflow-style:none;scrollbar-width:none">
           <button onclick="switchClientTab('contenu')"    id="ctab-contenu"    class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg bg-white text-[#2C2416] shadow-sm transition-all whitespace-nowrap">Contenu</button>
           <button onclick="switchClientTab('documents')"  id="ctab-documents"  class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] whitespace-nowrap">Documents</button>
-          <button onclick="switchClientTab('infos')"      id="ctab-infos"      class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] whitespace-nowrap">Infos</button>
           <button onclick="switchClientTab('notes')"      id="ctab-notes"      class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] whitespace-nowrap">Notes</button>
         </div>
 
@@ -863,23 +894,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
               <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'doc-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
             </div>` : ''}
-            <div id="doc-items-box" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <div id="doc-items-box" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
             ${docs?.length ? docs.map(d => {
               const label   = d.name || d.file_name || 'Document';
               const typeMap = { contrat:'Contrat', facture:'Facture', devis:'Devis', 'audit-instagram':'Audit', 'compte-rendu':'CR mensuel', autre:'Autre' };
               const type    = typeMap[d.type] || d.type || '';
               const isImg   = d.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(d.file_url);
-              const isVid   = d.file_url && /\.(mp4|mov|avi|webm)(\?|$)/i.test(d.file_url);
               const isPdf   = d.file_url && /\.pdf(\?|$)/i.test(d.file_url);
               const safeUrl = (d.file_url||'').replace(/'/g,"\\'");
               const icon    = isPdf ? 'solar:file-text-linear' : 'solar:document-text-linear';
               return `
               <div class="flex flex-col" data-search="${label.toLowerCase()} ${(d.type||'').toLowerCase()}">
-                <!-- Carré miniature cliquable -->
-                <a href="${d.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors bg-[#F5EDE4]" style="position:relative;padding-top:100%">
+                <!-- Miniature cliquable — hauteur fixe -->
+                <a href="${d.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors" style="height:130px;background:#F5EDE4">
                   ${isImg
-                    ? `<img src="${d.file_url}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block" />`
-                    : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:2.5rem"></iconify-icon></div>`
+                    ? `<img src="${d.file_url}" style="width:100%;height:130px;object-fit:cover;display:block" onerror="this.style.display='none'" />`
+                    : `<div style="height:130px;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:3rem"></iconify-icon></div>`
                   }
                 </a>
                 <!-- Nom + type -->
@@ -918,7 +948,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
               <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'file-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
             </div>` : ''}
-            <div id="file-items-box" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <div id="file-items-box" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
               ${uploads?.length ? uploads.map(u => {
                 const isImg = u.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(u.file_url);
                 const isVid = u.file_url && /\.(mp4|mov|avi|webm)(\?|$)/i.test(u.file_url);
@@ -926,10 +956,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 const date  = new Date(u.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
                 const icon  = isVid ? 'solar:videocamera-linear' : isPdf ? 'solar:file-text-linear' : 'solar:file-download-linear';
                 return `<div class="flex flex-col" data-search="${u.name.toLowerCase()}">
-                  <a href="${u.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors bg-[#F5EDE4]" style="position:relative;padding-top:100%">
+                  <a href="${u.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors" style="height:130px;background:#F5EDE4">
                     ${isImg
-                      ? `<img src="${u.file_url}" alt="${u.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block" />`
-                      : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:2.5rem"></iconify-icon></div>`
+                      ? `<img src="${u.file_url}" alt="${u.name}" style="width:100%;height:130px;object-fit:cover;display:block" onerror="this.style.display='none'" />`
+                      : `<div style="height:130px;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:3rem"></iconify-icon></div>`
                     }
                   </a>
                   <p class="text-xs text-[#2C2416]/70 truncate mt-1.5">${u.name}</p>
@@ -946,41 +976,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </div>
 
         <!-- Tab : Infos client -->
-        <div id="ctab-infos-panel" class="hidden bg-white rounded-2xl p-6 border border-[#D6CCC0]">
-          <h3 class="text-base font-medium text-[#2C2416] mb-5">Informations du client</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            <div><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Nom complet</label>
-              <input id="ci-name"  type="text" value="${c?.full_name||''}" class="w-full px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" /></div>
-            <div><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Téléphone</label>
-              <input id="ci-phone" type="tel" value="${c?.phone||''}" class="w-full px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" /></div>
-            <div><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Instagram</label>
-              <input id="ci-insta" type="text" value="${c?.instagram_handle||''}" class="w-full px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" /></div>
-            <div><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Offre</label>
-              <select id="ci-offer" class="w-full px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white">
-                <option value="">—</option>
-                <option value="audit" ${c?.offer==='audit'?'selected':''}>Audit Instagram</option>
-                <option value="pack" ${c?.offer==='pack'?'selected':''}>Pack Contenu</option>
-                <option value="mensuel" ${c?.offer==='mensuel'?'selected':''}>Accompagnement Mensuel</option>
-              </select></div>
-          </div>
-          ${igCred?.password ? `
-          <div class="sm:col-span-2">
-            <label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Mot de passe Instagram</label>
-            <div class="flex items-center gap-2">
-              <input id="ci-ig-pwd-display" type="password" value="${igCred.password.replace(/"/g,'&quot;')}" readonly class="flex-1 px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm bg-[#F5EDE4]/50 text-[#2C2416]" />
-              <button onclick="document.getElementById('ci-ig-pwd-display').type=document.getElementById('ci-ig-pwd-display').type==='password'?'text':'password'" class="p-2.5 border border-[#D6CCC0] rounded-xl text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] transition-colors" title="Afficher/masquer">
-                <iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon>
-              </button>
-            </div>
-            <p class="text-[10px] text-[#767A55] mt-1">Mis à jour le ${new Date(igCred.updated_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}</p>
-          </div>` : `
-          <div class="sm:col-span-2">
-            <p class="text-xs text-[#767A55] italic">Aucun mot de passe Instagram enregistré par ce client.</p>
-          </div>`}
-          <div id="ci-msg" class="hidden text-sm rounded-xl px-4 py-3 mb-3 sm:col-span-2"></div>
-          <button onclick="saveClientInfo('${clientId}')" class="px-6 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
-        </div>
-
         <!-- Tab : Notes -->
         <div id="ctab-notes-panel" class="hidden space-y-4">
           <!-- Fil de discussion avec le client -->
@@ -1052,7 +1047,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     // Switcher d'onglets client
     window.switchClientTab = (tab) => {
-      ['contenu','documents','infos','notes'].forEach(t => {
+      ['contenu','documents','notes'].forEach(t => {
         const panel = document.getElementById(`ctab-${t}-panel`);
         if (panel) panel.classList.toggle('hidden', t !== tab);
         const btn = document.getElementById(`ctab-${t}`);
