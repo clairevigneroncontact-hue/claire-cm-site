@@ -1,0 +1,121 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
+import BackArrow from '../../components/BackArrow.astro';
+
+const calendarLink = 'https://cal.com/claire-vigneron-k5okcq/30min?user=claire-vigneron-k5okcq&overlayCalendar=true';
+---
+
+<BaseLayout
+  title="Confier son Instagram : ce que ça change (et ce que ça ne change pas) — Claire Vigneron"
+  description="Déléguer sa communication fait peur. On a peur de perdre sa voix, son identité. Voici ce qui change vraiment — et ce qui reste entièrement le vôtre."
+>
+  <Nav />
+
+  <article class="pt-32 pb-20 px-6 bg-[#F5EDE4]">
+    <div class="max-w-2xl mx-auto">
+
+      <div class="mb-12">
+        <a href="/blog" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors mb-8">
+          <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon>
+          Retour au blog
+        </a>
+        <span class="text-xs font-medium uppercase tracking-widest text-[#767A55] block mb-4">Community Management · 5 min de lecture</span>
+        <h1 class="text-4xl md:text-5xl text-[#2C2416] tracking-tight leading-tight mb-6">
+          Confier son Instagram : ce que ça change (et ce que ça ne change pas)
+        </h1>
+        <p class="text-xl text-[#2C2416]/60 font-light leading-relaxed">
+          Déléguer sa communication, ça fait peur. On a peur de perdre sa voix, son identité, son authenticité. Voici ce qui change vraiment — et ce qui reste entièrement le vôtre.
+        </p>
+      </div>
+
+      <div class="space-y-8 text-[#2C2416]/80 font-light leading-relaxed text-lg">
+
+        <p>
+          C'est souvent la première inquiétude que j'entends lors d'un appel découverte : <em>"Est-ce que ça va encore ressembler à moi ?"</em> La question est légitime. Votre compte Instagram, c'est votre vitrine. C'est votre voix. Vous avez passé du temps à construire une relation avec votre audience.
+        </p>
+
+        <p>
+          Alors non — confier son Instagram ne veut pas dire abandonner tout ça. Voici ce qui change vraiment, et ce qui reste entièrement entre vos mains.
+        </p>
+
+        <!-- Ce qui change -->
+        <div class="bg-[#2C2416] rounded-2xl p-8 text-[#F5EDE4]">
+          <h2 class="text-2xl tracking-tight mb-6 text-[#F5EDE4]">Ce qui change</h2>
+          <div class="space-y-5">
+            {[
+              { titre: 'Le temps que vous y consacrez', texte: "Vous n'avez plus à chercher quoi publier, prendre les photos, rédiger les légendes, planifier. Tout ça est pris en charge. Vous validez — c'est tout." },
+              { titre: 'La régularité', texte: "Fini les périodes de silence parce que vous étiez débordé. Votre compte vit, même dans vos semaines chargées. L'algorithme vous récompense pour ça." },
+              { titre: 'La stratégie derrière chaque post', texte: "Chaque contenu a un objectif : visibilité, crédibilité, prise de contact. On ne publie pas pour remplir — on publie pour avancer vers vos objectifs." },
+              { titre: 'La qualité visuelle et éditoriale', texte: "Les visuels sont pensés pour votre image de marque. Les textes sont rédigés dans votre ton. Tout est cohérent, professionnel, fidèle à votre identité." },
+            ].map(item => (
+              <div class="flex items-start gap-4">
+                <iconify-icon icon="solar:check-circle-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl shrink-0 mt-0.5"></iconify-icon>
+                <div>
+                  <p class="font-medium text-[#F5EDE4] mb-1">{item.titre}</p>
+                  <p class="text-[#F5EDE4]/70 text-base">{item.texte}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Ce qui ne change pas -->
+        <div class="bg-[#EDE6DB] rounded-2xl p-8">
+          <h2 class="text-2xl text-[#2C2416] tracking-tight mb-6">Ce qui ne change pas</h2>
+          <div class="space-y-5">
+            {[
+              { titre: 'Votre voix', texte: "Je passe du temps à vous comprendre — votre façon de parler, vos expressions, ce qui vous tient à cœur. Les textes sont écrits pour vous ressembler, pas pour ressembler à un compte générique." },
+              { titre: 'Votre identité et vos valeurs', texte: "Ce que vous défendez, ce qui vous différencie, votre positionnement — tout ça reste la boussole. Je ne crée pas du contenu qui me plaît : je crée du contenu qui vous représente." },
+              { titre: 'La relation avec votre communauté', texte: "Vous restez maître de vos échanges en DM, de vos réponses aux commentaires, de votre présence humaine. Je m'occupe de la création et de la publication — la relation, c'est vous." },
+              { titre: 'Votre validation finale', texte: "Rien n'est publié sans votre accord. Vous recevez les contenus en avance, vous les relisez, vous les approuvez — ou vous demandez des ajustements. Vous avez le dernier mot, toujours." },
+            ].map(item => (
+              <div class="flex items-start gap-4">
+                <iconify-icon icon="solar:shield-check-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl shrink-0 mt-0.5"></iconify-icon>
+                <div>
+                  <p class="font-medium text-[#2C2416] mb-1">{item.titre}</p>
+                  <p class="text-[#2C2416]/65 text-base">{item.texte}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div class="border-l-4 border-[#8B3E22] pl-6 py-2">
+          <p class="text-[#2C2416]/70 italic">
+            "Mon rôle n'est pas de remplacer votre présence — c'est de la rendre possible. Régulière, cohérente, et fidèle à ce que vous êtes."
+          </p>
+          <p class="text-sm text-[#767A55] mt-2">— Claire Vigneron</p>
+        </div>
+
+        <div>
+          <h2 class="text-2xl text-[#2C2416] tracking-tight mb-4">Comment ça se passe concrètement ?</h2>
+          <p>
+            La collaboration commence toujours par un appel découverte. L'occasion de me parler de votre activité, votre audience, vos objectifs. Ensuite, je prends le temps d'analyser votre compte et de construire une stratégie adaptée.
+          </p>
+          <p class="mt-4">
+            Chaque semaine, vous recevez les contenus préparés pour validation. Vous les relisez à votre rythme et me faites vos retours. Après votre feu vert, je publie — et je vous envoie chaque mois un bilan avec les statistiques et les axes d'amélioration.
+          </p>
+          <p class="mt-4">
+            Simple. Transparent. Et surtout — ça vous ressemble.
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-16 pt-10 border-t border-[#D6CCC0]">
+        <p class="text-sm text-[#767A55] uppercase tracking-widest mb-4">Prêt à déléguer ?</p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="/offres#mensuel" class="px-6 py-3 bg-[#8B3E22] text-[#F5EDE4] rounded-full font-medium hover:bg-[#6B2E1A] transition-colors text-center">
+            Voir l'accompagnement mensuel
+          </a>
+          <a href={calendarLink} target="_blank" rel="noopener" class="px-6 py-3 border border-[#D6CCC0] text-[#2C2416] rounded-full font-medium hover:bg-[#EDE6DB] transition-colors text-center">
+            Réserver un appel gratuit
+          </a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <Footer />
+</BaseLayout>

@@ -1,0 +1,315 @@
+---
+---
+
+<div class="fixed bottom-6 left-6 z-50 flex flex-col items-start gap-3">
+
+  <!-- Fenêtre chat -->
+  <div
+    id="chat-window"
+    class="hidden w-[calc(100vw-3rem)] sm:w-80 bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] overflow-hidden flex-col"
+    style="height: 460px; max-height: calc(100vh - 120px);"
+  >
+    <!-- Header -->
+    <div class="bg-[#2C2416] px-4 py-3 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-[#8B3E22] rounded-full flex items-center justify-center text-white text-sm font-serif font-bold">C</div>
+        <div>
+          <p class="text-[#F5EDE4] text-sm font-medium">Assistante IA · Claire CM</p>
+          <p class="text-[#F5EDE4]/50 text-xs">Intelligence artificielle · Répond instantanément</p>
+        </div>
+      </div>
+      <button id="chat-close" class="text-[#F5EDE4]/50 hover:text-white transition-colors p-1">
+        <iconify-icon icon="solar:close-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+      </button>
+    </div>
+
+    <!-- Messages -->
+    <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-[#F5EDE4]/20"></div>
+
+    <!-- Suggestions -->
+    <div id="chat-suggestions" class="px-3 py-2 flex flex-wrap gap-1.5 border-t border-[#D6CCC0] bg-white shrink-0 min-h-[44px]"></div>
+
+    <!-- Input -->
+    <div class="px-3 py-3 border-t border-[#D6CCC0] bg-white shrink-0 flex gap-2">
+      <input
+        id="chat-input"
+        type="text"
+        placeholder="Votre question…"
+        class="flex-1 text-sm px-3 py-2 rounded-xl border border-[#D6CCC0] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]/50"
+      />
+      <button id="chat-send" class="w-9 h-9 bg-[#8B3E22] rounded-xl flex items-center justify-center text-white hover:bg-[#6B2E1A] transition-colors shrink-0">
+        <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Bouton fermer (visible quand chat ouvert) -->
+  <button
+    id="chat-close-outside"
+    class="hidden items-center gap-2 px-4 py-2 bg-[#2C2416]/80 hover:bg-[#2C2416] text-[#F5EDE4] text-xs font-medium rounded-full shadow-lg transition-all duration-200"
+    aria-label="Fermer le chat"
+  >
+    <iconify-icon icon="solar:close-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+    Fermer
+  </button>
+
+  <!-- Bouton d'ouverture -->
+  <button
+    id="chat-toggle"
+    class="w-14 h-14 bg-[#2C2416] hover:bg-[#8B3E22] text-white rounded-full flex items-center justify-center shadow-xl transition-all duration-300 hover:scale-110 relative"
+    aria-label="Ouvrir le chat"
+  >
+    <iconify-icon id="chat-icon-open"  icon="solar:chat-round-dots-linear" stroke-width="1.5" class="text-2xl"></iconify-icon>
+    <iconify-icon id="chat-icon-close" icon="solar:close-circle-linear"    stroke-width="1.5" class="text-2xl hidden"></iconify-icon>
+    <span id="chat-notif" class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#8B3E22] rounded-full border-2 border-[#2C2416]"></span>
+  </button>
+</div>
+
+<script>
+  // ─── Base de connaissance complète du site ───────────────────────────────
+  const KB: { patterns: string[]; answer: string; suggestions: string[] }[] = [
+    {
+      patterns: ['bonjour', 'salut', 'hello', 'bonsoir', 'coucou', 'aide', 'besoin'],
+      answer: "Bonjour ! 👋 Je suis l'assistante de Claire Vigneron, Community Manager spécialisée Instagram pour les artisans et indépendants.\n\nComment puis-je vous aider ?",
+      suggestions: ["Les offres et tarifs", "Comment ça fonctionne ?", "Prendre rendez-vous", "Qui est Claire ?"],
+    },
+    {
+      patterns: ['qui est claire', 'claire vigneron', 'à propos', 'parcours'],
+      answer: "**Claire Vigneron** est Community Manager spécialisée dans la valorisation du savoir-faire des artisans et indépendants sur Instagram.\n\nFormée avec Montacomm, elle a accompagné plusieurs entreprises dans le développement de leur présence Instagram : Bahati Body Sculpt, Transakauto, et plusieurs garages automobiles.\n\nSon approche : stratégie ciblée, contenus soignés, et accompagnement transparent.\n\n📍 Rennes · 06 78 30 13 58",
+      suggestions: ["Voir ses projets réalisés", "Les offres et tarifs", "Prendre rendez-vous"],
+    },
+    {
+      patterns: ['offre', 'service', 'prestation', 'prix', 'tarif', 'coût', 'combien', 'proposez-vous'],
+      answer: "Claire propose **3 offres** :\n\n🔍 **Audit Instagram — 97 €**\nDiagnostic complet de votre compte + plan d'action PDF en 5-7 jours. Sans engagement.\n\n📦 **Pack Contenu — 320 €**\n8 posts créés sur mesure (visuels + légendes), livrés en 7-10 jours. Sans engagement.\n\n📅 **Accompagnement Mensuel — 550 €/mois**\nGestion complète de votre Instagram chaque mois. Engagement minimum 3 mois. Audit offert le 1er mois.\n\nLaquelle vous intéresse ?",
+      suggestions: ["L'Audit (97 €)", "Le Pack Contenu (320 €)", "L'Accompagnement (550 €/mois)", "Comparer les offres"],
+    },
+    {
+      patterns: ['audit', '97'],
+      answer: "**L'Audit Instagram — 97 €** ✅\n\nC'est un diagnostic complet de votre compte :\n• Analyse bio, feed, engagement\n• Étude de vos 9 dernières publications\n• Identification des 3 points bloquants\n• Recommandations hashtags & créneaux\n• Plan d'action PDF livré en **5 à 7 jours**\n\n💡 Parfait si vous avez un compte mais ne savez pas pourquoi ça ne décolle pas.\n\nSans engagement. Vous pouvez ensuite continuer avec un Pack ou l'Accompagnement mensuel.",
+      suggestions: ["Commander l'audit", "Et le Pack Contenu ?", "Prendre rendez-vous d'abord"],
+    },
+    {
+      patterns: ['pack', 'contenu', 'post', '320', '8 posts'],
+      answer: "**Le Pack Contenu — 320 €** 📦\n\nCe sont 8 posts créés entièrement pour vous :\n• 8 visuels aux couleurs de votre marque\n• 8 légendes rédigées dans votre ton\n• Recommandations de publication (jour, heure, hashtags)\n• Brief de démarrage pour cerner votre univers\n• 1 session de retours incluse\n\n⏱ Livré en **7 à 10 jours**. Sans engagement.\n\n💡 Idéal pour tester la délégation sans vous engager sur le long terme.",
+      suggestions: ["Commander le pack", "Et l'accompagnement ?", "Prendre rendez-vous d'abord"],
+    },
+    {
+      patterns: ['accompagnement', 'mensuel', 'mensuelle', 'gestion', 'déléguer', '550'],
+      answer: "**L'Accompagnement Mensuel — 550 €/mois** 📅\n\nVotre Instagram géré de A à Z chaque mois :\n• Audit complet offert le 1er mois\n• Stratégie de contenu définie ensemble\n• Contenus créés et publiés chaque semaine\n• Légendes rédigées dans votre ton\n• Bilan statistique mensuel\n• Disponibilité par messages\n\n⏱ Engagement minimum **3 mois** (le temps de voir des résultats réels).\n\n💡 Pour ceux qui veulent déléguer entièrement et ne plus s'en occuper.",
+      suggestions: ["Démarrer l'accompagnement", "Pourquoi 3 mois ?", "Prendre rendez-vous d'abord"],
+    },
+    {
+      patterns: ['comparer', 'différence', 'lequel choisir', 'quelle offre'],
+      answer: "**Comment choisir ?** 🤔\n\n→ **Audit (97 €)** : vous avez un compte existant et voulez comprendre ce qui bloque.\n\n→ **Pack Contenu (320 €)** : vous voulez tester la délégation sans engagement, avec des posts prêts à publier.\n\n→ **Accompagnement (550 €/mois)** : vous voulez ne plus vous occuper de votre Instagram du tout.\n\nVous pouvez aussi commencer par l'audit, puis passer à l'accompagnement — l'audit est alors offert dès le 1er mois.",
+      suggestions: ["L'Audit (97 €)", "Le Pack Contenu (320 €)", "L'Accompagnement (550 €/mois)", "Prendre rendez-vous"],
+    },
+    {
+      patterns: ['pourquoi 3 mois', 'engagement', 'durée'],
+      answer: "**Pourquoi 3 mois minimum ?** 📆\n\nInstagram est un outil de confiance, pas de conversion immédiate. Les premiers résultats mesurables apparaissent généralement entre 1 et 3 mois.\n\nEn dessous de 3 mois, il est impossible de mesurer l'impact réel d'une stratégie de contenu. C'est le temps minimum pour :\n• Construire une présence cohérente\n• Alimenter l'algorithme régulièrement\n• Observer ce qui fonctionne pour votre compte\n\nAprès les 3 mois, vous pouvez continuer ou arrêter avec 1 mois de préavis.",
+      suggestions: ["Démarrer l'accompagnement", "Voir les résultats attendus", "Prendre rendez-vous"],
+    },
+    {
+      patterns: ['résultat', 'combien de temps', 'délai', 'quand', 'rapide'],
+      answer: "**Les délais réels sur Instagram** ⏳\n\n• **Audit** : livré en 5 à 7 jours\n• **Pack Contenu** : livré en 7 à 10 jours\n• **Accompagnement** : démarrage sous 1 à 2 semaines\n\nPour les résultats commerciaux (nouveaux clients) :\n• Premiers signaux positifs : 1 à 3 mois\n• Premiers clients via Instagram : 3 à 9 mois selon le secteur\n\nInstagram construit la confiance, pas des ventes immédiates. C'est un investissement sur le long terme.",
+      suggestions: ["En savoir plus", "Prendre rendez-vous", "Les offres et tarifs"],
+    },
+    {
+      patterns: ['fonctionnement', 'comment ça marche', 'process', 'étape', 'collaboration', 'quotidien'],
+      answer: "**Comment ça se passe** 🤝\n\n**1.** Appel découverte gratuit (30 min)\n**2.** Vous choisissez votre offre, je vous envoie un devis\n**3.** Vous signez → accès à votre espace client\n**4.** Chaque semaine, je vous envoie les contenus à valider\n**5.** Vous validez → je publie\n**6.** Bilan mensuel avec statistiques et recommandations\n\n✅ Rien n'est publié sans votre accord. Vous gardez le contrôle.",
+      suggestions: ["Les offres et tarifs", "Prendre rendez-vous", "L'espace client"],
+    },
+    {
+      patterns: ['rdv', 'rendez-vous', 'appel', 'réserver', 'reserver', 'contact', 'commencer', 'démarrer'],
+      answer: "Pour démarrer, c'est très simple ! 📅\n\nClaire vous propose un **appel découverte gratuit de 30 minutes** : pas de jargon, pas de pression. Elle vous écoute, analyse votre situation et vous dit quelle offre correspond le mieux.\n\n→ Réservez directement en ligne sur son calendrier : choisissez un créneau qui vous convient.\n\nOu contactez-la directement :\n📞 **06 78 30 13 58**\n✉️ **clairevigneron.contact@gmail.com**",
+      suggestions: ["Ouvrir le calendrier", "Les offres d'abord", "Les offres et tarifs"],
+    },
+    {
+      patterns: ['engagement', 'sans engagement', 'engagé', 'arrêter', 'stopper', 'resilier', 'résiliation'],
+      answer: "**Les engagements selon l'offre** 📋\n\n🔍 **Audit (97 €)** → Sans engagement. Commande unique, livraison PDF.\n\n📦 **Pack Contenu (320 €)** → Sans engagement. Commande ponctuelle.\n\n📅 **Accompagnement Mensuel (550 €/mois)** → Engagement minimum **3 mois**. C'est le temps nécessaire pour voir de vrais résultats. Après les 3 mois, vous continuez ou vous arrêtez avec 1 mois de préavis.\n\n💡 L'audit et le pack sont sans engagement — idéaux pour tester avant de s'investir sur le long terme.",
+      suggestions: ["Pourquoi 3 mois ?", "Les offres et tarifs", "Prendre rendez-vous"],
+    },
+    {
+      patterns: ['espace client', 'mon espace', 'connexion', 'accès'],
+      answer: "**L'espace client** 🔐\n\nDès le démarrage de la collaboration, vous accédez à votre espace personnel sécurisé. Vous y trouverez :\n\n• Vos contrats et documents signés\n• Vos factures\n• Un espace dépôt pour vos photos et vidéos\n• Les contenus créés à valider\n• Vos informations importantes (identifiants Instagram, etc.)\n• Le bilan mensuel\n\nAccès depuis le bouton en haut à droite du site, ou directement sur /espace-client.",
+      suggestions: ["Accéder à l'espace client", "Comment ça fonctionne ?", "Prendre rendez-vous"],
+    },
+    {
+      patterns: ['blog', 'article', 'conseil', 'ressource'],
+      answer: "**Le blog de Claire** 📝\n\nDes articles pratiques sur Instagram pour les artisans et indépendants :\n\n• Pourquoi les artisans sous-estiment leur Instagram\n• 5 types de posts qui fonctionnent vraiment\n• Confier son Instagram : ce qui change (et ce qui ne change pas)\n• \"Ça ne marche pas\" — la vérité sur le temps que prend Instagram\n\nDes conseils concrets, sans jargon, directement applicables.",
+      suggestions: ["Lire le blog", "Les offres et tarifs", "Prendre rendez-vous"],
+    },
+    {
+      patterns: ['téléphone', 'telephone', 'appeler', 'numéro', 'numero', 'email', 'mail', 'joindre', 'coordonnées'],
+      answer: "Vous pouvez joindre Claire directement :\n\n📞 **06 78 30 13 58**\n✉️ **clairevigneron.contact@gmail.com**\n\nOu réserver un appel découverte gratuit en ligne pour choisir votre créneau.",
+      suggestions: ["Ouvrir le calendrier", "Les offres et tarifs"],
+    },
+    {
+      patterns: ['projet', 'référence', 'client', 'bahati', 'transak', 'garage'],
+      answer: "**Projets réalisés** 💼\n\nClaire a accompagné plusieurs entreprises :\n\n🌿 **Bahati Body Sculpt** (3 mois)\nBien-être & drainage lymphatique. Création du compte Instagram de A à Z, identité visuelle, journée de shooting.\n\n🚗 **Transakauto** (1 an)\nRevente automobile Angers-Tours. Création et développement du compte, mise en avant des véhicules.\n\n🔧 **Garage automobile** (1 mois)\nCarrosserie. Calendrier éditorial et stratégie de contenu sur 1 mois.\n\nDétails complets sur la page À propos.",
+      suggestions: ["Voir les projets en détail", "Prendre rendez-vous", "Les offres et tarifs"],
+    },
+    {
+      patterns: ['photo', 'shooting', 'vidéo', 'visuel'],
+      answer: "**Photos et visuels** 📸\n\nJe travaille avec :\n• Le contenu que vous me fournissez (photos de votre activité, réalisations)\n• Des visuels graphiques que je crée moi-même\n\n💡 **Journée de shooting** : une journée de création de contenu photo/vidéo peut être organisée — c'est une **prestation en supplément**, à définir et tarifer ensemble selon vos besoins.",
+      suggestions: ["Les offres et tarifs", "Prendre rendez-vous"],
+    },
+    {
+      patterns: ['faq', 'question', 'fréquente'],
+      answer: "Vous trouverez toutes les réponses aux questions fréquentes sur la page FAQ du site :\n\n• Avant de démarrer\n• Les offres\n• Comment ça fonctionne\n• Résultats & attentes\n\nSi vous ne trouvez pas votre réponse, l'appel découverte gratuit est fait pour ça !",
+      suggestions: ["Voir la FAQ", "Prendre rendez-vous"],
+    },
+    {
+      patterns: ['merci', 'super', 'parfait', 'nickel', 'ok', 'cool', 'bien'],
+      answer: "Avec plaisir ! 😊\n\nN'hésitez pas si vous avez d'autres questions. Et si vous souhaitez aller plus loin, l'appel découverte gratuit est toujours disponible.",
+      suggestions: ["Prendre rendez-vous", "Les offres et tarifs"],
+    },
+  ];
+
+  // ─── Réponses aux suggestions (toutes en texte, jamais de redirection) ──
+  const SUGGESTION_ANSWERS: Record<string, { answer: string; suggestions: string[] }> = {
+    "Les offres et tarifs": KB.find(k => k.patterns.includes('offre'))!,
+    "L'Audit (97 €)": KB.find(k => k.patterns.includes('audit'))!,
+    "Le Pack Contenu (320 €)": KB.find(k => k.patterns.includes('pack'))!,
+    "L'Accompagnement (550 €/mois)": KB.find(k => k.patterns.includes('accompagnement'))!,
+    "Comparer les offres": KB.find(k => k.patterns.includes('comparer'))!,
+    "Comment ça fonctionne ?": KB.find(k => k.patterns.includes('fonctionnement'))!,
+    "Prendre rendez-vous": KB.find(k => k.patterns.includes('rdv'))!,
+    "Qui est Claire ?": KB.find(k => k.patterns.includes('qui est claire'))!,
+    "Voir ses projets réalisés": KB.find(k => k.patterns.includes('projet'))!,
+    "L'espace client": KB.find(k => k.patterns.includes('espace client'))!,
+    "Accéder à l'espace client": { answer: "Votre espace client est accessible à l'adresse **/espace-client** sur le site, ou via le bouton rond en haut à droite de la barre de navigation.\n\nVous y accédez avec l'email et le code d'accès fournis par Claire au démarrage de la collaboration.", suggestions: ["Comment ça fonctionne ?", "Prendre rendez-vous"] },
+    "Ouvrir le calendrier": { answer: "Pour réserver votre appel découverte gratuit de 30 minutes, rendez-vous sur le calendrier de Claire :\n\n👉 **cal.com/claire-vigneron** — choisissez le créneau qui vous convient.\n\nVous recevrez une confirmation par email avec le lien de la réunion.", suggestions: ["Les offres d'abord", "Les offres et tarifs"] },
+    "Les offres d'abord": KB.find(k => k.patterns.includes('offre'))!,
+    "Commander l'audit": { answer: "Pour commander l'Audit Instagram (97 €), deux options :\n\n1. **Directement en ligne** via la page Offres du site\n2. **Après un appel découverte** si vous voulez d'abord en discuter\n\nAprès commande, vous recevrez un questionnaire à remplir (votre compte Instagram, vos objectifs). L'audit est livré en 5 à 7 jours.", suggestions: ["Prendre rendez-vous d'abord", "En savoir plus sur l'audit"] },
+    "Commander le pack": { answer: "Pour commander le Pack Contenu (320 €) :\n\n1. **Via la page Offres** du site\n2. Vous recevrez ensuite un brief de démarrage à remplir (15 min) pour que je comprenne votre univers\n3. Je crée vos 8 posts et vous les soumets pour validation\n4. Livraison finale en 7 à 10 jours", suggestions: ["Prendre rendez-vous d'abord", "Les offres et tarifs"] },
+    "Démarrer l'accompagnement": { answer: "Pour démarrer l'Accompagnement Mensuel (550 €/mois) :\n\n**Étape 1** — On commence par un appel découverte gratuit\n**Étape 2** — Je vous envoie un devis et un contrat\n**Étape 3** — Accès à votre espace client\n**Étape 4** — On démarre la stratégie et la création de contenu\n\nL'audit complet est offert dès le premier mois.", suggestions: ["Prendre rendez-vous", "Pourquoi 3 mois ?"] },
+    "Pourquoi 3 mois ?": KB.find(k => k.patterns.includes('pourquoi 3 mois'))!,
+    "Y a-t-il un engagement ?": KB.find(k => k.patterns.includes('engagement'))!,
+    "Prendre rendez-vous d'abord": KB.find(k => k.patterns.includes('rdv'))!,
+    "En savoir plus sur l'audit": KB.find(k => k.patterns.includes('audit'))!,
+    "Et le Pack Contenu ?": KB.find(k => k.patterns.includes('pack'))!,
+    "Et l'accompagnement ?": KB.find(k => k.patterns.includes('accompagnement'))!,
+    "Voir les résultats attendus": KB.find(k => k.patterns.includes('résultat'))!,
+    "En savoir plus": KB.find(k => k.patterns.includes('résultat'))!,
+    "Voir la FAQ": { answer: "La page FAQ du site regroupe toutes les questions fréquentes, organisées par catégorie :\n\n• Avant de démarrer\n• Les offres\n• Comment ça fonctionne\n• Résultats & attentes\n\nVous y trouverez des réponses détaillées sur les délais, le fonctionnement au quotidien, les engagements, etc.", suggestions: ["Prendre rendez-vous", "Les offres et tarifs"] },
+    "Lire le blog": { answer: "Le blog de Claire propose des articles pratiques :\n\n📱 **Pourquoi les artisans sous-estiment leur Instagram** — et comment y remédier\n\n✍️ **5 types de posts qui fonctionnent** vraiment sur Instagram\n\n🤝 **Confier son Instagram** : ce qui change (et ce qui ne change pas)\n\n⏳ **\"Ça ne marche pas\"** — la vérité sur le temps que prend Instagram\n\nTous ces articles sont accessibles depuis la section Blog du site.", suggestions: ["Les offres et tarifs", "Prendre rendez-vous"] },
+    "Voir les projets en détail": KB.find(k => k.patterns.includes('projet'))!,
+  };
+
+  // ─── UI ──────────────────────────────────────────────────────────────────
+  const toggle       = document.getElementById('chat-toggle')!;
+  const chatWin      = document.getElementById('chat-window')!;
+  const iconOpen     = document.getElementById('chat-icon-open')!;
+  const iconClose    = document.getElementById('chat-icon-close')!;
+  const notif        = document.getElementById('chat-notif')!;
+  const messages     = document.getElementById('chat-messages')!;
+  const suggsEl      = document.getElementById('chat-suggestions')!;
+  const input        = document.getElementById('chat-input') as HTMLInputElement;
+  const sendBtn      = document.getElementById('chat-send')!;
+  const closeBtn     = document.getElementById('chat-close')!;
+  const closeOutside = document.getElementById('chat-close-outside')!;
+
+  let isOpen = false;
+
+  function toggleChat() {
+    isOpen = !isOpen;
+    chatWin.classList.toggle('hidden', !isOpen);
+    chatWin.classList.toggle('flex', isOpen);
+    iconOpen.classList.toggle('hidden', isOpen);
+    iconClose.classList.toggle('hidden', !isOpen);
+    toggle.classList.toggle('bg-[#8B3E22]', isOpen);
+    toggle.classList.toggle('bg-[#2C2416]', !isOpen);
+    closeOutside.classList.toggle('hidden', !isOpen);
+    closeOutside.classList.toggle('flex', isOpen);
+    notif.classList.add('hidden');
+    if (isOpen && messages.children.length === 0) {
+      setTimeout(() => showBotMessage(
+        "Bonjour ! 👋 Je suis l'assistante de Claire. Comment puis-je vous aider ?",
+        ["Les offres et tarifs", "Comment ça fonctionne ?", "Prendre rendez-vous", "Qui est Claire ?"]
+      ), 400);
+    }
+  }
+
+  function addMessage(text: string, isUser: boolean) {
+    const wrap = document.createElement('div');
+    wrap.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+    const bubble = document.createElement('div');
+    bubble.className = isUser
+      ? 'bg-[#8B3E22] text-white text-sm px-4 py-2.5 rounded-2xl rounded-br-sm max-w-[80%]'
+      : 'bg-white text-[#2C2416] text-sm px-4 py-3 rounded-2xl rounded-bl-sm max-w-[90%] shadow-sm border border-[#D6CCC0]/50 leading-relaxed';
+    bubble.innerHTML = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+    wrap.appendChild(bubble);
+    messages.appendChild(wrap);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function setSuggestions(suggs: string[]) {
+    suggsEl.innerHTML = '';
+    suggs.slice(0, 4).forEach(s => {
+      const btn = document.createElement('button');
+      btn.className = 'text-xs px-3 py-1.5 rounded-full border border-[#D6CCC0] text-[#2C2416]/70 hover:bg-[#8B3E22] hover:text-white hover:border-[#8B3E22] transition-colors whitespace-nowrap';
+      btn.textContent = s;
+      btn.addEventListener('click', () => handleSuggestion(s));
+      suggsEl.appendChild(btn);
+    });
+  }
+
+  function showBotMessage(text: string, suggs: string[] = []) {
+    const typing = document.createElement('div');
+    typing.className = 'flex justify-start';
+    typing.innerHTML = '<div class="bg-white text-[#2C2416]/40 text-sm px-4 py-2.5 rounded-2xl rounded-bl-sm border border-[#D6CCC0]/50 shadow-sm">…</div>';
+    messages.appendChild(typing);
+    messages.scrollTop = messages.scrollHeight;
+    setTimeout(() => {
+      messages.removeChild(typing);
+      addMessage(text, false);
+      setSuggestions(suggs);
+    }, 500);
+  }
+
+  function handleSuggestion(s: string) {
+    addMessage(s, true);
+    setSuggestions([]);
+    const resp = SUGGESTION_ANSWERS[s];
+    if (resp) {
+      showBotMessage(resp.answer, resp.suggestions);
+    } else {
+      processText(s);
+    }
+  }
+
+  function processText(text: string) {
+    if (!text.trim()) return;
+    addMessage(text, true);
+    setSuggestions([]);
+    input.value = '';
+    const lower = text.toLowerCase();
+    const match = KB.find(k => k.patterns.some(p => lower.includes(p)));
+    if (match) {
+      showBotMessage(match.answer, match.suggestions);
+    } else {
+      showBotMessage(
+        "Je n'ai pas bien compris votre question. 😊 Voici ce que je peux vous expliquer :",
+        ["Les offres et tarifs", "Comment ça fonctionne ?", "Prendre rendez-vous"]
+      );
+    }
+  }
+
+  toggle.addEventListener('click', toggleChat);
+  closeBtn.addEventListener('click', toggleChat);
+  closeOutside.addEventListener('click', toggleChat);
+
+  // Ouverture automatique après 12 secondes (première visite uniquement)
+  if (!sessionStorage.getItem('chat_auto_opened')) {
+    setTimeout(() => {
+      if (!isOpen) {
+        sessionStorage.setItem('chat_auto_opened', '1');
+        toggleChat();
+      }
+    }, 12000);
+  }
+  sendBtn.addEventListener('click', () => { const v = input.value.trim(); if (v) processText(v); });
+  input.addEventListener('keydown', (e: KeyboardEvent) => { if (e.key === 'Enter') { const v = input.value.trim(); if (v) processText(v); } });
+</script>
