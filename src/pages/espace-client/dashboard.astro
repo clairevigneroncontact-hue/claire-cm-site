@@ -639,32 +639,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       </a>`;
     }
 
-    // Fusionner documents + fichiers déposés
-    const uploadsAsDoc = (clientUploads||[]).map(u => ({
-      id: u.id, name: u.name, file_url: u.file_url,
-      type: 'fichier-déposé', created_at: u.created_at, _isUpload: true,
-    }));
-    const allDocsUnified = [...(docs||[]), ...uploadsAsDoc]
-      .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-
-    const TYPE_LABELS_FULL = { ...TYPE_LABELS, 'fichier-déposé': 'Fichier déposé' };
-    window._allDocsHtml = allDocsUnified.length
-      ? allDocsUnified.map(d => {
-          const label = d.name || d.file_name || 'Fichier';
-          const type  = TYPE_LABELS_FULL[d.type] || d.type || '';
-          const url   = d.file_url || '#';
-          const icon  = d._isUpload ? 'solar:upload-linear' : 'solar:file-download-linear';
-          return `<a href="${url}" target="_blank" data-search="${label.toLowerCase()} ${type.toLowerCase()}"
-            class="flex items-center justify-between gap-3 text-sm py-2 border-b border-[#D6CCC0]/30 last:border-0 hover:text-[#8B3E22] transition-colors">
-            <div class="flex items-center gap-2 min-w-0">
-              <iconify-icon icon="${icon}" stroke-width="1.5" class="text-[#8B3E22] shrink-0"></iconify-icon>
-              <span class="truncate">${label}</span>
-            </div>
-            ${type ? `<span class="text-xs text-[#767A55] shrink-0 bg-[#EDE6DB] px-2 py-0.5 rounded-full">${type}</span>` : ''}
-          </a>`;
-        }).join('')
-      : '<p class="text-xs text-[#2C2416]/30 italic">Aucun document</p>';
-    document.getElementById('docs-list').innerHTML = window._allDocsHtml;
+    // docs-list est peuplé par refreshDocsList() défini plus bas
 
     window.filterDocs = (q) => globalSearch(q);
     window._searchResults = [];
@@ -952,7 +927,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     }
 
-    refreshDocsList();
+    await refreshDocsList();
 
     window.startRename = (id) => {
       document.getElementById('uname-' + id)?.classList.add('hidden');
