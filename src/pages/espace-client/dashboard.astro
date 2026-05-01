@@ -970,16 +970,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       status.textContent = 'Envoi en cours…';
       const sb2 = await getSB();
       let ok = 0;
+      let lastError = '';
       for (const file of files) {
         const path = `${uid}/${Date.now()}-${file.name}`;
         const { data, error } = await sb2.storage.from('client-uploads').upload(path, file);
-        if (!error && data) {
+        if (error) { lastError = error.message || JSON.stringify(error); continue; }
+        if (data) {
           const { data: urlData } = sb2.storage.from('client-uploads').getPublicUrl(path);
-          await sb2.from('client_uploads').insert({ client_id: uid, name: file.name, file_url: urlData.publicUrl, file_type: file.type.startsWith('video') ? 'video' : 'photo' });
+          const { error: insertError } = await sb2.from('client_uploads').insert({ client_id: uid, name: file.name, file_url: urlData.publicUrl, file_type: file.type.startsWith('video') ? 'video' : 'photo' });
+          if (insertError) { lastError = insertError.message || JSON.stringify(insertError); continue; }
           ok++;
         }
       }
-      status.textContent = ok > 0 ? `${ok} fichier(s) envoyé(s) ✓` : 'Erreur lors de l\'envoi';
+      status.textContent = ok > 0 ? `${ok} fichier(s) envoyé(s) ✓` : `Erreur : ${lastError || 'inconnu'}`;
       e.target.value = '';
       await refreshDocsList();
       if (ok > 0) window.switchTab?.('docs');
