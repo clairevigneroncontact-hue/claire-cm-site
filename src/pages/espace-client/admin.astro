@@ -678,7 +678,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <input type="hidden" id="ct-type" value="post" />
             </div>
             <input id="ct-title" type="text" placeholder="Titre *" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22]" />
-            <textarea spellcheck="true"id="ct-caption" placeholder="Légende / description du post Instagram" rows="3" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none"></textarea>
+            <textarea spellcheck="true" id="ct-caption" placeholder="Légende / description du post Instagram" rows="3" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none"></textarea>
             <!-- Date + heure de publication -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
               <div>
@@ -747,8 +747,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               const captionBlock = ct.description ? `<div class="bg-[#F5EDE4] rounded-lg p-3 mb-2 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Légende</p><p class="text-sm text-[#2C2416]/75 leading-relaxed whitespace-pre-wrap">${ct.description}</p></div>` : '';
               const feedbackBlock = ct.feedback ? `<div class="bg-yellow-50 rounded-lg p-3 border border-yellow-200 mt-2"><p class="text-xs text-yellow-700 uppercase tracking-widest mb-1">Note du client</p><p class="text-sm text-yellow-800 leading-relaxed">${ct.feedback}</p></div>` : '';
               const fileBlock = file0?.url && !isImg ? `<a href="${file0.url}" target="_blank" class="flex items-center gap-3 p-3 bg-[#EDE6DB] rounded-xl hover:bg-[#D6CCC0] transition-colors mb-3"><iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] text-2xl shrink-0"></iconify-icon><span class="text-sm text-[#2C2416] truncate">${file0.name||'Ouvrir'}</span><iconify-icon icon="solar:arrow-right-up-linear" stroke-width="1.5" class="text-[#8B3E22] shrink-0 ml-auto"></iconify-icon></a>` : '';
-              const replyPanel = ct.status === 'rejected' ? `<div id="reply-${ct.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Envoyer une nouvelle version</p><select id="reply-type-${ct.id}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 bg-white focus:outline-none focus:border-[#8B3E22]"><option value="post">Post</option><option value="reel">Reel</option><option value="carrousel">Carrousel</option><option value="planning">Planning</option></select><textarea spellcheck="true"id="reply-caption-${ct.id}" placeholder="Nouvelle légende…" rows="3" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none"></textarea><input id="reply-file-${ct.id}" type="file" accept="image/*,video/*" class="block text-xs text-[#767A55] mb-2 cursor-pointer w-full" /><button onclick="sendReply('${ct.id}','${clientId}')" class="w-full py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Envoyer →</button></div>` : '';
-              const editPanel = `<div id="edit-${ct.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Modifier ce contenu</p><input id="edit-title-${ct.id}" type="text" value="${ct.title.replace(/"/g,'&quot;')}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] bg-white" /><textarea spellcheck="true"id="edit-caption-${ct.id}" rows="4" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none bg-white">${ct.description||''}</textarea><div class="mb-3"><p class="text-xs text-[#767A55] mb-1">Remplacer le fichier (optionnel)</p><input id="edit-file-${ct.id}" type="file" accept="image/*,video/*" class="block text-xs text-[#767A55] cursor-pointer w-full" /></div><div class="flex gap-2"><button onclick="saveContentEdit('${ct.id}','${clientId}')" class="flex-1 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer les modifications</button><button onclick="document.getElementById('edit-${ct.id}').classList.add('hidden')" class="px-4 py-2 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-sm hover:bg-[#EDE6DB] transition-colors">Annuler</button></div></div>`;
+              const replyPanel = ct.status === 'rejected' ? `<div id="reply-${ct.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Envoyer une nouvelle version</p><select id="reply-type-${ct.id}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 bg-white focus:outline-none focus:border-[#8B3E22]"><option value="post">Post</option><option value="reel">Reel</option><option value="carrousel">Carrousel</option><option value="planning">Planning</option></select><textarea spellcheck="true" id="reply-caption-${ct.id}" placeholder="Nouvelle légende…" rows="3" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none"></textarea><input id="reply-file-${ct.id}" type="file" accept="image/*,video/*" class="block text-xs text-[#767A55] mb-2 cursor-pointer w-full" /><button onclick="sendReply('${ct.id}','${clientId}')" class="w-full py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Envoyer →</button></div>` : '';
+              const editPanel = `<div id="edit-${ct.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Modifier ce contenu</p><input id="edit-title-${ct.id}" type="text" value="${ct.title.replace(/"/g,'&quot;')}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] bg-white" /><textarea spellcheck="true" id="edit-caption-${ct.id}" rows="4" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none bg-white">${ct.description||''}</textarea><div class="mb-3"><p class="text-xs text-[#767A55] mb-1">Remplacer le fichier (optionnel)</p><input id="edit-file-${ct.id}" type="file" accept="image/*,video/*" class="block text-xs text-[#767A55] cursor-pointer w-full" /></div><div class="flex gap-2"><button onclick="saveContentEdit('${ct.id}','${clientId}')" class="flex-1 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer les modifications</button><button onclick="document.getElementById('edit-${ct.id}').classList.add('hidden')" class="px-4 py-2 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-sm hover:bg-[#EDE6DB] transition-colors">Annuler</button></div></div>`;
 
               return `
               <div class="border ${ct.status === 'rejected' ? 'border-red-200' : 'border-[#D6CCC0]'} rounded-xl mb-3 overflow-hidden" data-search="${ct.title.toLowerCase()}">
@@ -823,7 +823,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <div id="client-cal-note-modal" class="hidden mx-4 mb-4 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30">
                 <p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Ajouter / modifier une note</p>
                 <input id="client-cal-date-picker" type="date" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white mb-2" />
-                <textarea spellcheck="true"id="client-cal-input" rows="2" placeholder="Votre note…" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none bg-white mb-2"></textarea>
+                <textarea spellcheck="true" id="client-cal-input" rows="2" placeholder="Votre note…" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none bg-white mb-2"></textarea>
                 <div class="flex gap-2">
                   <button onclick="saveClientCalNote()" class="px-4 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
                   <button onclick="document.getElementById('client-cal-note-modal').classList.add('hidden')" class="px-4 py-1.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs hover:bg-[#EDE6DB] transition-colors">Annuler</button>
@@ -974,8 +974,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
             <!-- Zone réponse admin -->
             <div class="flex gap-2 items-end pt-3 border-t border-white/10">
-              <textarea spellcheck="true" id="admin-reply-input" rows="2" placeholder="Message… (Entrée pour envoyer, Maj+Entrée pour sauter une ligne)"
-                onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendAdminNote('${clientId}'); }"
+              <textarea spellcheck="true" id="admin-reply-input" rows="2" placeholder="Message… (Entrée pour envoyer, Maj+Entrée pour nouvelle ligne)"
                 class="flex-1 px-3 py-2 rounded-xl border border-white/20 bg-white/10 text-[#F5EDE4] text-sm placeholder-[#F5EDE4]/40 resize-none focus:outline-none focus:border-[#8B3E22]"></textarea>
               <button onclick="sendAdminNote('${clientId}')" class="px-4 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors shrink-0">Envoyer</button>
             </div>
@@ -988,7 +987,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 <h3 class="text-sm font-medium text-[#2C2416]">Mes notes</h3>
               </div>
               <p class="text-xs text-[#767A55] mb-3">Tes réflexions privées, idées de contenu.</p>
-              <textarea spellcheck="true"id="notes-admin" rows="7" placeholder="Idées de posts, prochains thèmes…" class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none flex-1">${c?.admin_notes||''}</textarea>
+              <textarea spellcheck="true" id="notes-admin" rows="7" placeholder="Idées de posts, prochains thèmes…" class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none flex-1">${c?.admin_notes||''}</textarea>
               <div id="notes-msg" class="hidden text-sm rounded-xl px-4 py-2 mt-2"></div>
               <button onclick="saveNotes('${clientId}')" class="mt-3 px-5 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors self-start">Enregistrer</button>
             </div>
@@ -1760,6 +1759,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       // Charger calendrier et tâches dès l'ouverture
       await loadClientCal();
       await loadAdminTasks(clientId);
+      // Handler Enter sur la zone de réponse (plus fiable qu'un attribut inline)
+      const replyInput = document.getElementById('admin-reply-input');
+      if (replyInput) {
+        replyInput.onkeydown = (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            window.sendAdminNote(clientId);
+          }
+        };
+      }
     };
 
     // Realtime — tâches : mise à jour auto quand le client coche/ajoute une tâche
