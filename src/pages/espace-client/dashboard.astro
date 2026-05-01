@@ -671,48 +671,44 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const term = q.trim().toLowerCase();
       const panel = document.getElementById('search-results-panel');
       if (!panel) return;
-
-      if (!term) {
-        panel.classList.add('hidden');
-        panel.innerHTML = '';
-        return;
-      }
+      if (!term) { panel.classList.add('hidden'); panel.innerHTML = ''; return; }
 
       const results = [];
 
-      // Docs
+      // Documents + fichiers déposés
       document.querySelectorAll('#docs-list [data-search]').forEach(el => {
-        if ((el.dataset.search || '').includes(term)) {
-          const label = el.querySelector('span.truncate')?.textContent?.trim() || el.dataset.search.split(' ')[0];
-          const section = el.querySelector('.rounded-full')?.textContent?.trim() || 'Document';
-          results.push({ label: label.slice(0,50), section, icon:'solar:document-text-linear', el });
-        }
+        if (!(el.dataset.search||'').includes(term)) return;
+        const label = el.querySelector('span.truncate, #uname-' + (el.id||''))?.textContent?.trim()
+          || el.querySelector('span.truncate')?.textContent?.trim()
+          || el.dataset.search.split(' ')[0];
+        const badge = el.querySelector('.rounded-full')?.textContent?.trim() || 'Document';
+        results.push({ label: label.slice(0,50), section: 'Mes documents · ' + badge, icon:'solar:document-text-linear', el, tab:'docs' });
       });
 
-      // Content
+      // Contenus à valider (full list)
       document.querySelectorAll('#content-list [data-search]').forEach(el => {
-        if ((el.dataset.search || '').includes(term)) {
-          const title = el.querySelector('p.font-medium, p.font-semibold')?.textContent?.trim() || el.dataset.search.slice(0,30);
-          const detailEl = el.querySelector('[id^="dash-detail-"]');
-          const itemId = detailEl?.id?.replace('dash-detail-','');
-          results.push({ label: title.slice(0,50), section:'Contenu', icon:'solar:check-square-linear', el, itemId });
-        }
+        if (!(el.dataset.search||'').includes(term)) return;
+        const title = el.querySelector('p.font-medium')?.textContent?.trim() || el.dataset.search.slice(0,40);
+        const badge = el.querySelector('.rounded-full')?.textContent?.trim() || '';
+        const detailEl = el.querySelector('[id^="dash-detail-"]');
+        const itemId = detailEl?.id?.replace('dash-detail-','');
+        results.push({ label: title.slice(0,50), section: 'Contenus' + (badge ? ' · ' + badge : ''), icon:'solar:check-square-linear', el, itemId, tab:'content' });
       });
 
-      // Tasks
+      // Tâches
       document.querySelectorAll('#tasks-list [data-search]').forEach(el => {
-        if ((el.dataset.search || '').includes(term)) {
-          const text = el.querySelector('span.flex-1')?.textContent?.trim() || el.dataset.search;
-          results.push({ label: text.slice(0,50), section:'Tâche', icon:'solar:checklist-minimalistic-linear', el });
-        }
+        if (!(el.dataset.search||'').includes(term)) return;
+        const text = el.querySelector('span.flex-1')?.textContent?.trim() || el.dataset.search;
+        const done = el.querySelector('span.flex-1')?.classList.contains('line-through');
+        results.push({ label: text.slice(0,50), section: 'Tâche' + (done ? ' · Terminée' : ''), icon:'solar:checklist-minimalistic-linear', el, tab:'home' });
       });
 
-      // Notes
+      // Discussion (notes)
       document.querySelectorAll('#notes-feed [data-search]').forEach(el => {
-        if ((el.dataset.search || '').includes(term)) {
-          const text = el.querySelector('p.text-sm')?.textContent?.trim() || el.dataset.search;
-          results.push({ label: text.slice(0,50), section:'Note', icon:'solar:notebook-linear', el });
-        }
+        if (!(el.dataset.search||'').includes(term)) return;
+        const text = el.querySelector('p.text-sm')?.textContent?.trim() || el.dataset.search;
+        const fromAdmin = el.dataset.search === el.dataset.search && el.querySelector('.text-\\[\\#8B3E22\\]');
+        results.push({ label: text.slice(0,50), section: 'Discussion', icon:'solar:chat-round-dots-linear', el, openDiscussion: true });
       });
 
       window._searchResults = results;
@@ -739,15 +735,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (!r) return;
       document.getElementById('search-results-panel').classList.add('hidden');
       document.getElementById('doc-search-input').value = '';
-      if (!r.el) return;
-      // Scroll vers l'élément
-      r.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // Highlight temporaire
-      r.el.style.transition = 'box-shadow 0.3s';
-      r.el.style.boxShadow = '0 0 0 3px #8B3E2240';
-      setTimeout(() => { r.el.style.boxShadow = ''; }, 2000);
-      // Ouvrir le contenu si applicable
-      if (r.itemId) setTimeout(() => window.toggleDashContent(r.itemId), 400);
+
+      // Ouvrir le bon onglet d'abord
+      if (r.tab) window.switchTab(r.tab);
+      // Ouvrir la discussion si besoin
+      if (r.openDiscussion) window.toggleDiscussion?.();
+
+      const delay = (r.tab || r.openDiscussion) ? 200 : 0;
+      setTimeout(() => {
+        if (!r.el) return;
+        // Ouvrir le <details> parent si fermé
+        const details = r.el.closest('details');
+        if (details) details.open = true;
+        // Scroll + highlight
+        r.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        r.el.style.transition = 'box-shadow 0.3s';
+        r.el.style.boxShadow = '0 0 0 3px #8B3E2240';
+        setTimeout(() => { r.el.style.boxShadow = ''; }, 2000);
+        // Ouvrir le détail du contenu si applicable
+        if (r.itemId) setTimeout(() => window.toggleDashContent(r.itemId), 300);
+      }, delay);
     };
 
     // Fermer le panel en cliquant ailleurs
@@ -818,16 +825,40 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (c) c.classList.toggle('rotate-180');
     };
 
+    // Regroupement par mois
+    function groupByMonth(items, getBadge) {
+      if (!items.length) return '';
+      const groups = {};
+      items.forEach(item => {
+        const d = item.scheduled_at || item.created_at;
+        const k = (d||'').slice(0,7) || '0000-00';
+        if (!groups[k]) groups[k] = { items:[], label: d ? new Date(d).toLocaleDateString('fr-FR',{month:'long',year:'numeric'}) : 'Sans date' };
+        groups[k].items.push(item);
+      });
+      const nowM = new Date().toISOString().slice(0,7);
+      return Object.keys(groups).sort().reverse().map(k => {
+        const { items: gItems, label } = groups[k];
+        const cap = label[0].toUpperCase() + label.slice(1);
+        return '<details class="mb-2 border border-[#D6CCC0] rounded-xl overflow-hidden" ' + (k>=nowM?'open':'') + '>'
+          + '<summary class="flex items-center justify-between px-4 py-3 bg-[#F5EDE4] cursor-pointer hover:bg-[#EDE6DB] transition-colors select-none">'
+          + '<span class="text-sm font-semibold text-[#2C2416] capitalize">' + cap + '</span>'
+          + '<span class="text-xs text-[#767A55] bg-white px-2.5 py-1 rounded-full border border-[#D6CCC0]">' + gItems.length + ' contenu' + (gItems.length>1?'s':'') + '</span>'
+          + '</summary><div class="p-3">' + gItems.map(i => renderContentCard(i, getBadge(i))).join('') + '</div></details>';
+      }).join('');
+    }
+
     if (!allItems || !allItems.length) {
-      contentEl.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucun contenu en attente</p>';
+      contentEl.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucun contenu envoyé</p>';
     } else {
-      contentEl.innerHTML = [
-        pending.length
-          ? pending.map(i => renderContentCard(i, '<span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full shrink-0">En attente</span>')).join('')
-          : '<p class="text-xs text-[#2C2416]/30 italic mb-3">Aucun contenu en attente ✓</p>',
-        done.length ? `<details class="mt-2"><summary class="text-xs text-[#767A55] cursor-pointer hover:text-[#2C2416] transition-colors">Historique (${done.length})</summary>
-          <div class="mt-2">${done.map(i => renderContentCard(i, `<span class="text-xs px-2 py-0.5 rounded-full shrink-0 ${i.status==='approved'?'bg-green-100 text-green-700':'bg-red-100 text-red-600'}">${i.status==='approved'?'Validé ✓':'Refusé'}</span>`)).join('')}</div></details>` : ''
-      ].join('');
+      const pendingHtml = pending.length
+        ? '<p class="text-xs uppercase tracking-widest text-[#767A55] mb-3">En attente de validation</p>'
+          + groupByMonth(pending, () => '<span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full shrink-0">En attente</span>')
+        : '<p class="text-xs text-[#2C2416]/30 italic mb-4">Aucun contenu en attente ✓</p>';
+      const historyHtml = done.length
+        ? '<p class="text-xs uppercase tracking-widest text-[#767A55] mb-3 mt-6">Historique</p>'
+          + groupByMonth(done, (i) => `<span class="text-xs px-2 py-0.5 rounded-full shrink-0 ${i.status==='approved'?'bg-green-100 text-green-700':'bg-red-100 text-red-600'}">${i.status==='approved'?'Validé ✓':'Refusé'}</span>`)
+        : '';
+      contentEl.innerHTML = pendingHtml + historyHtml;
     }
     // Aperçu sur l'onglet Accueil (max 3 en attente)
     const homePreviewEl = document.getElementById('content-list-home');
