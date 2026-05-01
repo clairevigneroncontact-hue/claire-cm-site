@@ -694,24 +694,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
           </div>
 
-          <!-- Stats -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="bg-[#F5EDE4] rounded-xl p-3 text-center">
-              <p class="text-2xl font-serif text-[#2C2416]">${total}</p>
-              <p class="text-xs text-[#767A55] mt-0.5">Contenus envoyés</p>
-            </div>
-            <div class="bg-yellow-50 rounded-xl p-3 text-center">
-              <p class="text-2xl font-serif text-yellow-700">${pending}</p>
-              <p class="text-xs text-yellow-600 mt-0.5">En attente</p>
-            </div>
-            <div class="bg-green-50 rounded-xl p-3 text-center">
-              <p class="text-2xl font-serif text-green-700">${approved}</p>
-              <p class="text-xs text-green-600 mt-0.5">Validés</p>
-            </div>
-            <div class="bg-[#EDE6DB] rounded-xl p-3 text-center">
-              <p class="text-2xl font-serif text-[#2C2416]">${uploads?.length || 0}</p>
-              <p class="text-xs text-[#767A55] mt-0.5">Fichiers reçus</p>
-            </div>
+          <!-- Stats compactes -->
+          <div class="flex flex-wrap gap-3">
+            <span class="text-xs px-3 py-1.5 bg-[#F5EDE4] rounded-full text-[#2C2416]">${total} contenu${total>1?'s':''}</span>
+            ${pending ? `<span class="text-xs px-3 py-1.5 bg-yellow-50 rounded-full text-yellow-700">${pending} en attente</span>` : ''}
+            ${approved ? `<span class="text-xs px-3 py-1.5 bg-green-50 rounded-full text-green-700">${approved} validé${approved>1?'s':''}</span>` : ''}
+            ${uploads?.length ? `<span class="text-xs px-3 py-1.5 bg-[#EDE6DB] rounded-full text-[#767A55]">${uploads.length} fichier${uploads.length>1?'s':''} reçu${uploads.length>1?'s':''}</span>` : ''}
           </div>
         </div>
 
@@ -729,7 +717,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <button onclick="switchClientTab('documents')"  id="ctab-documents"  class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] whitespace-nowrap">Documents</button>
           <button onclick="switchClientTab('infos')"      id="ctab-infos"      class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] whitespace-nowrap">Infos</button>
           <button onclick="switchClientTab('notes')"      id="ctab-notes"      class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] whitespace-nowrap">Notes</button>
-          <button onclick="switchClientTab('fichiers')"   id="ctab-fichiers"   class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] whitespace-nowrap">Fichiers</button>
         </div>
 
         <!-- Tab : Contenu -->
@@ -920,6 +907,42 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             }).join('') : '<p class="text-xs text-[#2C2416]/30 italic col-span-full">Aucun document déposé</p>'}
             </div>
           </div>
+
+          <!-- Fichiers déposés par le client -->
+          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+            <div class="flex items-center gap-2 mb-3">
+              <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>
+              <h3 class="text-sm font-medium text-[#2C2416]">Fichiers déposés par le client (${uploads?.length||0})</h3>
+            </div>
+            ${uploads?.length ? `<div class="relative mb-3">
+              <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
+              <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'file-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
+            </div>` : ''}
+            <div id="file-items-box" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              ${uploads?.length ? uploads.map(u => {
+                const isImg = u.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(u.file_url);
+                const isVid = u.file_url && /\.(mp4|mov|avi|webm)(\?|$)/i.test(u.file_url);
+                const isPdf = u.file_url && /\.pdf(\?|$)/i.test(u.file_url);
+                const date  = new Date(u.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+                const icon  = isVid ? 'solar:videocamera-linear' : isPdf ? 'solar:file-text-linear' : 'solar:file-download-linear';
+                return `<div class="flex flex-col" data-search="${u.name.toLowerCase()}">
+                  <a href="${u.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors bg-[#F5EDE4]" style="position:relative;padding-top:100%">
+                    ${isImg
+                      ? `<img src="${u.file_url}" alt="${u.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block" />`
+                      : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:2.5rem"></iconify-icon></div>`
+                    }
+                  </a>
+                  <p class="text-xs text-[#2C2416]/70 truncate mt-1.5">${u.name}</p>
+                  <div class="flex items-center justify-between mt-1">
+                    <p class="text-[10px] text-[#767A55]">${date}</p>
+                    <button onclick="deleteUpload('${u.id}','${(u.file_url||'').replace(/'/g,"\\'")}','${clientId}')" class="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-xs"></iconify-icon>
+                    </button>
+                  </div>
+                </div>`;
+              }).join('') : '<p class="text-xs text-[#2C2416]/30 italic col-span-full">Aucun fichier déposé</p>'}
+            </div>
+          </div>
         </div>
 
         <!-- Tab : Infos client -->
@@ -974,7 +997,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
             <!-- Zone réponse admin -->
             <div class="flex gap-2 items-end pt-3 border-t border-white/10">
-              <textarea spellcheck="true" id="admin-reply-input" rows="2" placeholder="Message… (Entrée pour envoyer, Maj+Entrée pour nouvelle ligne)"
+              <textarea spellcheck="true" id="admin-reply-input" rows="2" placeholder="Message…"
                 class="flex-1 px-3 py-2 rounded-xl border border-white/20 bg-white/10 text-[#F5EDE4] text-sm placeholder-[#F5EDE4]/40 resize-none focus:outline-none focus:border-[#8B3E22]"></textarea>
               <button onclick="sendAdminNote('${clientId}')" class="px-4 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors shrink-0">Envoyer</button>
             </div>
@@ -1010,40 +1033,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
         </div>
 
-        <!-- Tab : Fichiers reçus — grille uniforme de petits carrés -->
-        <div id="ctab-fichiers-panel" class="hidden bg-white rounded-2xl p-5 border border-[#D6CCC0]">
-          <h3 class="text-sm font-medium text-[#2C2416] mb-3">Fichiers déposés par le client (${uploads?.length||0})</h3>
-          ${uploads?.length ? `<div class="relative mb-3">
-            <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
-            <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'file-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
-          </div>` : ''}
-          <div id="file-items-box" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            ${uploads?.length ? uploads.map(u => {
-              const isImg = u.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(u.file_url);
-              const isVid = u.file_url && /\.(mp4|mov|avi|webm)(\?|$)/i.test(u.file_url);
-              const date  = new Date(u.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
-              const fileIcon = isVid ? 'solar:videocamera-linear' : 'solar:file-download-linear';
-              return `<div class="flex flex-col" data-search="${u.name.toLowerCase()}">
-                <a href="${u.file_url||'#'}" target="_blank"
-                  class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors bg-[#F5EDE4]" style="position:relative;padding-top:100%">
-                  ${isImg
-                    ? `<img src="${u.file_url}" alt="${u.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block" />`
-                    : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${fileIcon}" stroke-width="1.5" style="color:#8B3E22;font-size:2.5rem"></iconify-icon></div>`
-                  }
-                </a>
-                <p class="text-xs text-[#2C2416]/70 truncate mt-1.5">${u.name}</p>
-                <div class="flex items-center justify-between mt-1">
-                  <p class="text-[10px] text-[#767A55]">${date}</p>
-                  <button onclick="deleteUpload('${u.id}','${(u.file_url||'').replace(/'/g,"\\'")}','${clientId}')"
-                    class="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                    <iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-xs"></iconify-icon>
-                  </button>
-                </div>
-              </div>`;
-            }).join('') : '<p class="text-xs text-[#2C2416]/30 italic col-span-full">Aucun fichier reçu</p>'}
-          </div>
-        </div>
-
       `;
     };
 
@@ -1063,7 +1052,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     // Switcher d'onglets client
     window.switchClientTab = (tab) => {
-      ['contenu','documents','infos','notes','fichiers'].forEach(t => {
+      ['contenu','documents','infos','notes'].forEach(t => {
         const panel = document.getElementById(`ctab-${t}-panel`);
         if (panel) panel.classList.toggle('hidden', t !== tab);
         const btn = document.getElementById(`ctab-${t}`);
@@ -1187,7 +1176,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
       // Si une correspondance trouvée, basculer vers le bon onglet
       if (term) {
-        const tabMap = { 'ct-items-box':'contenu','doc-items-box':'documents','file-items-box':'fichiers','admin-tasks-list':'notes','admin-client-notes-feed':'notes' };
+        const tabMap = { 'ct-items-box':'contenu','doc-items-box':'documents','file-items-box':'documents','admin-tasks-list':'notes','admin-client-notes-feed':'notes' };
         for (const [id, tab] of Object.entries(tabMap)) {
           const c = document.getElementById(id);
           if (c && c.querySelector('[data-search]:not([style*="none"])')) {
