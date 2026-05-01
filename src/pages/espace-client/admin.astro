@@ -1845,22 +1845,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         feed.innerHTML = '<p class="text-sm text-[#F5EDE4]/40 italic">Aucun message pour l\'instant.</p>';
         return;
       }
+      const clientFirstName = document.querySelector('#view-client h2')?.textContent?.split(' ')[0] || 'Client';
       feed.innerHTML = data.map(n => {
         const d   = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
         const txt = n.note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         if (n.from_admin) {
-          return `<div class="flex justify-end">
-            <div class="bg-[#8B3E22]/80 rounded-xl rounded-tr-sm px-4 py-3 max-w-[85%]">
-              <p class="text-[10px] text-[#F5EDE4]/70 font-semibold mb-0.5">Toi</p>
-              <p class="text-sm text-[#F5EDE4] leading-relaxed">${txt}</p>
-              <p class="text-[10px] text-[#F5EDE4]/50 mt-1.5 text-right">${d}</p>
+          // Bulle droite — admin (toi)
+          return `<div class="flex justify-end items-end gap-2 pl-8">
+            <div class="bg-[#8B3E22] rounded-2xl rounded-br-sm px-4 py-3 shadow-sm" style="max-width:78%">
+              <p class="text-sm text-white leading-relaxed">${txt}</p>
+              <p class="text-[10px] text-white/50 mt-1.5 text-right">${d}</p>
             </div>
+            <div class="w-7 h-7 bg-[#8B3E22] rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold mb-0.5">C</div>
           </div>`;
         }
-        return `<div class="flex">
-          <div class="bg-white/10 rounded-xl rounded-tl-sm px-4 py-3 max-w-[85%] border border-white/10">
+        // Bulle gauche — client
+        return `<div class="flex items-end gap-2 pr-8">
+          <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center shrink-0 text-[#F5EDE4] text-xs font-bold mb-0.5">${clientFirstName[0]?.toUpperCase()||'?'}</div>
+          <div class="bg-white/15 rounded-2xl rounded-bl-sm px-4 py-3 border border-white/10 shadow-sm" style="max-width:78%">
             <p class="text-sm text-[#F5EDE4] leading-relaxed">${txt}</p>
-            <p class="text-[10px] text-[#F5EDE4]/50 mt-1.5">${d}</p>
+            <p class="text-[10px] text-[#F5EDE4]/40 mt-1.5">${d}</p>
           </div>
         </div>`;
       }).join('');
