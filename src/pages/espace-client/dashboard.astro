@@ -970,9 +970,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       status.textContent = 'Envoi en cours…';
       const sb2 = await getSB();
       let ok = 0;
+      const sanitize = (name) => name
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-zA-Z0-9._-]/g, '_')
+        .replace(/_+/g, '_').replace(/^_|_$/g, '');
+
       let lastError = '';
       for (const file of files) {
-        const path = `${uid}/${Date.now()}-${file.name}`;
+        const safeName = sanitize(file.name) || 'fichier';
+        const path = `${uid}/${Date.now()}-${safeName}`;
         const { data, error } = await sb2.storage.from('client-uploads').upload(path, file);
         if (error) { lastError = error.message || JSON.stringify(error); continue; }
         if (data) {
