@@ -446,18 +446,31 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     // Notes discussion
     async function loadClientNotes() {
       const sb2 = await getSB();
-      const { data } = await sb2.from('client_notes').select('*').eq('client_id', uid).order('created_at', { ascending: false }).limit(30);
+      const { data } = await sb2.from('client_notes').select('*').eq('client_id', uid).order('created_at', { ascending: true }).limit(100);
       const feed = document.getElementById('notes-feed');
       if (!feed) return;
       if (!data || !data.length) { feed.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucune note pour l\'instant</p>'; return; }
       feed.innerHTML = data.map(n => {
-        const d = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+        const d   = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
         const txt = n.note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        return `<div class="bg-[#EDE6DB] rounded-xl rounded-tr-sm px-4 py-3" data-search="${n.note.toLowerCase()}">
-          <p class="text-sm text-[#2C2416] leading-relaxed">${txt}</p>
-          <p class="text-[10px] text-[#767A55] mt-1.5">${d}</p>
+        if (n.from_admin) {
+          return `<div class="flex gap-2 items-start" data-search="${n.note.toLowerCase()}">
+            <div class="w-7 h-7 bg-[#8B3E22] rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold mt-0.5">C</div>
+            <div class="bg-[#8B3E22]/10 rounded-xl rounded-tl-sm px-4 py-3 border border-[#8B3E22]/20">
+              <p class="text-[10px] text-[#8B3E22] font-semibold mb-1">Claire CM</p>
+              <p class="text-sm text-[#2C2416] leading-relaxed">${txt}</p>
+              <p class="text-[10px] text-[#767A55] mt-1.5">${d}</p>
+            </div>
+          </div>`;
+        }
+        return `<div class="flex justify-end" data-search="${n.note.toLowerCase()}">
+          <div class="bg-[#EDE6DB] rounded-xl rounded-tr-sm px-4 py-3 max-w-[85%]">
+            <p class="text-sm text-[#2C2416] leading-relaxed">${txt}</p>
+            <p class="text-[10px] text-[#767A55] mt-1.5 text-right">${d}</p>
+          </div>
         </div>`;
       }).join('');
+      feed.scrollTop = feed.scrollHeight;
     }
     window.addClientNote = async () => {
       const sb2 = await getSB();
@@ -882,6 +895,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     sb.channel('client-tasks-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
         if ((payload.new?.client_id || payload.old?.client_id) === uid) loadTasks();
+      })
+      .subscribe();
+
+    // Realtime — notes admin : apparaît instantanément dans "Dernières notes"
+    sb.channel('client-notes-sync')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'client_notes' }, (payload) => {
+        if (payload.new?.client_id === uid && payload.new?.from_admin) loadClientNotes();
       })
       .subscribe();
 
