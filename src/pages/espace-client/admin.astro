@@ -189,7 +189,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const since    = new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString();
       const lastSeen = localStorage.getItem(NOTIFS_KEY) || '1970-01-01';
 
-      const [{ data: contentEvents }, { data: uploads }, { data: newClients }] = await Promise.all([
+      const [{ data: contentEvents }, { data: uploads }, { data: newClients }, { data: newMessages }] = await Promise.all([
         sb2.from('content_items')
           .select('id, title, status, updated_at, client_id, profiles(full_name, email)')
           .in('status', ['approved', 'rejected'])
@@ -207,6 +207,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           .gte('created_at', since)
           .order('created_at', { ascending: false })
           .limit(5),
+        sb2.from('client_notes')
+          .select('id, note, created_at, client_id, from_admin, profiles(full_name, email)')
+          .eq('from_admin', false)
+          .gte('created_at', since)
+          .order('created_at', { ascending: false })
+          .limit(20),
       ]);
 
       const items = [];
@@ -225,6 +231,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       (newClients || []).forEach(nc => {
         items.push({ id:'nc-'+nc.id, date:nc.created_at, unread:nc.created_at>lastSeen,
           icon:'👤', text:`Nouveau client : ${nc.full_name||nc.email}`, clientId:nc.id, tab:'infos' });
+      });
+      (newMessages || []).forEach(m => {
+        const client = m.profiles?.full_name || m.profiles?.email || 'Client';
+        const preview = (m.note||'').slice(0,40) + ((m.note||'').length > 40 ? '…' : '');
+        items.push({ id:'msg-'+m.id, date:m.created_at, unread:m.created_at>lastSeen,
+          icon:'💬', text:`${client} : "${preview}"`, clientId:m.client_id, tab:'notes' });
       });
       items.sort((a,b) => b.date.localeCompare(a.date));
 
@@ -730,13 +742,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
           </div>
 
-          <!-- Stats compactes -->
-          <div class="flex flex-wrap gap-3">
-            <span class="text-xs px-3 py-1.5 bg-[#F5EDE4] rounded-full text-[#2C2416]">${total} contenu${total>1?'s':''}</span>
-            ${pending ? `<span class="text-xs px-3 py-1.5 bg-yellow-50 rounded-full text-yellow-700">${pending} en attente</span>` : ''}
-            ${approved ? `<span class="text-xs px-3 py-1.5 bg-green-50 rounded-full text-green-700">${approved} validé${approved>1?'s':''}</span>` : ''}
-            ${uploads?.length ? `<span class="text-xs px-3 py-1.5 bg-[#EDE6DB] rounded-full text-[#767A55]">${uploads.length} fichier${uploads.length>1?'s':''} reçu${uploads.length>1?'s':''}</span>` : ''}
-          </div>
 
           <!-- Panel infos client (masqué par défaut) -->
           <div id="client-info-panel" class="hidden mt-4 pt-4 border-t border-[#D6CCC0]">
@@ -902,7 +907,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
             <h3 class="text-sm font-medium text-[#2C2416] mb-3">Déposer un document</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-              <input id="doc-name" type="text" spellcheck="true" placeholder="Nom du document *" class="px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+              <input id="doc-name" type="text" spellcheck="true" placeholder="Nom du document (optionnel)" class="px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
               <select id="doc-type" onchange="toggleDocTypeOther('doc-type','doc-type-custom')" class="px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white">
                 <option value="contrat">Contrat</option>
                 <option value="facture">Facture</option>
@@ -926,7 +931,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
               <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'doc-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
             </div>` : ''}
-            <div id="doc-items-box" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div id="doc-items-box" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
             ${docs?.length ? docs.map(d => {
               const label   = d.name || d.file_name || 'Document';
               const typeMap = { contrat:'Contrat', facture:'Facture', devis:'Devis', 'audit-instagram':'Audit', 'compte-rendu':'CR mensuel', autre:'Autre' };
@@ -938,9 +943,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               return `
               <div class="flex flex-col" data-search="${label.toLowerCase()} ${(d.type||'').toLowerCase()}">
                 <!-- Miniature cliquable — hauteur fixe -->
-                <a href="${d.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors" style="height:130px;background:#F5EDE4">
+                <a href="${d.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors" style="height:90px;background:#F5EDE4">
                   ${isImg
-                    ? `<img src="${d.file_url}" style="width:100%;height:130px;object-fit:cover;display:block" onerror="this.style.display='none'" />`
+                    ? `<img src="${d.file_url}" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`
                     : `<div style="height:130px;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:3rem"></iconify-icon></div>`
                   }
                 </a>
@@ -980,7 +985,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
               <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'file-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
             </div>` : ''}
-            <div id="file-items-box" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div id="file-items-box" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
               ${uploads?.length ? uploads.map(u => {
                 const isImg = u.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(u.file_url);
                 const isVid = u.file_url && /\.(mp4|mov|avi|webm)(\?|$)/i.test(u.file_url);
@@ -988,9 +993,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 const date  = new Date(u.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
                 const icon  = isVid ? 'solar:videocamera-linear' : isPdf ? 'solar:file-text-linear' : 'solar:file-download-linear';
                 return `<div class="flex flex-col" data-search="${u.name.toLowerCase()}">
-                  <a href="${u.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors" style="height:130px;background:#F5EDE4">
+                  <a href="${u.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors" style="height:90px;background:#F5EDE4">
                     ${isImg
-                      ? `<img src="${u.file_url}" alt="${u.name}" style="width:100%;height:130px;object-fit:cover;display:block" onerror="this.style.display='none'" />`
+                      ? `<img src="${u.file_url}" alt="${u.name}" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`
                       : `<div style="height:130px;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:3rem"></iconify-icon></div>`
                     }
                   </a>
@@ -1453,14 +1458,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     window.uploadDoc = async (clientId) => {
       const sb   = await getSB();
-      const name = document.getElementById('doc-name').value.trim();
+      let   name = document.getElementById('doc-name').value.trim();
       let   type = document.getElementById('doc-type').value;
       if (type === 'autre') {
         const custom = document.getElementById('doc-type-custom')?.value.trim();
         if (custom) type = custom;
       }
       const file = document.getElementById('doc-file').files?.[0];
-      if (!name) return alert('Nom obligatoire');
+      if (!name && file) name = file.name.replace(/\.[^.]+$/, '');
+      if (!name) name = type || 'Document';
 
       let fileUrl = '';
       if (file) {
@@ -1953,6 +1959,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'client_notes' }, (payload) => {
         if (payload.new?.client_id === window._currentAdminClientId)
           window.loadAdminClientNotes(window._currentAdminClientId);
+        // Notif dans la cloche si message du client (pas de l'admin)
+        if (!payload.new?.from_admin) {
+          loadAdminNotifs();
+          showAdminToast('💬 Nouveau message d\'un client');
+        }
       })
       .subscribe();
 
