@@ -1007,6 +1007,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       status.textContent = ok > 0 ? `${ok} fichier(s) envoyé(s) ✓` : 'Erreur lors de l\'envoi';
       e.target.value = '';
       await refreshDocsList();
+      if (ok > 0) window.switchTab?.('docs');
     };
 
     // ─── Notifications ───────────────────────────────────────────────────────
@@ -1048,11 +1049,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <p class="text-xs text-[#2C2416] leading-relaxed ${n.read ? '' : 'font-medium'}">${n.message}</p>
               <p class="text-[10px] text-[#767A55] mt-0.5">${dateStr}</p>
             </div>
-            <button onclick="event.stopPropagation(); markNotifRead('${n.id}')"
-              class="shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${n.read ? 'border-[#D6CCC0]' : 'border-[#8B3E22]/40 hover:border-[#8B3E22] hover:bg-[#8B3E22]/10'}"
-              title="Marquer comme lu">
-              <iconify-icon icon="solar:check-linear" stroke-width="2.5" style="font-size:9px;color:${n.read ? '#D6CCC0' : '#8B3E22'}"></iconify-icon>
-            </button>
+            ${!n.read ? '<span class="w-2 h-2 bg-[#8B3E22] rounded-full shrink-0 mt-1 flex-shrink-0"></span>' : ''}
           </div>`;
         }).join('');
       }
