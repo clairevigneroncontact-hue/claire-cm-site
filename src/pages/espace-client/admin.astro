@@ -1838,7 +1838,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     window.loadAdminClientNotes = async (clientId) => {
       if (!clientId) return;
       const sb2 = await getSB();
-      const { data } = await sb2.from('client_notes').select('*').eq('client_id', clientId).order('created_at', { ascending: true }).limit(100);
+      const { data } = await sb2.from('client_notes').select('id,client_id,note,from_admin,created_at').eq('client_id', clientId).order('created_at', { ascending: true }).limit(100);
       const feed = document.getElementById('admin-client-notes-feed');
       if (!feed) return;
       if (!data || !data.length) {

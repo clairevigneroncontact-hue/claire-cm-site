@@ -429,7 +429,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     // Notes discussion
     async function loadClientNotes() {
       const sb2 = await getSB();
-      const { data } = await sb2.from('client_notes').select('*').eq('client_id', uid).order('created_at', { ascending: true }).limit(100);
+      const { data } = await sb2.from('client_notes').select('id,client_id,note,from_admin,created_at').eq('client_id', uid).order('created_at', { ascending: true }).limit(100);
       const feed = document.getElementById('notes-feed');
       if (!feed) return;
       if (!data || !data.length) { feed.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucune note pour l\'instant</p>'; return; }
