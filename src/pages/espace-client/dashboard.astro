@@ -96,8 +96,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <!-- Navigation par onglets -->
       <div class="flex gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-6 overflow-x-auto">
         <button id="tab-btn-home" onclick="switchTab('home')" class="bg-white text-[#2C2416] shadow-sm rounded-lg py-2.5 px-3 text-sm font-medium whitespace-nowrap">Accueil</button>
-        <button id="tab-btn-docs" onclick="switchTab('docs')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-3 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap">Mes documents</button>
         <button id="tab-btn-content" onclick="switchTab('content')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-3 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap">Contenus à valider</button>
+        <button id="tab-btn-docs" onclick="switchTab('docs')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-3 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap">Mes documents</button>
         <button id="tab-btn-infos" onclick="switchTab('infos')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-3 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap">Mes informations</button>
       </div>
 
@@ -192,41 +192,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </div>
       </div>
 
-      <!-- Onglet Mes documents -->
-      <div id="tab-docs-panel" class="hidden">
-        <!-- Upload -->
-        <div id="card-upload" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] mb-5">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
-              <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
-            </div>
-            <h2 class="text-base text-[#2C2416] font-medium">Déposer des fichiers</h2>
-          </div>
-          <p class="text-xs text-[#2C2416]/50 font-light mb-4">Photos, vidéos pour vos contenus.</p>
-          <label class="cursor-pointer block">
-            <input id="upload-input" type="file" accept="image/*,video/*" multiple class="hidden" />
-            <div class="border-2 border-dashed border-[#D6CCC0] rounded-xl p-4 text-center hover:border-[#8B3E22] transition-colors">
-              <iconify-icon icon="solar:cloud-upload-linear" stroke-width="1.5" class="text-2xl text-[#D6CCC0] block mx-auto mb-1"></iconify-icon>
-              <span class="text-xs text-[#2C2416]/50">Cliquer pour sélectionner</span>
-            </div>
-          </label>
-          <div id="upload-status" class="mt-2 text-xs text-[#767A55]"></div>
-          <div id="uploads-list" class="mt-3 space-y-1"></div>
-        </div>
-
-        <!-- Documents fusionnés (docs + uploads) -->
-        <div id="card-docs" class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
-              <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
-            </div>
-            <h2 class="text-base text-[#2C2416] font-medium">Mes documents</h2>
-          </div>
-          <div id="docs-list" class="space-y-0.5"><p class="text-xs text-[#2C2416]/30 italic">Aucun document</p></div>
-          <div id="invoices-list" class="hidden"></div>
-        </div>
-      </div>
-
       <!-- Onglet Contenus à valider -->
       <div id="tab-content-panel" class="hidden">
         <div id="card-content" class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
@@ -237,6 +202,40 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <h2 class="text-base text-[#2C2416] font-medium">Contenus à valider</h2>
           </div>
           <div id="content-list"><p class="text-xs text-[#2C2416]/30 italic">Aucun contenu en attente</p></div>
+        </div>
+      </div>
+
+      <!-- Onglet Mes documents -->
+      <div id="tab-docs-panel" class="hidden">
+        <!-- Upload -->
+        <div id="card-upload" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] mb-5">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+              <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+            </div>
+            <h2 class="text-base text-[#2C2416] font-medium">Déposer des fichiers</h2>
+          </div>
+          <p class="text-xs text-[#2C2416]/50 font-light mb-4">Photos, vidéos, PDFs et autres documents.</p>
+          <label class="cursor-pointer block">
+            <input id="upload-input" type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.png,.jpg,.jpeg,.gif,.webp" multiple class="hidden" />
+            <div class="border-2 border-dashed border-[#D6CCC0] rounded-xl p-5 text-center hover:border-[#8B3E22] transition-colors">
+              <iconify-icon icon="solar:cloud-upload-linear" stroke-width="1.5" class="text-2xl text-[#D6CCC0] block mx-auto mb-2"></iconify-icon>
+              <span class="text-xs text-[#2C2416]/50">Cliquer pour sélectionner</span>
+              <p class="text-[10px] text-[#2C2416]/30 mt-1">Images, vidéos, PDF, Word, Excel…</p>
+            </div>
+          </label>
+          <div id="upload-status" class="mt-2 text-xs text-[#767A55]"></div>
+        </div>
+        <!-- Documents fusionnés (envoyés par Claire + déposés par client) -->
+        <div id="card-docs" class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+              <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+            </div>
+            <h2 class="text-base text-[#2C2416] font-medium">Mes documents</h2>
+          </div>
+          <div id="docs-list" class="space-y-0.5"><p class="text-xs text-[#2C2416]/30 italic">Aucun document</p></div>
+          <div id="invoices-list" class="hidden"></div>
         </div>
       </div>
 
@@ -857,29 +856,124 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       window.validate(id, 'rejected', text);
     };
 
-    // Uploads
-    const { data: existingUploads } = await sb.from('client_uploads').select('*').eq('client_id', uid).order('created_at', { ascending: false });
-    if (existingUploads && existingUploads.length) {
-      document.getElementById('uploads-list').innerHTML = existingUploads.map(f =>
-        `<div class="flex items-center gap-2 text-xs text-[#2C2416]/60"><iconify-icon icon="solar:paperclip-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>${f.name}</div>`
-      ).join('');
+    // ── Uploads : rendu inline + renommer + supprimer ────────────────────────
+    const TYPE_LABELS_UPLOAD = { 'image':'Photo', 'video':'Vidéo', 'pdf':'PDF', 'document':'Document', 'photo':'Photo' };
+
+    function renderUploadItem(f) {
+      const ext  = (f.name || '').split('.').pop()?.toLowerCase() || '';
+      const isImg = /^(jpg|jpeg|png|gif|webp|svg)$/.test(ext);
+      const isPdf = ext === 'pdf';
+      const isVid = /^(mp4|mov|avi|webm|mkv)$/.test(ext);
+      const icon  = isImg ? 'solar:gallery-linear' : isPdf ? 'solar:file-text-linear' : isVid ? 'solar:videocamera-linear' : 'solar:paperclip-linear';
+      const safeUrl = (f.file_url || '#').replace(/'/g, "\\'");
+      const safeName = (f.name || 'Fichier').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `<div class="flex items-center gap-3 py-2.5 border-b border-[#D6CCC0]/30 last:border-0 group" data-search="${(f.name||'').toLowerCase()}">
+        <iconify-icon icon="${icon}" stroke-width="1.5" class="text-[#8B3E22] shrink-0 text-base"></iconify-icon>
+        <div class="flex-1 min-w-0">
+          <span id="uname-${f.id}" class="text-sm text-[#2C2416] truncate block">${safeName}</span>
+          <div id="urename-${f.id}" class="hidden flex gap-1 items-center">
+            <input type="text" value="${safeName}" spellcheck="true"
+              class="flex-1 px-2 py-1 text-sm rounded-lg border border-[#8B3E22] focus:outline-none"
+              onkeydown="if(event.key==='Enter') saveUploadName('${f.id}',this.value); if(event.key==='Escape') cancelRename('${f.id}')"
+              onblur="cancelRename('${f.id}')" />
+            <button onmousedown="event.preventDefault(); saveUploadName('${f.id}', document.querySelector('#urename-${f.id} input').value)" class="px-2 py-1 bg-[#8B3E22] text-white text-xs rounded-lg">✓</button>
+          </div>
+        </div>
+        <a href="${f.file_url||'#'}" target="_blank" class="shrink-0 p-1 text-[#767A55] hover:text-[#8B3E22] transition-colors" title="Ouvrir">
+          <iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+        </a>
+        <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <button onclick="startRename('${f.id}')" class="p-1.5 text-[#767A55] hover:text-[#8B3E22] transition-colors rounded-lg hover:bg-[#8B3E22]/10" title="Renommer">
+            <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+          </button>
+          <button onclick="deleteUpload('${f.id}','${safeUrl}')" class="p-1.5 text-[#767A55] hover:text-red-500 transition-colors rounded-lg hover:bg-red-50" title="Supprimer">
+            <iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+          </button>
+        </div>
+        <span class="text-[10px] text-[#767A55] shrink-0 bg-[#EDE6DB] px-2 py-0.5 rounded-full">Déposé</span>
+      </div>`;
     }
+
+    async function refreshDocsList() {
+      const sb2 = await getSB();
+      const [{ data: freshDocs }, { data: freshUploads }] = await Promise.all([
+        sb2.from('documents').select('*').eq('client_id', uid).order('created_at', { ascending: false }),
+        sb2.from('client_uploads').select('*').eq('client_id', uid).order('created_at', { ascending: false }),
+      ]);
+      const docsHtml = (freshDocs||[]).map(d => {
+        const label = d.name || d.file_name || 'Document';
+        const type  = { contrat:'Contrat', facture:'Facture', devis:'Devis', 'audit-instagram':'Audit', 'compte-rendu':'Bilan' }[d.type] || d.type || '';
+        return `<a href="${d.file_url||'#'}" target="_blank" data-search="${label.toLowerCase()}"
+          class="flex items-center justify-between gap-3 text-sm py-2.5 border-b border-[#D6CCC0]/30 last:border-0 hover:text-[#8B3E22] transition-colors">
+          <div class="flex items-center gap-2 min-w-0">
+            <iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] shrink-0"></iconify-icon>
+            <span class="truncate">${label}</span>
+          </div>
+          ${type ? `<span class="text-[10px] text-[#767A55] shrink-0 bg-[#EDE6DB] px-2 py-0.5 rounded-full">${type}</span>` : ''}
+        </a>`;
+      }).join('');
+      const uploadsHtml = (freshUploads||[]).map(renderUploadItem).join('');
+      const el = document.getElementById('docs-list');
+      if (el) {
+        el.innerHTML = (docsHtml + uploadsHtml) || '<p class="text-xs text-[#2C2416]/30 italic">Aucun document</p>';
+      }
+    }
+
+    refreshDocsList();
+
+    window.startRename = (id) => {
+      document.getElementById('uname-' + id)?.classList.add('hidden');
+      const wrap = document.getElementById('urename-' + id);
+      wrap?.classList.remove('hidden');
+      wrap?.querySelector('input')?.focus();
+      wrap?.querySelector('input')?.select();
+    };
+    window.cancelRename = (id) => {
+      document.getElementById('uname-' + id)?.classList.remove('hidden');
+      document.getElementById('urename-' + id)?.classList.add('hidden');
+    };
+    window.saveUploadName = async (id, newName) => {
+      const name = (newName || '').trim();
+      if (!name) { window.cancelRename(id); return; }
+      const sb2 = await getSB();
+      await sb2.from('client_uploads').update({ name }).eq('id', id);
+      const nameEl = document.getElementById('uname-' + id);
+      if (nameEl) nameEl.textContent = name;
+      window.cancelRename(id);
+    };
+    window.deleteUpload = async (id, fileUrl) => {
+      if (!confirm('Supprimer ce fichier définitivement ?')) return;
+      const sb2 = await getSB();
+      try {
+        if (fileUrl && fileUrl !== '#') {
+          const url = new URL(fileUrl);
+          const parts = url.pathname.split('/client-uploads/');
+          if (parts[1]) await sb2.storage.from('client-uploads').remove([decodeURIComponent(parts[1])]);
+        }
+      } catch(e) {}
+      await sb2.from('client_uploads').delete().eq('id', id);
+      await refreshDocsList();
+    };
+
     document.getElementById('upload-input').onchange = async (e) => {
       const files = Array.from(e.target.files || []);
       if (!files.length) return;
       const status = document.getElementById('upload-status');
       status.textContent = 'Envoi en cours…';
       const sb2 = await getSB();
+      let ok = 0;
       for (const file of files) {
         const path = `${uid}/${Date.now()}-${file.name}`;
         const { data, error } = await sb2.storage.from('client-uploads').upload(path, file);
         if (!error && data) {
           const { data: urlData } = sb2.storage.from('client-uploads').getPublicUrl(path);
           await sb2.from('client_uploads').insert({ client_id: uid, name: file.name, file_url: urlData.publicUrl, file_type: file.type.startsWith('video') ? 'video' : 'photo' });
+          ok++;
         }
       }
-      status.textContent = `${files.length} fichier(s) envoyé(s) ✓`;
-      setTimeout(() => window.location.reload(), 800);
+      status.textContent = ok > 0 ? `${ok} fichier(s) envoyé(s) ✓` : 'Erreur lors de l\'envoi';
+      e.target.value = '';
+      await refreshDocsList();
     };
 
     // ─── Notifications ───────────────────────────────────────────────────────
