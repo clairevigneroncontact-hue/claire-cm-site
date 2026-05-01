@@ -267,9 +267,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <p class="text-[10px] text-[#767A55] mt-0.5">${when}</p>
           </div>
           <button onclick="event.stopPropagation(); dismissNotif('${item.id}')"
-            class="shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ml-1 ${item.unread?'border-[#8B3E22]/40 hover:bg-[#8B3E22]/10 hover:border-[#8B3E22]':'border-[#D6CCC0] hover:border-[#8B3E22]'}"
-            title="Marquer comme traité">
-            <iconify-icon icon="solar:check-linear" stroke-width="2.5" style="font-size:9px;color:${item.unread?'#8B3E22':'#D6CCC0'}"></iconify-icon>
+            class="shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ml-1 ${item.unread?'border-[#8B3E22]/50 hover:bg-[#8B3E22]/10 hover:border-[#8B3E22]':'border-[#D6CCC0] bg-[#F5EDE4] hover:border-[#8B3E22]'}"
+            title="Cocher comme traité">
+            ${!item.unread ? `<iconify-icon icon="solar:check-linear" stroke-width="2.5" style="font-size:9px;color:#8B3E22"></iconify-icon>` : ''}
           </button>
         </div>`;
       }).join('');
