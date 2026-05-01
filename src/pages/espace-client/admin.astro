@@ -142,6 +142,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     // ===== Notifications admin =====
     const NOTIFS_KEY = 'adminNotifsLastSeen';
+    const NOTIFS_DISMISSED_KEY = 'adminNotifsDismissed';
 
     function showAdminToast(message) {
       const t = document.createElement('div');
@@ -202,10 +203,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         badge.classList.toggle('hidden', unread === 0);
       }
 
+      const dismissed = new Set(JSON.parse(localStorage.getItem(NOTIFS_DISMISSED_KEY)||'[]'));
+      const visible = items.filter(i => !dismissed.has(i.id));
+
+      const unreadVisible = visible.filter(i => i.unread).length;
+      const badge2 = document.getElementById('admin-notif-badge');
+      if (badge2) { badge2.textContent = unreadVisible > 9 ? '9+' : String(unreadVisible); badge2.classList.toggle('hidden', unreadVisible === 0); }
+
       const list = document.getElementById('admin-notif-list');
       if (!list) return;
-      if (!items.length) { list.innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4">Aucune notification récente.</p>'; return; }
-      list.innerHTML = items.map(item => {
+      if (!visible.length) { list.innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4">Aucune notification récente.</p>'; return; }
+      list.innerHTML = visible.map(item => {
         const when = new Date(item.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
         return `<div onclick="window.openClient('${item.clientId}'); window.switchClientTab('${item.tab}'); window.toggleAdminNotifPanel()"
           class="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-[#F5EDE4] transition-colors ${item.unread?'bg-[#8B3E22]/10':'bg-white'}">
@@ -214,10 +222,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <p class="text-xs text-[#2C2416] leading-relaxed ${item.unread?'font-medium':''}">${item.text}</p>
             <p class="text-[10px] text-[#767A55] mt-0.5">${when}</p>
           </div>
-          ${item.unread ? '<div class="w-2 h-2 bg-[#8B3E22] rounded-full shrink-0 mt-1.5"></div>' : ''}
+          <button onclick="event.stopPropagation(); dismissNotif('${item.id}')"
+            class="shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ml-1 ${item.unread?'border-[#8B3E22]/40 hover:bg-[#8B3E22]/10 hover:border-[#8B3E22]':'border-[#D6CCC0] hover:border-[#8B3E22]'}"
+            title="Marquer comme traité">
+            <iconify-icon icon="solar:check-linear" stroke-width="2.5" style="font-size:9px;color:${item.unread?'#8B3E22':'#D6CCC0'}"></iconify-icon>
+          </button>
         </div>`;
       }).join('');
     }
+
+    window.dismissNotif = (id) => {
+      const dismissed = new Set(JSON.parse(localStorage.getItem(NOTIFS_DISMISSED_KEY)||'[]'));
+      dismissed.add(id);
+      localStorage.setItem(NOTIFS_DISMISSED_KEY, JSON.stringify([...dismissed]));
+      loadAdminNotifs();
+    };
 
     window.markAdminNotifsRead = () => {
       localStorage.setItem(NOTIFS_KEY, new Date().toISOString());
@@ -544,7 +563,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const now = Date.now();
       el.innerHTML = list.map(c => {
         const createdAt = new Date(c.created_at);
-        const isNew     = (now - createdAt.getTime()) < 48 * 3600 * 1000;
+        const isNew     = (now - createdAt.getTime()) < 24 * 3600 * 1000;
         const dateStr   = createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 
         // Dernière activité
@@ -607,6 +626,57 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         : s === 'rejected'
         ? '<span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600">Refusé</span>'
         : '<span class="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">En attente</span>';
+
+      // ── Rendu d'un item contenu (extrait pour le regroupement mensuel) ──────
+      const _renderCtItem = (ct) => {
+        let files = [];
+        try { files = Array.isArray(ct.files) ? ct.files : (ct.files ? JSON.parse(ct.files) : []); } catch(e) { files = []; }
+        const file0 = files[0];
+        const isImg = file0?.url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(file0.url);
+        const tMatch = ct.title.match(/^\[([A-ZÉÈÀÙÂÊÎÔÛÇ\s\-]+)\]/i);
+        const tType  = tMatch ? tMatch[1].toUpperCase() : '';
+        const cleanT = ct.title.replace(/^\[[^\]]+\]\s*/, '') || ct.title;
+        const TYPE_HEX  = { 'POST':'#3B82F6','REEL':'#8B5CF6','CARROUSEL':'#10B981','PLANNING':'#F59E0B','CALENDRIER ÉDITORIAL':'#F59E0B','AUDIT':'#6B7280' };
+        const TYPE_ICON = { 'POST':'solar:image-linear','REEL':'solar:videocamera-linear','CARROUSEL':'solar:gallery-linear','PLANNING':'solar:calendar-linear','CALENDRIER ÉDITORIAL':'solar:calendar-linear' };
+        const TYPE_TAG  = { 'POST':'bg-blue-100 text-blue-700','REEL':'bg-purple-100 text-purple-700','CARROUSEL':'bg-emerald-100 text-emerald-700','PLANNING':'bg-orange-100 text-orange-700','CALENDRIER ÉDITORIAL':'bg-orange-100 text-orange-700','AUDIT':'bg-gray-100 text-gray-500' };
+        const tHex  = TYPE_HEX[tType]  || '#8B3E22';
+        const tIcon = TYPE_ICON[tType] || 'solar:document-text-linear';
+        const tTagC = TYPE_TAG[tType]  || 'bg-[#8B3E22]/10 text-[#8B3E22]';
+        const typeTag = tType ? `<span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${tTagC} uppercase tracking-wide">${tType}</span>` : '';
+        const schedDate = ct.scheduled_at
+          ? new Date(ct.scheduled_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) + ' · ' + new Date(ct.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
+          : new Date(ct.created_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+        const shortDesc = ct.description ? `<p class="text-xs text-[#767A55] line-clamp-2 mt-1 leading-relaxed">${ct.description.slice(0,100)}</p>` : '';
+        const captionBlock = ct.description ? `<div class="bg-[#F5EDE4] rounded-lg p-3 mb-2 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Légende</p><p class="text-sm text-[#2C2416]/75 leading-relaxed whitespace-pre-wrap">${ct.description}</p></div>` : '';
+        const feedbackBlock = ct.feedback ? `<div class="bg-yellow-50 rounded-lg p-3 border border-yellow-200 mt-2"><p class="text-xs text-yellow-700 uppercase tracking-widest mb-1">Note du client</p><p class="text-sm text-yellow-800 leading-relaxed">${ct.feedback}</p></div>` : '';
+        const fileBlock = file0?.url && !isImg ? `<a href="${file0.url}" target="_blank" class="flex items-center gap-3 p-3 bg-[#EDE6DB] rounded-xl hover:bg-[#D6CCC0] transition-colors mb-3"><iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] text-2xl shrink-0"></iconify-icon><span class="text-sm text-[#2C2416] truncate">${file0.name||'Ouvrir'}</span><iconify-icon icon="solar:arrow-right-up-linear" stroke-width="1.5" class="text-[#8B3E22] shrink-0 ml-auto"></iconify-icon></a>` : '';
+        const replyPanel = ct.status === 'rejected' ? `<div id="reply-${ct.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Envoyer une nouvelle version</p><select id="reply-type-${ct.id}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 bg-white focus:outline-none focus:border-[#8B3E22]"><option value="post">Post</option><option value="reel">Reel</option><option value="carrousel">Carrousel</option><option value="planning">Planning</option></select><textarea spellcheck="true" id="reply-caption-${ct.id}" placeholder="Nouvelle légende…" rows="3" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none"></textarea><input id="reply-file-${ct.id}" type="file" accept="image/*,video/*" class="block text-xs text-[#767A55] mb-2 cursor-pointer w-full" /><button onclick="sendReply('${ct.id}','${clientId}')" class="w-full py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Envoyer →</button></div>` : '';
+        const editPanel = `<div id="edit-${ct.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Modifier ce contenu</p><input id="edit-title-${ct.id}" type="text" value="${ct.title.replace(/"/g,'&quot;')}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] bg-white" /><textarea spellcheck="true" id="edit-caption-${ct.id}" rows="4" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none bg-white">${ct.description||''}</textarea><div class="mb-3"><p class="text-xs text-[#767A55] mb-1">Remplacer le fichier (optionnel)</p><input id="edit-file-${ct.id}" type="file" accept="image/*,video/*" class="block text-xs text-[#767A55] cursor-pointer w-full" /></div><div class="flex gap-2"><button onclick="saveContentEdit('${ct.id}','${clientId}')" class="flex-1 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer les modifications</button><button onclick="document.getElementById('edit-${ct.id}').classList.add('hidden')" class="px-4 py-2 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-sm hover:bg-[#EDE6DB] transition-colors">Annuler</button></div></div>`;
+        return `<div class="border ${ct.status === 'rejected' ? 'border-red-200' : 'border-[#D6CCC0]'} rounded-xl mb-3 overflow-hidden" data-search="${ct.title.toLowerCase()}"><div class="flex hover:bg-[#F5EDE4]/20 transition-colors"><div onclick="toggleContentDetail('${ct.id}')" class="w-16 sm:w-24 md:w-32 shrink-0 overflow-hidden rounded-l-xl flex items-center justify-center cursor-pointer" style="background:${tHex}18;height:90px">${file0?.url?`<img src="${file0.url}" alt="visuel" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`:`<iconify-icon icon="${tIcon}" stroke-width="1.5" style="color:${tHex};font-size:2rem"></iconify-icon>`}</div><div onclick="toggleContentDetail('${ct.id}')" class="flex-1 p-4 min-w-0 cursor-pointer"><div class="flex items-start justify-between gap-2 mb-1.5"><div class="flex flex-wrap items-center gap-2 min-w-0">${typeTag}<p class="font-semibold text-[#2C2416] text-sm truncate">${cleanT}</p></div><div class="flex items-center gap-1 shrink-0 ml-1" onclick="event.stopPropagation()"><a href="${file0?.url||'#'}" target="${file0?.url?'_blank':'_self'}" onclick="${file0?.url?'event.stopPropagation()':`event.preventDefault();event.stopPropagation();toggleContentDetail('${ct.id}')`}" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors"><iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon></a>${statusBadge(ct.status)}<iconify-icon id="chevron-${ct.id}" icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform"></iconify-icon></div></div>${shortDesc}<p class="text-xs text-[#767A55] mt-1.5">${schedDate}</p></div></div><div id="detail-${ct.id}" class="hidden border-t border-[#D6CCC0]/50 p-4">${fileBlock}${captionBlock}${feedbackBlock}<div class="flex gap-2 mt-3 flex-wrap"><button onclick="toggleEdit('${ct.id}')" class="px-4 py-2 border border-[#8B3E22] text-[#8B3E22] rounded-full text-xs font-medium hover:bg-[#8B3E22]/10 transition-colors">✏️ Modifier</button>${ct.status==='rejected'?`<button onclick="replyToRefused('${ct.id}','${clientId}')" class="px-4 py-2 border border-[#2C2416] text-[#2C2416] rounded-full text-xs font-medium hover:bg-[#EDE6DB] transition-colors">↩ Nouvelle version</button>`:''}<button onclick="deleteContent('${ct.id}','${file0?.url?file0.url.replace(/'/g,"\\'"):''}','${clientId}')" class="px-4 py-2 border border-red-300 text-red-500 rounded-full text-xs font-medium hover:bg-red-50 transition-colors">🗑 Supprimer</button></div>${editPanel}${replyPanel}</div></div>`;
+      };
+
+      // Regrouper par mois si > 4 contenus
+      const ctItemsHtml = (() => {
+        if (!content?.length) return '<p class="text-xs text-[#2C2416]/30 italic">Aucun contenu envoyé</p>';
+        if (content.length <= 4) return content.map(_renderCtItem).join('');
+        const groups = {};
+        content.forEach(ct => {
+          const d = ct.scheduled_at || ct.created_at;
+          const k = (d||'').slice(0,7) || '0000-00';
+          if (!groups[k]) groups[k] = { items:[], label: d ? new Date(d).toLocaleDateString('fr-FR',{month:'long',year:'numeric'}) : 'Sans date' };
+          groups[k].items.push(ct);
+        });
+        const nowM = new Date().toISOString().slice(0,7);
+        return Object.keys(groups).sort().reverse().map(k => {
+          const { items, label } = groups[k];
+          const cap = label[0].toUpperCase() + label.slice(1);
+          return '<details class="mb-2 border border-[#D6CCC0] rounded-xl overflow-hidden" ' + (k >= nowM ? 'open' : '') + '>'
+            + '<summary class="flex items-center justify-between px-4 py-3 bg-[#F5EDE4] cursor-pointer hover:bg-[#EDE6DB] transition-colors select-none">'
+            + '<span class="text-sm font-semibold text-[#2C2416] capitalize">' + cap + '</span>'
+            + '<span class="text-xs text-[#767A55] bg-white px-2.5 py-1 rounded-full border border-[#D6CCC0]">' + items.length + ' contenu' + (items.length > 1 ? 's' : '') + '</span>'
+            + '</summary><div class="p-2">' + items.map(_renderCtItem).join('') + '</div></details>';
+        }).join('');
+      })();
 
       document.getElementById('client-detail').innerHTML = `
         <!-- En-tête client -->
@@ -722,77 +792,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
               <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'ct-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
             </div>` : ''}
-            <div id="ct-items-box">
-            ${content?.length ? content.map(ct => {
-              let files = [];
-              try { files = Array.isArray(ct.files) ? ct.files : (ct.files ? JSON.parse(ct.files) : []); } catch(e) { files = []; }
-              const file0 = files[0];
-              const isImg = file0?.url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(file0.url);
-              // Type coloré extrait du titre [POST], [REEL]…
-              const tMatch = ct.title.match(/^\[([A-ZÉÈÀÙÂÊÎÔÛÇ\s\-]+)\]/i);
-              const tType  = tMatch ? tMatch[1].toUpperCase() : '';
-              const cleanT = ct.title.replace(/^\[[^\]]+\]\s*/, '') || ct.title;
-              const TYPE_COLORS = { 'POST':'bg-blue-100 text-blue-700', 'REEL':'bg-purple-100 text-purple-700', 'CARROUSEL':'bg-emerald-100 text-emerald-700', 'PLANNING':'bg-orange-100 text-orange-700', 'CALENDRIER ÉDITORIAL':'bg-orange-100 text-orange-700', 'AUDIT':'bg-gray-100 text-gray-500', 'AUDIT INSTAGRAM':'bg-gray-100 text-gray-500' };
-              const TYPE_HEX  = { 'POST':'#3B82F6','REEL':'#8B5CF6','CARROUSEL':'#10B981','PLANNING':'#F59E0B','CALENDRIER ÉDITORIAL':'#F59E0B','AUDIT':'#6B7280' };
-              const TYPE_ICON = { 'POST':'solar:image-linear','REEL':'solar:videocamera-linear','CARROUSEL':'solar:gallery-linear','PLANNING':'solar:calendar-linear','CALENDRIER ÉDITORIAL':'solar:calendar-linear' };
-              const TYPE_TAG  = { 'POST':'bg-blue-100 text-blue-700','REEL':'bg-purple-100 text-purple-700','CARROUSEL':'bg-emerald-100 text-emerald-700','PLANNING':'bg-orange-100 text-orange-700','CALENDRIER ÉDITORIAL':'bg-orange-100 text-orange-700','AUDIT':'bg-gray-100 text-gray-500' };
-              const tHex  = TYPE_HEX[tType]  || '#8B3E22';
-              const tIcon = TYPE_ICON[tType] || 'solar:document-text-linear';
-              const tTagC = TYPE_TAG[tType]  || 'bg-[#8B3E22]/10 text-[#8B3E22]';
-              const typeTag = tType ? `<span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${tTagC} uppercase tracking-wide">${tType}</span>` : '';
-              const schedDate = ct.scheduled_at
-                ? new Date(ct.scheduled_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) + ' · ' + new Date(ct.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
-                : new Date(ct.created_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
-              const shortDesc = ct.description ? `<p class="text-xs text-[#767A55] line-clamp-2 mt-1 leading-relaxed">${ct.description.slice(0,100)}</p>` : '';
-              const captionBlock = ct.description ? `<div class="bg-[#F5EDE4] rounded-lg p-3 mb-2 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Légende</p><p class="text-sm text-[#2C2416]/75 leading-relaxed whitespace-pre-wrap">${ct.description}</p></div>` : '';
-              const feedbackBlock = ct.feedback ? `<div class="bg-yellow-50 rounded-lg p-3 border border-yellow-200 mt-2"><p class="text-xs text-yellow-700 uppercase tracking-widest mb-1">Note du client</p><p class="text-sm text-yellow-800 leading-relaxed">${ct.feedback}</p></div>` : '';
-              const fileBlock = file0?.url && !isImg ? `<a href="${file0.url}" target="_blank" class="flex items-center gap-3 p-3 bg-[#EDE6DB] rounded-xl hover:bg-[#D6CCC0] transition-colors mb-3"><iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] text-2xl shrink-0"></iconify-icon><span class="text-sm text-[#2C2416] truncate">${file0.name||'Ouvrir'}</span><iconify-icon icon="solar:arrow-right-up-linear" stroke-width="1.5" class="text-[#8B3E22] shrink-0 ml-auto"></iconify-icon></a>` : '';
-              const replyPanel = ct.status === 'rejected' ? `<div id="reply-${ct.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Envoyer une nouvelle version</p><select id="reply-type-${ct.id}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 bg-white focus:outline-none focus:border-[#8B3E22]"><option value="post">Post</option><option value="reel">Reel</option><option value="carrousel">Carrousel</option><option value="planning">Planning</option></select><textarea spellcheck="true" id="reply-caption-${ct.id}" placeholder="Nouvelle légende…" rows="3" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none"></textarea><input id="reply-file-${ct.id}" type="file" accept="image/*,video/*" class="block text-xs text-[#767A55] mb-2 cursor-pointer w-full" /><button onclick="sendReply('${ct.id}','${clientId}')" class="w-full py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Envoyer →</button></div>` : '';
-              const editPanel = `<div id="edit-${ct.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Modifier ce contenu</p><input id="edit-title-${ct.id}" type="text" value="${ct.title.replace(/"/g,'&quot;')}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] bg-white" /><textarea spellcheck="true" id="edit-caption-${ct.id}" rows="4" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none bg-white">${ct.description||''}</textarea><div class="mb-3"><p class="text-xs text-[#767A55] mb-1">Remplacer le fichier (optionnel)</p><input id="edit-file-${ct.id}" type="file" accept="image/*,video/*" class="block text-xs text-[#767A55] cursor-pointer w-full" /></div><div class="flex gap-2"><button onclick="saveContentEdit('${ct.id}','${clientId}')" class="flex-1 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer les modifications</button><button onclick="document.getElementById('edit-${ct.id}').classList.add('hidden')" class="px-4 py-2 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-sm hover:bg-[#EDE6DB] transition-colors">Annuler</button></div></div>`;
-
-              return `
-              <div class="border ${ct.status === 'rejected' ? 'border-red-200' : 'border-[#D6CCC0]'} rounded-xl mb-3 overflow-hidden" data-search="${ct.title.toLowerCase()}">
-                <div class="flex hover:bg-[#F5EDE4]/20 transition-colors">
-                  <!-- Visuel gauche — hauteur fixe pour que object-fit fonctionne -->
-                  <div onclick="toggleContentDetail('${ct.id}')" class="w-16 sm:w-24 md:w-32 shrink-0 overflow-hidden rounded-l-xl flex items-center justify-center cursor-pointer" style="background:${tHex}18; height:90px">
-                    ${file0?.url
-                      ? `<img src="${file0.url}" alt="visuel" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`
-                      : `<iconify-icon icon="${tIcon}" stroke-width="1.5" style="color:${tHex};font-size:2rem"></iconify-icon>`
-                    }
-                  </div>
-                  <!-- Infos droite -->
-                  <div onclick="toggleContentDetail('${ct.id}')" class="flex-1 p-4 min-w-0 cursor-pointer">
-                    <div class="flex items-start justify-between gap-2 mb-1.5">
-                      <div class="flex flex-wrap items-center gap-2 min-w-0">
-                        ${typeTag}
-                        <p class="font-semibold text-[#2C2416] text-sm truncate">${cleanT}</p>
-                      </div>
-                      <div class="flex items-center gap-1 shrink-0 ml-1" onclick="event.stopPropagation()">
-                        <a href="${file0?.url || '#'}" target="${file0?.url ? '_blank' : '_self'}"
-                          onclick="${file0?.url ? 'event.stopPropagation()' : `event.preventDefault();event.stopPropagation();toggleContentDetail('${ct.id}')`}"
-                          class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors" title="${file0?.url ? 'Voir le fichier' : 'Voir le détail'}">
-                          <iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon>
-                        </a>
-                        ${statusBadge(ct.status)}
-                        <iconify-icon id="chevron-${ct.id}" icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform"></iconify-icon>
-                      </div>
-                    </div>
-                    ${shortDesc}
-                    <p class="text-xs text-[#767A55] mt-1.5">${schedDate}</p>
-                  </div>
-                </div>
-                <div id="detail-${ct.id}" class="hidden border-t border-[#D6CCC0]/50 p-4">
-                  ${fileBlock}${captionBlock}${feedbackBlock}
-                  <div class="flex gap-2 mt-3 flex-wrap">
-                    <button onclick="toggleEdit('${ct.id}')" class="px-4 py-2 border border-[#8B3E22] text-[#8B3E22] rounded-full text-xs font-medium hover:bg-[#8B3E22]/10 transition-colors">✏️ Modifier</button>
-                    ${ct.status === 'rejected' ? `<button onclick="replyToRefused('${ct.id}','${clientId}')" class="px-4 py-2 border border-[#2C2416] text-[#2C2416] rounded-full text-xs font-medium hover:bg-[#EDE6DB] transition-colors">↩ Nouvelle version</button>` : ''}
-                    <button onclick="deleteContent('${ct.id}','${file0?.url ? file0.url.replace(/'/g,"\\'") : ''}','${clientId}')" class="px-4 py-2 border border-red-300 text-red-500 rounded-full text-xs font-medium hover:bg-red-50 transition-colors">🗑 Supprimer</button>
-                  </div>
-                  ${editPanel}${replyPanel}
-                </div>
-              </div>`;
-            }).join('') : '<p class="text-xs text-[#2C2416]/30 italic">Aucun contenu envoyé</p>'}
-            </div>
+            <div id="ct-items-box">${ctItemsHtml}</div>
           </div>
 
           <!-- Calendrier éditorial (en bas du tab Contenu) -->
