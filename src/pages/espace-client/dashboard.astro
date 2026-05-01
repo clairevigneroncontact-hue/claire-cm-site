@@ -93,47 +93,109 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <!-- Navigation par onglets -->
+      <div class="flex gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-6 overflow-x-auto">
+        <button id="tab-btn-home" onclick="switchTab('home')" class="bg-white text-[#2C2416] shadow-sm rounded-lg py-2.5 px-3 text-sm font-medium whitespace-nowrap">Accueil</button>
+        <button id="tab-btn-docs" onclick="switchTab('docs')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-3 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap">Mes documents</button>
+        <button id="tab-btn-content" onclick="switchTab('content')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-3 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap">Contenus à valider</button>
+        <button id="tab-btn-infos" onclick="switchTab('infos')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-3 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap">Mes informations</button>
+      </div>
 
-        <!-- Infos importantes -->
-        <div id="card-infos" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] self-start">
-          <div class="flex items-center gap-3 mb-5">
-            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
-              <iconify-icon icon="solar:user-id-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+      <!-- Onglet Accueil -->
+      <div id="tab-home-panel">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+          <!-- Tâches -->
+          <div id="card-tasks" class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+                <iconify-icon icon="solar:checklist-minimalistic-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+              </div>
+              <h2 class="text-base text-[#2C2416] font-medium">Mes tâches</h2>
             </div>
-            <h2 class="text-base text-[#2C2416] font-medium">Mes informations</h2>
+            <div id="tasks-list" class="space-y-1.5 mb-4">
+              <p class="text-xs text-[#2C2416]/30 italic">Aucune tâche</p>
+            </div>
+            <div class="flex gap-2">
+              <input id="new-task-input" type="text" spellcheck="true" placeholder="Ajouter une tâche…"
+                onkeydown="if(event.key==='Enter') addTask()"
+                class="flex-1 px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
+              <button onclick="addTask()" class="px-4 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">+</button>
+            </div>
           </div>
-          <div id="infos-content" class="space-y-2 text-sm text-[#2C2416]/70 font-light">
-            <p class="text-xs text-[#2C2416]/30 italic">Chargement…</p>
+
+          <!-- Aperçu contenus en attente -->
+          <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0] lg:col-span-2">
+            <div class="flex items-center justify-between gap-3 mb-5">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+                  <iconify-icon icon="solar:check-square-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+                </div>
+                <h2 class="text-base text-[#2C2416] font-medium">Contenus en attente</h2>
+              </div>
+              <button onclick="switchTab('content')" class="text-xs text-[#8B3E22] hover:underline shrink-0">Voir tout →</button>
+            </div>
+            <div id="content-list-home"><p class="text-xs text-[#2C2416]/30 italic">Chargement…</p></div>
           </div>
-          <a href="/espace-client/parametres" class="mt-4 text-xs text-[#8B3E22] hover:underline block">Modifier mes informations →</a>
+
         </div>
 
-        <!-- Contenu à valider -->
-        <div id="card-content" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] md:col-span-2">
-          <div class="flex items-center gap-3 mb-5">
-            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
-              <iconify-icon icon="solar:check-square-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+        <!-- Calendrier éditorial — pleine largeur en bas de l'onglet Accueil -->
+        <div id="card-calendar" class="bg-white rounded-2xl p-4 md:p-6 border border-[#D6CCC0] mt-5">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+                <iconify-icon icon="solar:calendar-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+              </div>
+              <div>
+                <h2 class="text-base text-[#2C2416] font-medium">Calendrier éditorial</h2>
+              </div>
             </div>
-            <h2 class="text-base text-[#2C2416] font-medium">Contenu à valider</h2>
-          </div>
-          <div id="content-list"><p class="text-xs text-[#2C2416]/30 italic">Aucun contenu en attente</p></div>
-        </div>
-
-        <!-- Documents & Factures unifiés -->
-        <div id="card-docs" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] md:col-span-2">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
-              <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+            <div class="flex items-center gap-1.5">
+              <button onclick="calNav(-1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon></button>
+              <div class="relative">
+                <button id="cal-month-label" onclick="calToggleMonthPicker(event)" class="text-sm font-semibold text-[#2C2416] min-w-[130px] text-center px-2 py-1 rounded-lg hover:bg-[#EDE6DB] cursor-pointer transition-colors"></button>
+                <div id="cal-month-picker" class="hidden absolute top-9 left-1/2 bg-white rounded-xl shadow-2xl border border-[#D6CCC0] p-3 z-50" style="min-width:216px;transform:translateX(-50%)">
+                  <div class="grid grid-cols-3 gap-1" id="cal-month-grid"></div>
+                </div>
+              </div>
+              <button onclick="calNav(1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon></button>
+              <button onclick="calOpenNoteForm()" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors ml-1" title="Ajouter une note"><iconify-icon icon="solar:pen-linear" stroke-width="1.5"></iconify-icon></button>
             </div>
-            <h2 class="text-base text-[#2C2416] font-medium">Mes documents</h2>
           </div>
-          <div id="docs-list" class="space-y-0.5"><p class="text-xs text-[#2C2416]/30 italic">Aucun document</p></div>
-          <div id="invoices-list" class="hidden"></div>
+          <!-- Vue grille + note -->
+          <div id="cal-grid-view">
+            <div id="cal-grid" class="overflow-x-auto"></div>
+            <div id="cal-note-modal" class="hidden mt-4 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30">
+              <p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Ajouter / modifier une note</p>
+              <input id="cal-note-date-picker" type="date" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white mb-2" />
+              <textarea spellcheck="true" id="cal-note-input" rows="2" placeholder="Votre note…" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none bg-white mb-2"></textarea>
+              <div class="flex gap-2">
+                <button onclick="saveCalNote()" class="px-4 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
+                <button onclick="document.getElementById('cal-note-modal').classList.add('hidden')" class="px-4 py-1.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs hover:bg-[#EDE6DB] transition-colors">Annuler</button>
+              </div>
+            </div>
+          </div>
+          <!-- Vue jour plein format -->
+          <div id="cal-day-modal" class="hidden mt-2">
+            <div class="flex items-center justify-between mb-4">
+              <button onclick="closeDashCalFullDay()" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors">
+                <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon> Retour
+              </button>
+              <button id="dash-next-day-btn" onclick="dashCalGoToNext()" class="hidden items-center gap-2 text-sm font-medium text-[#8B3E22] hover:text-[#6B2E1A] bg-[#8B3E22]/10 hover:bg-[#8B3E22]/20 px-3 py-1.5 rounded-lg transition-colors">
+                Suivant <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon>
+              </button>
+            </div>
+            <h4 id="cal-day-title" class="text-xl font-medium text-[#2C2416] mb-5"></h4>
+            <div id="cal-day-content" class="space-y-4"></div>
+          </div>
         </div>
+      </div>
 
+      <!-- Onglet Mes documents -->
+      <div id="tab-docs-panel" class="hidden">
         <!-- Upload -->
-        <div id="card-upload" class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+        <div id="card-upload" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] mb-5">
           <div class="flex items-center gap-3 mb-4">
             <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
               <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
@@ -152,104 +214,89 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div id="uploads-list" class="mt-3 space-y-1"></div>
         </div>
 
-        <!-- Notes client -->
-        <div id="card-notes" class="bg-[#2C2416] rounded-2xl overflow-hidden md:col-span-1 lg:col-span-2">
-          <!-- En-tête -->
-          <div class="flex items-center gap-3 px-6 py-4 border-b border-white/10">
-            <div class="w-9 h-9 bg-[#8B3E22] rounded-xl flex items-center justify-center">
-              <iconify-icon icon="solar:chat-round-dots-linear" stroke-width="1.5" class="text-lg text-white"></iconify-icon>
-            </div>
-            <h2 class="text-base text-[#F5EDE4] font-medium">Discussion avec Claire</h2>
-          </div>
-          <!-- Fil de messages -->
-          <div id="notes-feed" class="space-y-3 px-5 py-4 overflow-y-auto" style="min-height:220px;max-height:380px">
-            <p class="text-sm text-[#F5EDE4]/30 italic text-center pt-4">Aucun message pour l'instant</p>
-          </div>
-          <!-- Zone de saisie -->
-          <div class="flex gap-2 items-end px-5 py-4 border-t border-white/10">
-            <textarea spellcheck="true" id="new-note-ta" rows="2"
-              placeholder="Votre message… (Entrée pour envoyer, Maj+Entrée pour nouvelle ligne)"
-              class="flex-1 px-4 py-2.5 rounded-xl border border-white/20 bg-white/10 text-[#F5EDE4] text-sm placeholder-[#F5EDE4]/40 resize-none focus:outline-none focus:border-[#8B3E22]"></textarea>
-            <button onclick="addClientNote()" class="px-4 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors shrink-0">Envoyer</button>
-          </div>
-          <span id="notes-send-msg" class="hidden text-xs text-green-400 px-5 pb-3 block">Envoyé ✓</span>
-        </div>
-
-        <!-- Tâches -->
-        <div id="card-tasks" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] md:col-span-1 lg:col-span-1">
+        <!-- Documents fusionnés (docs + uploads) -->
+        <div id="card-docs" class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
           <div class="flex items-center gap-3 mb-4">
             <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
-              <iconify-icon icon="solar:checklist-minimalistic-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+              <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
             </div>
-            <h2 class="text-base text-[#2C2416] font-medium">Mes tâches</h2>
+            <h2 class="text-base text-[#2C2416] font-medium">Mes documents</h2>
           </div>
-          <div id="tasks-list" class="space-y-1.5 mb-4">
-            <p class="text-xs text-[#2C2416]/30 italic">Aucune tâche</p>
-          </div>
-          <div class="flex gap-2">
-            <input id="new-task-input" type="text" spellcheck="true" placeholder="Ajouter une tâche…"
-              onkeydown="if(event.key==='Enter') addTask()"
-              class="flex-1 px-4 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22]" />
-            <button onclick="addTask()" class="px-4 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">+</button>
-          </div>
+          <div id="docs-list" class="space-y-0.5"><p class="text-xs text-[#2C2416]/30 italic">Aucun document</p></div>
+          <div id="invoices-list" class="hidden"></div>
         </div>
       </div>
+
+      <!-- Onglet Contenus à valider -->
+      <div id="tab-content-panel" class="hidden">
+        <div id="card-content" class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+              <iconify-icon icon="solar:check-square-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+            </div>
+            <h2 class="text-base text-[#2C2416] font-medium">Contenus à valider</h2>
+          </div>
+          <div id="content-list"><p class="text-xs text-[#2C2416]/30 italic">Aucun contenu en attente</p></div>
+        </div>
+      </div>
+
+      <!-- Onglet Mes informations -->
+      <div id="tab-infos-panel" class="hidden">
+        <div id="card-infos" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] max-w-xl">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+              <iconify-icon icon="solar:user-id-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+            </div>
+            <h2 class="text-base text-[#2C2416] font-medium">Mes informations</h2>
+          </div>
+          <div id="infos-content" class="space-y-2 text-sm text-[#2C2416]/70 font-light">
+            <p class="text-xs text-[#2C2416]/30 italic">Chargement…</p>
+          </div>
+          <a href="/espace-client/parametres" class="mt-4 text-xs text-[#8B3E22] hover:underline block">Modifier mes informations →</a>
+        </div>
+      </div>
+
     </main>
 
-    <!-- Calendrier éditorial — en bas, pleine largeur -->
-    <div class="max-w-6xl mx-auto px-4 md:px-6 pb-6">
-      <div id="card-calendar" class="bg-white rounded-2xl p-4 md:p-6 border border-[#D6CCC0] mt-5">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
-              <iconify-icon icon="solar:calendar-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
-            </div>
-            <div>
-              <h2 class="text-base text-[#2C2416] font-medium">Calendrier éditorial</h2>
-            </div>
+  </div>
+
+  <!-- Bulle discussion flottante (cachée au départ, visible après login) -->
+  <div id="discussion-widget" class="hidden fixed bottom-6 right-6 z-40">
+    <!-- Panel discussion (s'ouvre au-dessus du bouton) -->
+    <div id="discussion-panel" class="hidden absolute bottom-16 right-0 w-80 sm:w-96 bg-[#2C2416] rounded-2xl shadow-2xl overflow-hidden border border-white/10" style="max-height:520px">
+      <!-- En-tête -->
+      <div class="flex items-center justify-between gap-3 px-5 py-4 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-[#8B3E22] rounded-xl flex items-center justify-center shrink-0">
+            <iconify-icon icon="solar:chat-round-dots-linear" stroke-width="1.5" class="text-base text-white"></iconify-icon>
           </div>
-          <div class="flex items-center gap-1.5">
-            <button onclick="calNav(-1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon></button>
-            <div class="relative">
-              <button id="cal-month-label" onclick="calToggleMonthPicker(event)" class="text-sm font-semibold text-[#2C2416] min-w-[130px] text-center px-2 py-1 rounded-lg hover:bg-[#EDE6DB] cursor-pointer transition-colors"></button>
-              <div id="cal-month-picker" class="hidden absolute top-9 left-1/2 bg-white rounded-xl shadow-2xl border border-[#D6CCC0] p-3 z-50" style="min-width:216px;transform:translateX(-50%)">
-                <div class="grid grid-cols-3 gap-1" id="cal-month-grid"></div>
-              </div>
-            </div>
-            <button onclick="calNav(1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon></button>
-            <button onclick="calOpenNoteForm()" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors ml-1" title="Ajouter une note"><iconify-icon icon="solar:pen-linear" stroke-width="1.5"></iconify-icon></button>
-          </div>
+          <h2 class="text-sm text-[#F5EDE4] font-medium">Discussion avec Claire</h2>
         </div>
-        <!-- Vue grille + note -->
-        <div id="cal-grid-view">
-          <div id="cal-grid" class="overflow-x-auto"></div>
-          <div id="cal-note-modal" class="hidden mt-4 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30">
-            <p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Ajouter / modifier une note</p>
-            <input id="cal-note-date-picker" type="date" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white mb-2" />
-            <textarea spellcheck="true" id="cal-note-input" rows="2" placeholder="Votre note…" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none bg-white mb-2"></textarea>
-            <div class="flex gap-2">
-              <button onclick="saveCalNote()" class="px-4 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
-              <button onclick="document.getElementById('cal-note-modal').classList.add('hidden')" class="px-4 py-1.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs hover:bg-[#EDE6DB] transition-colors">Annuler</button>
-            </div>
-          </div>
-        </div>
-        <!-- Vue jour plein format -->
-        <div id="cal-day-modal" class="hidden mt-2">
-          <div class="flex items-center justify-between mb-4">
-            <button onclick="closeDashCalFullDay()" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors">
-              <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon> Retour
-            </button>
-            <button id="dash-next-day-btn" onclick="dashCalGoToNext()" class="hidden items-center gap-2 text-sm font-medium text-[#8B3E22] hover:text-[#6B2E1A] bg-[#8B3E22]/10 hover:bg-[#8B3E22]/20 px-3 py-1.5 rounded-lg transition-colors">
-              Suivant <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon>
-            </button>
-          </div>
-          <h4 id="cal-day-title" class="text-xl font-medium text-[#2C2416] mb-5"></h4>
-          <div id="cal-day-content" class="space-y-4"></div>
-        </div>
+        <button onclick="toggleDiscussion()" class="text-[#F5EDE4]/40 hover:text-white transition-colors shrink-0">
+          <iconify-icon icon="solar:close-circle-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+        </button>
       </div>
+      <!-- Fil de messages -->
+      <div id="notes-feed" class="space-y-3 px-5 py-4 overflow-y-auto" style="min-height:200px;max-height:320px">
+        <p class="text-sm text-[#F5EDE4]/30 italic text-center pt-4">Aucun message pour l'instant</p>
+      </div>
+      <!-- Zone de saisie -->
+      <div class="flex gap-2 items-end px-5 py-4 border-t border-white/10">
+        <textarea spellcheck="true" id="new-note-ta" rows="2"
+          placeholder="Votre message… (Entrée pour envoyer)"
+          class="flex-1 px-4 py-2.5 rounded-xl border border-white/20 bg-white/10 text-[#F5EDE4] text-sm placeholder-[#F5EDE4]/40 resize-none focus:outline-none focus:border-[#8B3E22]"></textarea>
+        <button onclick="addClientNote()" id="notes-send-msg-btn" class="px-4 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors shrink-0">Envoyer</button>
+      </div>
+      <span id="notes-send-msg" class="hidden text-xs text-green-400 px-5 pb-3 block">Envoyé ✓</span>
     </div>
 
+    <!-- Bouton rond terracotta -->
+    <button onclick="toggleDiscussion()" class="relative w-14 h-14 bg-[#8B3E22] hover:bg-[#6B2E1A] rounded-full shadow-2xl flex items-center justify-center transition-colors">
+      <iconify-icon icon="solar:chat-round-dots-bold" class="text-2xl text-white"></iconify-icon>
+      <span id="discussion-unread" class="hidden absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold px-1"></span>
+    </button>
   </div>
+
 </BaseLayout>
 
 <script is:inline>
@@ -285,9 +332,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     },
     {
       icon: 'solar:notebook-linear',
-      title: 'Notes & tâches',
-      text: 'Laissez des messages à Claire (préférences, idées) et gérez vos tâches. Tout est visible depuis son espace admin.',
-      card: 'card-notes'
+      title: 'Discussion & tâches',
+      text: 'Utilisez la bulle en bas à droite pour discuter avec Claire. Gérez vos tâches depuis l\'onglet Accueil.',
+      card: 'card-tasks'
     },
     {
       icon: 'solar:calendar-linear',
@@ -296,6 +343,38 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       card: 'card-calendar'
     },
   ];
+
+  // ─── Navigation par onglets ──────────────────────────────────────────────
+  window.switchTab = (tab) => {
+    ['home','docs','content','infos'].forEach(t => {
+      document.getElementById('tab-' + t + '-panel')?.classList.toggle('hidden', t !== tab);
+      const btn = document.getElementById('tab-btn-' + t);
+      if (btn) {
+        btn.classList.toggle('bg-white', t === tab);
+        btn.classList.toggle('shadow-sm', t === tab);
+        btn.classList.toggle('text-[#2C2416]', t === tab);
+        btn.classList.toggle('text-[#2C2416]/50', t !== tab);
+      }
+    });
+  };
+
+  // ─── Bulle discussion ────────────────────────────────────────────────────
+  window.toggleDiscussion = () => {
+    const panel = document.getElementById('discussion-panel');
+    const widget = document.getElementById('discussion-widget');
+    if (!panel) return;
+    const isOpen = !panel.classList.contains('hidden');
+    panel.classList.toggle('hidden');
+    if (!isOpen) {
+      // Ouvre → clear badge unread
+      const badge = document.getElementById('discussion-unread');
+      if (badge) { badge.classList.add('hidden'); badge.textContent = ''; }
+      localStorage.setItem('discussionLastOpened', new Date().toISOString());
+      if (window.loadClientNotes) window.loadClientNotes();
+      const ta = document.getElementById('new-note-ta');
+      if (ta) setTimeout(() => ta.focus(), 200);
+    }
+  };
 
   function loadScript(src) {
     return new Promise(resolve => {
@@ -405,6 +484,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('dashboard').classList.remove('hidden');
+    document.getElementById('discussion-widget')?.classList.remove('hidden');
 
     const uid = session.user.id;
     document.getElementById('logout-btn').onclick = async () => { await sb.auth.signOut(); window.location.href = '/espace-client'; };
@@ -424,7 +504,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     }
 
     // Notes discussion
-    async function loadClientNotes() {
+    window.loadClientNotes = async function loadClientNotes() {
       const sb2 = await getSB();
       const { data } = await sb2.from('client_notes').select('*').eq('client_id', uid).order('created_at', { ascending: true }).limit(100);
       const feed = document.getElementById('notes-feed');
@@ -453,6 +533,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </div>`;
       }).join('');
       feed.scrollTop = feed.scrollHeight;
+      // Badge unread : messages admin non vus quand le panel est fermé
+      const lastOpened = localStorage.getItem('discussionLastOpened') || '1970-01-01';
+      const panel = document.getElementById('discussion-panel');
+      if (panel && panel.classList.contains('hidden')) {
+        const unreadAdmin = (data||[]).filter(n => n.from_admin && n.created_at > lastOpened).length;
+        const badge = document.getElementById('discussion-unread');
+        if (badge) {
+          badge.classList.toggle('hidden', unreadAdmin === 0);
+          badge.textContent = unreadAdmin > 9 ? '9+' : String(unreadAdmin);
+        }
+      }
     }
     window.addClientNote = async () => {
       const sb2 = await getSB();
@@ -515,6 +606,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         (p.email || session.user.email) ? `<p><span class="font-medium text-[#2C2416]">Email :</span> ${p.email || session.user.email}</p>` : '',
         p.phone               ? `<p><span class="font-medium text-[#2C2416]">Téléphone :</span> ${p.phone}</p>` : '',
         p.instagram_handle    ? `<p><span class="font-medium text-[#2C2416]">Instagram :</span> @${p.instagram_handle}</p>` : '',
+        p.offer               ? `<p><span class="font-medium text-[#2C2416]">Offre :</span> ${OFFER_MAP[p.offer] || p.offer}</p>` : '',
       ].join('') || '<p class="text-xs text-[#2C2416]/30 italic">À compléter dans les paramètres</p>';
     }
 
@@ -738,6 +830,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div class="mt-2">${done.map(i => renderContentCard(i, `<span class="text-xs px-2 py-0.5 rounded-full shrink-0 ${i.status==='approved'?'bg-green-100 text-green-700':'bg-red-100 text-red-600'}">${i.status==='approved'?'Validé ✓':'Refusé'}</span>`)).join('')}</div></details>` : ''
       ].join('');
     }
+    // Aperçu sur l'onglet Accueil (max 3 en attente)
+    const homePreviewEl = document.getElementById('content-list-home');
+    if (homePreviewEl) {
+      if (!pending.length) {
+        homePreviewEl.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucun contenu en attente ✓</p>';
+      } else {
+        homePreviewEl.innerHTML = pending.slice(0,3).map(i => renderContentCard(i, '<span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full shrink-0">En attente</span>')).join('');
+        if (pending.length > 3) {
+          homePreviewEl.innerHTML += `<button onclick="switchTab('content')" class="mt-2 text-xs text-[#8B3E22] hover:underline block">+ ${pending.length - 3} autre(s) → Voir tout</button>`;
+        }
+      }
+    }
     window.validate = async (id, status, feedback = '') => {
       const sb2 = await getSB();
       await sb2.from('content_items').update({ status, feedback, updated_at: new Date().toISOString() }).eq('id', id);
@@ -823,18 +927,23 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     }
 
-    // Clic sur notification → marquer lu + scroller vers la section
+    // Clic sur notification → marquer lu + switcher onglet + scroller vers la section
     window.goToSection = async (notifId, cardId) => {
       await sb.from('notifications').update({ read: true }).eq('id', notifId);
       document.getElementById('notif-panel').classList.add('hidden');
       loadNotifications();
       if (cardId) {
-        const card = document.getElementById(cardId);
-        if (card) {
-          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          card.classList.add('ring-4', 'ring-[#8B3E22]', 'ring-offset-2');
-          setTimeout(() => card.classList.remove('ring-4', 'ring-[#8B3E22]', 'ring-offset-2'), 2500);
-        }
+        // Switcher vers le bon onglet
+        if (cardId === 'card-content' || cardId === 'content-list') switchTab('content');
+        else if (cardId === 'card-docs' || cardId === 'card-invoices') switchTab('docs');
+        setTimeout(() => {
+          const card = document.getElementById(cardId);
+          if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.classList.add('ring-4', 'ring-[#8B3E22]', 'ring-offset-2');
+            setTimeout(() => card.classList.remove('ring-4', 'ring-[#8B3E22]', 'ring-offset-2'), 2500);
+          }
+        }, 100);
       }
     };
 
