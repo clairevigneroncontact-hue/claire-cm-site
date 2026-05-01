@@ -52,29 +52,31 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     <header class="bg-[#2C2416] px-6 py-5 flex items-center justify-between">
       <a href="/" class="text-xl font-serif text-[#F5EDE4] tracking-tight">Claire Vigneron <span class="text-[#767A55]">·</span> CM</a>
       <div class="flex items-center gap-3">
-        <span id="user-name" class="text-sm font-medium text-[#F5EDE4] hidden md:block"></span>
         <!-- Cloche notifications -->
-        <button id="notif-btn" class="relative w-10 h-10 rounded-xl border border-[#F5EDE4]/20 flex items-center justify-center text-[#F5EDE4]/70 hover:text-white hover:border-white/40 hover:bg-white/10 transition-colors">
+        <button id="notif-btn" class="relative w-11 h-11 rounded-xl border border-[#F5EDE4]/40 flex items-center justify-center text-[#F5EDE4] hover:text-white hover:border-white/60 hover:bg-white/10 transition-colors">
           <iconify-icon icon="solar:bell-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
-          <span id="notif-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-[#8B3E22] rounded-full text-[10px] text-white flex items-center justify-center font-medium"></span>
+          <span id="notif-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#8B3E22] rounded-full text-[10px] text-white flex items-center justify-center font-bold px-1 leading-none"></span>
         </button>
-        <a href="/espace-client/parametres" class="w-10 h-10 rounded-xl border border-[#F5EDE4]/20 flex items-center justify-center text-[#F5EDE4]/70 hover:text-white hover:border-white/40 hover:bg-white/10 transition-colors" title="Paramètres">
+        <a href="/espace-client/parametres" class="w-11 h-11 rounded-xl border border-[#F5EDE4]/40 flex items-center justify-center text-[#F5EDE4] hover:text-white hover:border-white/60 hover:bg-white/10 transition-colors" title="Paramètres">
           <iconify-icon icon="solar:settings-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
         </a>
-        <button id="logout-btn" class="text-sm text-[#F5EDE4]/70 hover:text-white transition-colors px-4 py-2 rounded-xl border border-[#F5EDE4]/20 hover:bg-white/10">Déconnexion</button>
+        <button id="logout-btn" class="text-sm text-[#F5EDE4] hover:text-white transition-colors px-4 py-2 rounded-xl border border-[#F5EDE4]/40 hover:bg-white/10 hover:border-white/60">Déconnexion</button>
       </div>
     </header>
 
-    <!-- Panel notifications (dépliable) -->
-    <div id="notif-panel" class="hidden bg-white border-b border-[#D6CCC0] px-6 py-4">
-      <div class="max-w-6xl mx-auto">
-        <div class="flex items-center justify-between mb-3">
-          <p class="text-sm font-medium text-[#2C2416]">Notifications</p>
-          <button id="mark-all-read" class="text-xs text-[#8B3E22] hover:underline">Tout marquer comme lu</button>
-        </div>
-        <div id="notif-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+    <!-- Panel notifications flottant -->
+    <div id="notif-panel" class="hidden fixed top-[76px] right-4 w-80 bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] z-50 overflow-hidden">
+      <div class="px-4 py-3 border-b border-[#D6CCC0] flex items-center justify-between">
+        <span class="text-sm font-semibold text-[#2C2416]">Notifications</span>
+        <button id="mark-all-read" onclick="markAllNotifRead()" class="text-xs text-[#8B3E22] hover:underline">Tout marquer lu</button>
+      </div>
+      <div id="notif-list" class="max-h-[360px] overflow-y-auto divide-y divide-[#D6CCC0]/40">
+        <p class="text-xs text-[#2C2416]/40 italic p-4">Aucune notification</p>
       </div>
     </div>
+
+    <!-- Cache le panel notifs au clic ailleurs -->
+    <div id="notif-overlay" class="hidden fixed inset-0 z-40" onclick="document.getElementById('notif-panel').classList.add('hidden'); document.getElementById('notif-overlay').classList.add('hidden')"></div>
 
     <main class="max-w-6xl mx-auto px-4 md:px-6 py-10">
       <div class="mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -495,8 +497,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const fullName = p?.full_name || meta.full_name || meta.name || '';
     const prenom   = fullName ? fullName.split(' ')[0] : (session.user.email || '').split('@')[0];
 
-    document.getElementById('welcome').textContent    = `Bonjour, ${prenom} 👋`;
-    document.getElementById('user-name').textContent  = prenom;
+    document.getElementById('welcome').textContent = `Bonjour, ${prenom} 👋`;
 
     // Sauvegarder le nom depuis les métadonnées si manquant
     if (fullName && p && !p.full_name) {
@@ -1035,33 +1036,47 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
 
       if (list) {
-        list.innerHTML = (notifs||[]).length ? (notifs||[]).map(n => {
+        if (!(notifs||[]).length) { list.innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4">Aucune notification</p>'; return; }
+        list.innerHTML = (notifs||[]).map(n => {
           const target  = notifTarget(n.type);
           const icon    = n.type === 'content' ? 'solar:check-square-linear' : 'solar:document-text-linear';
           const dateStr = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-          return `
-          <div onclick="goToSection('${n.id}','${target?.id||''}')"
-               class="flex items-start gap-3 py-2.5 border-b border-[#D6CCC0]/40 last:border-0 cursor-pointer hover:bg-[#F5EDE4] -mx-2 px-2 rounded-lg transition-colors ${n.read ? '' : 'bg-[#8B3E22]/10'}">
+          return `<div onclick="goToSection('${n.id}','${target?.id||''}')"
+            class="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-[#F5EDE4] transition-colors ${n.read ? 'bg-white' : 'bg-[#8B3E22]/10'}">
             <iconify-icon icon="${icon}" stroke-width="1.5" class="text-[#8B3E22] text-lg shrink-0 mt-0.5"></iconify-icon>
             <div class="flex-1 min-w-0">
-              <p class="text-sm text-[#2C2416]">${n.message}</p>
-              <p class="text-xs text-[#767A55] mt-0.5">${dateStr}${target ? ' · Cliquer pour y aller →' : ''}</p>
+              <p class="text-xs text-[#2C2416] leading-relaxed ${n.read ? '' : 'font-medium'}">${n.message}</p>
+              <p class="text-[10px] text-[#767A55] mt-0.5">${dateStr}</p>
             </div>
-            ${!n.read ? '<span class="w-2 h-2 bg-[#8B3E22] rounded-full shrink-0 mt-2 flex-shrink-0"></span>' : ''}
+            <button onclick="event.stopPropagation(); markNotifRead('${n.id}')"
+              class="shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${n.read ? 'border-[#D6CCC0]' : 'border-[#8B3E22]/40 hover:border-[#8B3E22] hover:bg-[#8B3E22]/10'}"
+              title="Marquer comme lu">
+              <iconify-icon icon="solar:check-linear" stroke-width="2.5" style="font-size:9px;color:${n.read ? '#D6CCC0' : '#8B3E22'}"></iconify-icon>
+            </button>
           </div>`;
-        }).join('') : '<p class="text-xs text-[#2C2416]/40 italic py-2">Aucune notification</p>';
+        }).join('');
       }
     }
 
-    // Clic sur notification → marquer lu + switcher onglet + scroller vers la section
+    window.markNotifRead = async (id) => {
+      await sb.from('notifications').update({ read: true }).eq('id', id);
+      await loadNotifications();
+    };
+
+    window.markAllNotifRead = async () => {
+      await sb.from('notifications').update({ read: true }).eq('client_id', uid);
+      await loadNotifications();
+    };
+
+    // Clic sur notification → marquer lu + switcher onglet
     window.goToSection = async (notifId, cardId) => {
       await sb.from('notifications').update({ read: true }).eq('id', notifId);
       document.getElementById('notif-panel').classList.add('hidden');
+      document.getElementById('notif-overlay').classList.add('hidden');
       loadNotifications();
       if (cardId) {
-        // Switcher vers le bon onglet
-        if (cardId === 'card-content' || cardId === 'content-list') switchTab('content');
-        else if (cardId === 'card-docs' || cardId === 'card-invoices') switchTab('docs');
+        if (cardId === 'card-content' || cardId === 'content-list') window.switchTab('content');
+        else if (cardId === 'card-docs' || cardId === 'card-invoices') window.switchTab('docs');
         setTimeout(() => {
           const card = document.getElementById(cardId);
           if (card) {
@@ -1069,27 +1084,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             card.classList.add('ring-4', 'ring-[#8B3E22]', 'ring-offset-2');
             setTimeout(() => card.classList.remove('ring-4', 'ring-[#8B3E22]', 'ring-offset-2'), 2500);
           }
-        }, 100);
+        }, 150);
       }
     };
 
-    document.getElementById('notif-btn').onclick = async () => {
-      const panel = document.getElementById('notif-panel');
-      const isOpen = !panel.classList.contains('hidden');
-      panel.classList.toggle('hidden');
-      if (!isOpen) {
-        // Ouvrir → marquer tout comme lu et réinitialiser le badge
-        await sb.from('notifications').update({ read: true }).eq('client_id', uid).eq('read', false);
-        const badge = document.getElementById('notif-badge');
-        badge.classList.add('hidden');
-        badge.classList.remove('flex');
-        loadNotifications();
-      }
-    };
-
-    document.getElementById('mark-all-read').onclick = async () => {
-      await sb.from('notifications').update({ read: true }).eq('client_id', uid);
-      loadNotifications();
+    document.getElementById('notif-btn').onclick = () => {
+      const panel   = document.getElementById('notif-panel');
+      const overlay = document.getElementById('notif-overlay');
+      const isOpen  = !panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', isOpen);
+      overlay.classList.toggle('hidden', isOpen);
+      if (!isOpen) loadNotifications();
     };
 
     loadNotifications();
