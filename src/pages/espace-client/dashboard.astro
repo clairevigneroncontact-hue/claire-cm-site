@@ -153,30 +153,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </div>
 
         <!-- Notes client -->
-        <div id="card-notes" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] md:col-span-1 lg:col-span-2">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
-              <iconify-icon icon="solar:notebook-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+        <div id="card-notes" class="bg-[#2C2416] rounded-2xl overflow-hidden md:col-span-1 lg:col-span-2">
+          <!-- En-tête -->
+          <div class="flex items-center gap-3 px-6 py-4 border-b border-white/10">
+            <div class="w-9 h-9 bg-[#8B3E22] rounded-xl flex items-center justify-center">
+              <iconify-icon icon="solar:chat-round-dots-linear" stroke-width="1.5" class="text-lg text-white"></iconify-icon>
             </div>
-            <h2 class="text-base text-[#2C2416] font-medium">Mes notes pour Claire</h2>
+            <h2 class="text-base text-[#F5EDE4] font-medium">Discussion avec Claire</h2>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <p class="text-xs text-[#2C2416]/50 font-light mb-3">Préférences, idées, questions… Claire les verra directement dans votre dossier.</p>
-              <textarea spellcheck="true" id="new-note-ta" rows="5" placeholder="Ex : je préfère les visuels clairs, idée de sujet pour le prochain post…"
-                class="w-full px-4 py-3 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none"></textarea>
-              <div class="flex items-center gap-3 mt-3">
-                <button onclick="addClientNote()" class="px-5 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Envoyer</button>
-                <span id="notes-send-msg" class="text-xs text-green-700 hidden">Envoyé ✓</span>
-              </div>
-            </div>
-            <div>
-              <p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Mes dernières notes</p>
-              <div id="notes-feed" class="space-y-2.5 max-h-52 overflow-y-auto pr-1">
-                <p class="text-xs text-[#2C2416]/30 italic">Aucune note pour l'instant</p>
-              </div>
-            </div>
+          <!-- Fil de messages -->
+          <div id="notes-feed" class="space-y-3 px-5 py-4 overflow-y-auto" style="min-height:220px;max-height:380px">
+            <p class="text-sm text-[#F5EDE4]/30 italic text-center pt-4">Aucun message pour l'instant</p>
           </div>
+          <!-- Zone de saisie -->
+          <div class="flex gap-2 items-end px-5 py-4 border-t border-white/10">
+            <textarea spellcheck="true" id="new-note-ta" rows="2"
+              placeholder="Votre message… (Entrée pour envoyer, Maj+Entrée pour nouvelle ligne)"
+              class="flex-1 px-4 py-2.5 rounded-xl border border-white/20 bg-white/10 text-[#F5EDE4] text-sm placeholder-[#F5EDE4]/40 resize-none focus:outline-none focus:border-[#8B3E22]"></textarea>
+            <button onclick="addClientNote()" class="px-4 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors shrink-0">Envoyer</button>
+          </div>
+          <span id="notes-send-msg" class="hidden text-xs text-green-400 px-5 pb-3 block">Envoyé ✓</span>
         </div>
 
         <!-- Tâches -->
@@ -433,24 +429,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const { data } = await sb2.from('client_notes').select('id,client_id,note,from_admin,created_at').eq('client_id', uid).order('created_at', { ascending: true }).limit(100);
       const feed = document.getElementById('notes-feed');
       if (!feed) return;
-      if (!data || !data.length) { feed.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucune note pour l\'instant</p>'; return; }
+      if (!data || !data.length) { feed.innerHTML = '<p class="text-sm text-[#F5EDE4]/30 italic text-center pt-4">Aucun message pour l\'instant</p>'; return; }
       feed.innerHTML = data.map(n => {
         const d   = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
         const txt = n.note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         if (n.from_admin) {
-          return `<div class="flex gap-2 items-start" data-search="${n.note.toLowerCase()}">
-            <div class="w-7 h-7 bg-[#8B3E22] rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold mt-0.5">C</div>
-            <div class="bg-[#8B3E22]/10 rounded-xl rounded-tl-sm px-4 py-3 border border-[#8B3E22]/20">
+          // Bulle gauche — Claire
+          return `<div class="flex items-end gap-2 pr-10" data-search="${n.note.toLowerCase()}">
+            <div class="w-7 h-7 bg-[#8B3E22] rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold mb-0.5">C</div>
+            <div class="bg-white/15 rounded-2xl rounded-bl-sm px-4 py-3 border border-white/10" style="max-width:78%">
               <p class="text-[10px] text-[#8B3E22] font-semibold mb-1">Claire CM</p>
-              <p class="text-sm text-[#2C2416] leading-relaxed">${txt}</p>
-              <p class="text-[10px] text-[#767A55] mt-1.5">${d}</p>
+              <p class="text-sm text-[#F5EDE4] leading-relaxed">${txt}</p>
+              <p class="text-[10px] text-[#F5EDE4]/40 mt-1.5">${d}</p>
             </div>
           </div>`;
         }
-        return `<div class="flex justify-end" data-search="${n.note.toLowerCase()}">
-          <div class="bg-[#EDE6DB] rounded-xl rounded-tr-sm px-4 py-3 max-w-[85%]">
-            <p class="text-sm text-[#2C2416] leading-relaxed">${txt}</p>
-            <p class="text-[10px] text-[#767A55] mt-1.5 text-right">${d}</p>
+        // Bulle droite — client
+        return `<div class="flex justify-end pl-10" data-search="${n.note.toLowerCase()}">
+          <div class="bg-[#8B3E22] rounded-2xl rounded-br-sm px-4 py-3" style="max-width:78%">
+            <p class="text-sm text-white leading-relaxed">${txt}</p>
+            <p class="text-[10px] text-white/50 mt-1.5 text-right">${d}</p>
           </div>
         </div>`;
       }).join('');
