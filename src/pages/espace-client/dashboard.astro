@@ -9,7 +9,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   </div>
 
   <!-- Overlay sombre tutoriel -->
-  <div id="tuto-overlay" class="hidden fixed inset-0 z-[90] bg-[#2C2416]/75 pointer-events-none"></div>
+  <div id="tuto-overlay" class="hidden fixed inset-0 z-[90] bg-[#2C2416]/35 pointer-events-none"></div>
 
   <!-- Panel tutoriel (fixé en bas, thème sombre) -->
   <div id="tutorial" class="hidden fixed bottom-0 left-0 right-0 z-[100] px-4 pb-6">
@@ -407,7 +407,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       title: 'Discussion avec Claire',
       text: 'La bulle en bas à droite vous connecte directement à Claire. Vos messages sont instantanés. Cliquez en dehors pour refermer.',
       tab: 'home', card: null,
-      action: () => { window.switchTab('home'); }
+      action: () => {
+        window.switchTab('home');
+        setTimeout(() => {
+          const widget = document.getElementById('discussion-widget');
+          if (widget) widget.style.zIndex = '95';
+          const panel = document.getElementById('discussion-panel');
+          if (panel && panel.classList.contains('hidden')) window.toggleDiscussion();
+        }, 200);
+      }
     },
   ];
 
@@ -506,6 +514,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         prevCard.classList.remove('ring-4', 'ring-[#8B3E22]', 'ring-offset-4', 'relative', 'z-50', 'shadow-2xl');
         prevCard.style.transition = '';
         prevCard = null;
+      }
+      // Refermer la discussion et restaurer son z-index si on quitte cette étape
+      const widget = document.getElementById('discussion-widget');
+      if (widget && widget.style.zIndex === '95') {
+        widget.style.zIndex = '';
+        const panel = document.getElementById('discussion-panel');
+        if (panel && !panel.classList.contains('hidden')) {
+          panel.classList.add('hidden');
+          document.getElementById('discussion-overlay')?.classList.add('hidden');
+        }
       }
     }
 
