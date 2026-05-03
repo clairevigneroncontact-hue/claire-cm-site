@@ -1200,29 +1200,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     function removeNotifRow(id) {
       const row = document.querySelector(`[data-notif-id="${id}"]`);
       if (!row) return;
-      row.style.transition = 'opacity 0.3s, max-height 0.4s';
+      row.style.transition = 'opacity 0.12s';
       row.style.opacity = '0';
-      row.style.maxHeight = row.offsetHeight + 'px';
-      setTimeout(() => { row.style.maxHeight = '0'; row.style.overflow = 'hidden'; }, 300);
-      setTimeout(() => { row.remove(); updateNotifBadge(); }, 700);
+      setTimeout(() => { row.remove(); updateNotifBadge(); }, 120);
     }
     function updateNotifBadge() {
-      const unread = document.querySelectorAll('[data-notif-id]').length;
+      const remaining = document.querySelectorAll('[data-notif-id]').length;
       const badge = document.getElementById('notif-badge');
-      if (badge) { badge.textContent = unread > 9 ? '9+' : String(unread); badge.classList.toggle('hidden', unread === 0); badge.classList.toggle('flex', unread > 0); }
+      if (badge) {
+        if (remaining === 0) { badge.classList.add('hidden'); badge.classList.remove('flex'); }
+        else { badge.textContent = remaining > 9 ? '9+' : String(remaining); badge.classList.remove('hidden'); badge.classList.add('flex'); }
+      }
     }
 
     window.markNotifRead = (id) => {
-      markNotifRowRead(id);
       sb.from('notifications').update({ read: true }).eq('id', id);
-      setTimeout(() => removeNotifRow(id), 500);
+      removeNotifRow(id);
     };
 
     window.markAllNotifRead = () => {
-      document.querySelectorAll('[data-notif-id]').forEach(row => {
-        markNotifRowRead(row.dataset.notifId);
-        setTimeout(() => removeNotifRow(row.dataset.notifId), 500);
-      });
+      const ids = [...document.querySelectorAll('[data-notif-id]')].map(r => r.dataset.notifId);
+      ids.forEach(id => removeNotifRow(id));
       sb.from('notifications').update({ read: true }).eq('client_id', uid);
     };
 
