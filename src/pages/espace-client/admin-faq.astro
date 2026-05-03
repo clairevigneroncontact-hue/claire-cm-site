@@ -1,0 +1,129 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="FAQ & Aide — Espace Admin" hideChatWidget={true}>
+
+  <div id="loading" class="min-h-screen bg-[#2C2416] flex items-center justify-center">
+    <p class="text-[#F5EDE4]/50 text-sm">Vérification…</p>
+  </div>
+
+  <div id="page" class="hidden min-h-screen bg-[#F5EDE4]">
+    <header class="bg-[#2C2416] px-6 py-5 flex items-center gap-4">
+      <button onclick="history.back()" class="flex items-center gap-2 text-[#F5EDE4]/70 hover:text-white transition-colors text-sm">
+        <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon>
+        Retour
+      </button>
+      <a href="/" class="text-lg font-serif text-[#F5EDE4] tracking-tight ml-auto">
+        Claire Vigneron <span class="text-[#767A55]">·</span> CM
+        <span class="text-[#8B3E22] text-xs ml-2 uppercase tracking-widest font-sans">Admin</span>
+      </a>
+    </header>
+
+    <main class="max-w-2xl mx-auto px-4 md:px-6 py-10">
+      <h1 class="text-3xl text-[#2C2416] tracking-tight mb-2">FAQ & Aide</h1>
+      <p class="text-[#767A55] text-sm font-light mb-8">Guide d'utilisation de l'espace admin</p>
+
+      <div class="space-y-3">
+
+        <details class="bg-white border border-[#D6CCC0] rounded-2xl overflow-hidden group">
+          <summary class="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[#F5EDE4] transition-colors select-none">
+            <span class="text-sm font-medium text-[#2C2416]">Comment créer un nouvel espace client ?</span>
+            <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform group-open:rotate-180 shrink-0 ml-3"></iconify-icon>
+          </summary>
+          <div class="px-5 pb-4 text-sm text-[#2C2416]/70 font-light leading-relaxed border-t border-[#D6CCC0]/50 pt-3">
+            Depuis la vue principale, clique sur <strong>+ Nouveau client</strong>. Remplis l'email, le nom, le téléphone, le compte Instagram et l'offre. Le client reçoit automatiquement un email pour définir son mot de passe.
+          </div>
+        </details>
+
+        <details class="bg-white border border-[#D6CCC0] rounded-2xl overflow-hidden group">
+          <summary class="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[#F5EDE4] transition-colors select-none">
+            <span class="text-sm font-medium text-[#2C2416]">Comment envoyer du contenu à valider ?</span>
+            <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform group-open:rotate-180 shrink-0 ml-3"></iconify-icon>
+          </summary>
+          <div class="px-5 pb-4 text-sm text-[#2C2416]/70 font-light leading-relaxed border-t border-[#D6CCC0]/50 pt-3">
+            Ouvre la fiche d'un client → onglet <strong>Contenu</strong> → section <em>Envoyer du contenu à valider</em>. Choisis le type (Post, Story, Reel, Carrousel), saisis le titre, la légende, la date et l'heure de publication ainsi que le fichier, puis clique <strong>Envoyer</strong>.
+          </div>
+        </details>
+
+        <details class="bg-white border border-[#D6CCC0] rounded-2xl overflow-hidden group">
+          <summary class="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[#F5EDE4] transition-colors select-none">
+            <span class="text-sm font-medium text-[#2C2416]">Comment fonctionne le calendrier éditorial ?</span>
+            <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform group-open:rotate-180 shrink-0 ml-3"></iconify-icon>
+          </summary>
+          <div class="px-5 pb-4 text-sm text-[#2C2416]/70 font-light leading-relaxed border-t border-[#D6CCC0]/50 pt-3">
+            Le calendrier affiche les contenus <strong>validés</strong> (couleur pleine) et <strong>en attente</strong> (tirets ambre). Cliquer sur un jour affiche le détail complet. Tu peux décaler une publication par glisser-déposer sur une autre date, ou via le bouton <em>Décaler</em> dans la vue jour.
+          </div>
+        </details>
+
+        <details class="bg-white border border-[#D6CCC0] rounded-2xl overflow-hidden group">
+          <summary class="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[#F5EDE4] transition-colors select-none">
+            <span class="text-sm font-medium text-[#2C2416]">Comment déposer un document ou une facture ?</span>
+            <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform group-open:rotate-180 shrink-0 ml-3"></iconify-icon>
+          </summary>
+          <div class="px-5 pb-4 text-sm text-[#2C2416]/70 font-light leading-relaxed border-t border-[#D6CCC0]/50 pt-3">
+            Fiche client → onglet <strong>Documents</strong> → sous-onglet <em>Documents</em> ou <em>Factures</em> → section <em>Déposer un document</em>. Sélectionne le type (Contrat, Facture, Devis…), le fichier, et clique <strong>Déposer</strong>. Le document apparaît immédiatement dans l'espace du client.
+          </div>
+        </details>
+
+        <details class="bg-white border border-[#D6CCC0] rounded-2xl overflow-hidden group">
+          <summary class="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[#F5EDE4] transition-colors select-none">
+            <span class="text-sm font-medium text-[#2C2416]">Comment gérer les notifications ?</span>
+            <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform group-open:rotate-180 shrink-0 ml-3"></iconify-icon>
+          </summary>
+          <div class="px-5 pb-4 text-sm text-[#2C2416]/70 font-light leading-relaxed border-t border-[#D6CCC0]/50 pt-3">
+            Les notifications importantes apparaissent dans le <strong>panneau de droite</strong> (vue liste clients) et dans la <strong>cloche</strong> en haut. Les deux sont synchronisées : cocher ou glisser dans l'un met à jour l'autre. Cliquer sur une notification ouvre directement le client concerné.
+          </div>
+        </details>
+
+        <details class="bg-white border border-[#D6CCC0] rounded-2xl overflow-hidden group">
+          <summary class="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[#F5EDE4] transition-colors select-none">
+            <span class="text-sm font-medium text-[#2C2416]">Comment utiliser la discussion avec un client ?</span>
+            <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform group-open:rotate-180 shrink-0 ml-3"></iconify-icon>
+          </summary>
+          <div class="px-5 pb-4 text-sm text-[#2C2416]/70 font-light leading-relaxed border-t border-[#D6CCC0]/50 pt-3">
+            Ouvre la fiche d'un client. La <strong>bulle de discussion</strong> est en bas à droite. Cliquer dessus ouvre le fil de messages bidirectionnel. Les nouveaux messages du client génèrent une notification. Clique en dehors pour fermer.
+          </div>
+        </details>
+
+        <details class="bg-white border border-[#D6CCC0] rounded-2xl overflow-hidden group">
+          <summary class="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[#F5EDE4] transition-colors select-none">
+            <span class="text-sm font-medium text-[#2C2416]">Comment modifier ou supprimer un contenu envoyé ?</span>
+            <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform group-open:rotate-180 shrink-0 ml-3"></iconify-icon>
+          </summary>
+          <div class="px-5 pb-4 text-sm text-[#2C2416]/70 font-light leading-relaxed border-t border-[#D6CCC0]/50 pt-3">
+            Fiche client → onglet <strong>Contenu</strong> → clique sur le contenu pour dérouler le détail → boutons <em>✏️ Modifier</em> et <em>🗑 Supprimer</em>. Tu peux aussi modifier et supprimer directement depuis la vue jour du calendrier éditorial.
+          </div>
+        </details>
+
+      </div>
+    </main>
+  </div>
+
+  <script is:inline>
+    const SUPABASE_URL = 'https://etubpowlffhdvnfqkjij.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_AyehSGHv6TEwFvPQIuMivg_-_mJ7zUH';
+    const ADMIN_EMAIL  = 'clairevigneron.contact@gmail.com';
+
+    async function getSB() {
+      if (!window._sb) {
+        await new Promise(resolve => {
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+          s.onload = resolve; document.head.appendChild(s);
+        });
+        window._sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      }
+      return window._sb;
+    }
+
+    window.addEventListener('load', async () => {
+      const sb = await getSB();
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session || session.user.email !== ADMIN_EMAIL) { window.location.href = '/espace-client'; return; }
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('page').classList.remove('hidden');
+    });
+  </script>
+
+</BaseLayout>

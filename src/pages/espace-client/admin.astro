@@ -65,22 +65,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </div>
         <!-- FAQ & Aide admin -->
         <div class="border-t border-[#D6CCC0] pt-6">
-          <h2 class="text-sm font-semibold text-[#2C2416] uppercase tracking-widest mb-4">FAQ & Aide — Espace Admin</h2>
-          <div class="space-y-2">
-            {[
-              ['Comment créer un nouvel espace client ?', 'Depuis la vue principale, clique sur "+ Nouveau client". Remplis l\'email, le nom, le téléphone, le compte Instagram et l\'offre. Le client reçoit un email pour définir son mot de passe.'],
-              ['Comment envoyer du contenu à valider ?', 'Ouvre la fiche d\'un client → onglet "Contenu" → section "Envoyer du contenu à valider". Choisis le type (Post, Story, Reel, Carrousel), saisis le titre, la légende, la date/heure de publication et le fichier, puis clique "Envoyer".'],
-              ['Comment fonctionne le calendrier éditorial ?', 'Le calendrier affiche les contenus validés (couleur pleine) et en attente (tirets ambre). Cliquer sur un jour affiche le détail. Tu peux décaler une publication en glissant-déposant sur une autre date ou via le bouton "Décaler".'],
-              ['Comment déposer un document ou une facture ?', 'Fiche client → onglet "Documents" → section "Déposer un document". Sélectionne le type (Contrat, Facture, Devis…), le fichier, et clique "Déposer". Le document apparaît immédiatement dans l\'espace du client.'],
-              ['Comment gérer les notifications ?', 'Les notifications importantes apparaissent dans le panneau de droite (vue liste clients) et dans la cloche. Les deux sont synchronisées. Cliquer sur une notification ouvre le client concerné. Glisser à gauche (mobile) ou cocher pour supprimer.'],
-              ['Comment utiliser la discussion avec un client ?', 'Ouvre la fiche d\'un client. La bulle de discussion est en bas à droite. Cliquer dessus ouvre le fil de messages. Les messages du client apparaissent dans les notifications.'],
-            ].map(([q, a]) => (
-              <details class="border border-[#D6CCC0] rounded-xl overflow-hidden">
-                <summary class="flex items-center justify-between px-4 py-3 bg-[#F5EDE4] cursor-pointer hover:bg-[#EDE6DB] transition-colors select-none text-sm font-medium text-[#2C2416]">{q}</summary>
-                <div class="px-4 py-3 text-sm text-[#2C2416]/70 font-light leading-relaxed border-t border-[#D6CCC0]/50">{a}</div>
-              </details>
-            ))}
-          </div>
+          <h2 class="text-sm font-semibold text-[#2C2416] uppercase tracking-widest mb-4">FAQ & Aide</h2>
+          <a href="/espace-client/admin-faq" class="flex items-center justify-between bg-[#EDE6DB] rounded-2xl p-4 hover:bg-[#D6CCC0]/40 transition-colors group">
+            <div class="flex items-center gap-3">
+              <iconify-icon icon="solar:question-circle-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl shrink-0"></iconify-icon>
+              <div>
+                <p class="text-sm font-medium text-[#2C2416]">Guide d'utilisation — Espace Admin</p>
+                <p class="text-xs text-[#767A55] font-light mt-0.5">Créer un client, envoyer du contenu, calendrier, documents…</p>
+              </div>
+            </div>
+            <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5" class="text-[#8B3E22] group-hover:translate-x-1 transition-transform shrink-0 ml-3"></iconify-icon>
+          </a>
         </div>
       </div>
     </div>
