@@ -27,7 +27,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     </header>
 
     <!-- Panel notifications flottant (cloche, mobile/tablette) -->
-    <div id="admin-bell-float-panel" class="hidden fixed top-[76px] right-4 w-80 bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] z-50 overflow-hidden xl:hidden">
+    <div id="admin-bell-float-panel" class="hidden fixed top-[76px] right-4 w-80 bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] z-50 overflow-hidden">
       <div class="px-4 py-3 bg-[#2C2416] flex items-center justify-between">
         <span class="text-sm font-semibold text-[#F5EDE4]">Notifications</span>
         <button onclick="clearAllImpNotifs()" class="text-xs text-[#F5EDE4]/50 hover:text-[#F5EDE4] transition-colors">Tout effacer</button>
@@ -309,7 +309,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       window._lastAdminNotifItems = items;
       renderImpNotifs(items);
 
-      // Re-trier les clients selon l'activité récente (backup si realtime manqué)
+      // Backup : si realtime a manqué des événements, détecter l'activité via les notifs
       if (allClients.length) {
         const latestByClient = {};
         items.forEach(n => {
@@ -318,12 +318,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const oneHourAgo = new Date(Date.now() - 3600*1000).toISOString();
         let changed = false;
         Object.entries(latestByClient).forEach(([cid, date]) => {
-          if (date > oneHourAgo && !_recentActivity[cid]) { _recentActivity[cid] = Date.parse(date); changed = true; }
+          if (date > oneHourAgo && !_recentActivity[cid] && !_activeQueue.includes(cid)) {
+            _recentActivity[cid] = Date.parse(date);
+            _activeQueue = [..._activeQueue, cid];
+            changed = true;
+          }
         });
-        if (changed) {
-          allClients.sort((a, b) => (latestByClient[b.id]||'0') > (latestByClient[a.id]||'0') ? 1 : -1);
-          renderClients(allClients);
-        }
+        if (changed) sortAndRenderClients();
       }
     }
 
@@ -484,17 +485,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     // ─── Cloche : panel flottant fusionné avec le panel droit ────────────────
     document.getElementById('admin-bell-btn').onclick = (e) => {
       e.stopPropagation();
-      // Sur xl, scroller vers le panel droit; sinon toggle panel flottant
-      const impList = document.getElementById('imp-notif-list');
-      if (window.innerWidth >= 1280 && impList) {
-        impList.closest('.sticky')?.scrollIntoView({ behavior:'smooth', block:'start' });
-      } else {
-        const fp = document.getElementById('admin-bell-float-panel');
-        if (fp) {
-          fp.classList.toggle('hidden');
-          if (!fp.classList.contains('hidden') && window._lastAdminNotifItems) renderImpNotifs(window._lastAdminNotifItems);
-        }
-      }
+      const fp = document.getElementById('admin-bell-float-panel');
+      if (!fp) return;
+      fp.classList.toggle('hidden');
+      if (!fp.classList.contains('hidden') && window._lastAdminNotifItems) renderImpNotifs(window._lastAdminNotifItems);
     };
     document.addEventListener('click', (e) => {
       const fp   = document.getElementById('admin-bell-float-panel');
@@ -505,17 +499,28 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     // ─── Suivi activité clients (temps réel) ──────────────────────────────────
     const _recentActivity = {};  // clientId → timestamp
+    let   _activeQueue    = [];  // file ordonnée : le plus récent en tête
+
+    function sortAndRenderClients() {
+      if (!allClients.length) return;
+      const qSet   = new Set(_activeQueue);
+      const active = _activeQueue.map(id => allClients.find(c => c.id === id)).filter(Boolean);
+      const rest   = allClients.filter(c => !qSet.has(c.id));
+      renderClients([...active, ...rest]);
+    }
 
     function bumpClient(clientId) {
       if (!clientId) return;
       _recentActivity[clientId] = Date.now();
-      // Remonter ce client en tête dans allClients
-      const idx = allClients.findIndex(c => c.id === clientId);
-      if (idx > 0) {
-        const [c] = allClients.splice(idx, 1);
-        allClients.unshift(c);
-      }
-      renderClients(allClients);
+      _activeQueue = [clientId, ..._activeQueue.filter(id => id !== clientId)];
+      sortAndRenderClients();
+    }
+
+    function unbumpClient(clientId) {
+      // Quand l'admin ouvre ce client : il sort de la file, revient à sa position normale
+      _activeQueue = _activeQueue.filter(id => id !== clientId);
+      delete _recentActivity[clientId];
+      sortAndRenderClients();
     }
 
     // Realtime — nouvelles activités clients
@@ -890,6 +895,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       document.getElementById('view-list').classList.add('hidden');
       document.getElementById('view-client').classList.remove('hidden');
       document.getElementById('client-detail').innerHTML = '<p class="text-sm text-[#2C2416]/40 italic p-4">Chargement…</p>';
+      // Retirer de la file active : le client redescend à sa position normale
+      unbumpClient(clientId);
       try { await _openClientInner(clientId); } catch(err) {
         console.error('openClient error:', err);
         document.getElementById('client-detail').innerHTML = `<div class="bg-red-50 rounded-2xl p-6 border border-red-200"><p class="text-sm font-medium text-red-700 mb-1">Erreur lors du chargement</p><p class="text-xs text-red-600 font-mono">${String(err?.message||err)}</p></div>`;
