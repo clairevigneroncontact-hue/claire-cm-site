@@ -107,6 +107,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       </div>
     </main>
 
+    <!-- Overlay fermeture bulle discussion admin -->
+    <div id="admin-discussion-overlay" class="hidden fixed inset-0 z-[38]" onclick="document.getElementById('admin-discussion-panel').classList.add('hidden'); document.getElementById('admin-discussion-overlay').classList.add('hidden')"></div>
+
     <!-- Bulle discussion flottante admin (visible quand un client est ouvert) -->
     <div id="admin-discussion-widget" class="hidden fixed bottom-6 right-6 z-40">
       <!-- Panel -->
@@ -225,8 +228,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
       (uploads || []).forEach(u => {
         const client = u.profiles?.full_name || u.profiles?.email || 'Client';
+        const uName = u.name || (() => { try { return decodeURIComponent((u.file_url||'').split('/').pop().replace(/^\d+-/,'')); } catch(e) { return 'fichier'; } })();
         items.push({ id:'u-'+u.id, date:u.created_at, unread:u.created_at>lastSeen,
-          icon:'📎', text:`${client} a déposé "${u.name}"`, clientId:u.client_id, tab:'fichiers' });
+          icon:'📎', text:`${client} a déposé "${uName}"`, clientId:u.client_id, tab:'fichiers' });
       });
       (newClients || []).forEach(nc => {
         items.push({ id:'nc-'+nc.id, date:nc.created_at, unread:nc.created_at>lastSeen,
@@ -259,15 +263,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (!visible.length) { list.innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4">Aucune notification récente.</p>'; return; }
       list.innerHTML = visible.map(item => {
         const when = new Date(item.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-        return `<div onclick="window.openClient('${item.clientId}'); window.switchClientTab('${item.tab}'); window.toggleAdminNotifPanel()"
+        return `<div data-admin-notif-id="${item.id}" onclick="dismissNotifRow('${item.id}'); window.openClient('${item.clientId}'); window.switchClientTab('${item.tab==='fichiers'?'documents':item.tab}'); window.toggleAdminNotifPanel()"
           class="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-[#F5EDE4] transition-colors ${item.unread?'bg-[#8B3E22]/10':'bg-white'}">
           <span class="text-base mt-0.5 shrink-0">${item.icon}</span>
           <div class="flex-1 min-w-0">
-            <p class="text-xs text-[#2C2416] leading-relaxed ${item.unread?'font-medium':''}">${item.text}</p>
+            <p data-admin-notif-text class="text-xs text-[#2C2416] leading-relaxed ${item.unread?'font-medium':''}">${item.text}</p>
             <p class="text-[10px] text-[#767A55] mt-0.5">${when}</p>
           </div>
           <button onclick="event.stopPropagation(); dismissNotif('${item.id}')"
-            class="shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ml-1 ${item.unread?'border-[#8B3E22]/50 hover:bg-[#8B3E22]/10 hover:border-[#8B3E22]':'border-[#D6CCC0] bg-[#F5EDE4] hover:border-[#8B3E22]'}"
+            data-admin-checkbox
+            class="shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ml-1 ${item.unread?'border-[#8B3E22]/50 hover:bg-[#8B3E22]/10 hover:border-[#8B3E22]':'border-[#D6CCC0] bg-[#F5EDE4]'}"
             title="Cocher comme traité">
             ${!item.unread ? `<iconify-icon icon="solar:check-linear" stroke-width="2.5" style="font-size:9px;color:#8B3E22"></iconify-icon>` : ''}
           </button>
@@ -275,16 +280,30 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }).join('');
     }
 
+    function dismissNotifRow(id) {
+      const row = document.querySelector(`[data-admin-notif-id="${id}"]`);
+      if (!row) return;
+      row.classList.remove('bg-[#8B3E22]/10');
+      row.classList.add('bg-white');
+      const btn = row.querySelector('[data-admin-checkbox]');
+      if (btn) {
+        btn.className = 'shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ml-1 border-[#D6CCC0] bg-[#F5EDE4]';
+        btn.innerHTML = '<iconify-icon icon="solar:check-linear" stroke-width="2.5" style="font-size:9px;color:#8B3E22"></iconify-icon>';
+      }
+      const txt = row.querySelector('[data-admin-notif-text]');
+      if (txt) txt.classList.remove('font-medium');
+    }
+
     window.dismissNotif = (id) => {
+      dismissNotifRow(id);
       const dismissed = new Set(JSON.parse(localStorage.getItem(NOTIFS_DISMISSED_KEY)||'[]'));
       dismissed.add(id);
       localStorage.setItem(NOTIFS_DISMISSED_KEY, JSON.stringify([...dismissed]));
-      loadAdminNotifs();
     };
 
     window.markAdminNotifsRead = () => {
+      document.querySelectorAll('[data-admin-notif-id]').forEach(row => dismissNotifRow(row.dataset.adminNotifId));
       localStorage.setItem(NOTIFS_KEY, new Date().toISOString());
-      loadAdminNotifs();
     };
 
     window.toggleAdminNotifPanel = () => {
@@ -664,6 +683,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const approved = (content||[]).filter(i => i.status === 'approved').length;
       const rejected = (content||[]).filter(i => i.status === 'rejected').length;
       const total    = (content||[]).length;
+      const docsNonInv = (docs||[]).filter(d => d.type !== 'facture');
+      const docsInv    = (docs||[]).filter(d => d.type === 'facture');
 
       const statusBadge = s => s === 'approved'
         ? '<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">Validé ✓</span>'
@@ -858,7 +879,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
                     <iconify-icon icon="solar:calendar-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
                   </div>
-                  <h2 class="text-base text-[#2C2416] font-medium">Calendrier éditorial</h2>
+                  <div class="flex items-center gap-2">
+                    <h2 class="text-base text-[#2C2416] font-medium">Calendrier éditorial</h2>
+                    <iconify-icon icon="mdi:instagram" class="text-xl text-[#8B3E22]/60"></iconify-icon>
+                  </div>
                 </div>
                 <div class="flex items-center gap-1.5">
                   <button onclick="clientCalNav(-1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon></button>
@@ -924,90 +948,127 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
           </div>
 
-          <!-- Grille documents -->
-          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
-            <h3 class="text-sm font-medium text-[#2C2416] mb-3">Documents déposés (${docs?.length||0})</h3>
-            ${docs?.length ? `<div class="relative mb-3">
-              <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
-              <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'doc-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
-            </div>` : ''}
-            <div id="doc-items-box" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
-            ${docs?.length ? docs.map(d => {
-              const label   = d.name || d.file_name || 'Document';
-              const typeMap = { contrat:'Contrat', facture:'Facture', devis:'Devis', 'audit-instagram':'Audit', 'compte-rendu':'CR mensuel', autre:'Autre' };
-              const type    = typeMap[d.type] || d.type || '';
-              const isImg   = d.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(d.file_url);
-              const isPdf   = d.file_url && /\.pdf(\?|$)/i.test(d.file_url);
-              const safeUrl = (d.file_url||'').replace(/'/g,"\\'");
-              const icon    = isPdf ? 'solar:file-text-linear' : 'solar:document-text-linear';
-              return `
-              <div class="flex flex-col" data-search="${label.toLowerCase()} ${(d.type||'').toLowerCase()}">
-                <!-- Miniature cliquable — hauteur fixe -->
-                <a href="${d.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors" style="height:90px;background:#F5EDE4">
-                  ${isImg
-                    ? `<img src="${d.file_url}" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`
-                    : `<div style="height:130px;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:3rem"></iconify-icon></div>`
-                  }
-                </a>
-                <!-- Nom + type -->
-                <p class="text-xs font-medium text-[#2C2416] truncate mt-1.5">${label}</p>
-                ${type ? `<p class="text-[10px] text-[#767A55]">${type}</p>` : ''}
-                <!-- Boutons toujours visibles -->
-                <div class="flex items-center gap-1 mt-1">
-                  <button onclick="toggleDocEdit('${d.id}')" class="flex-1 py-1 text-[10px] text-[#767A55] hover:text-[#8B3E22] hover:bg-[#EDE6DB] rounded-lg transition-colors flex items-center justify-center gap-0.5">
-                    <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-xs"></iconify-icon> Modifier
-                  </button>
-                  <button onclick="deleteDoc('${d.id}','${safeUrl}','${clientId}')" class="flex-1 py-1 text-[10px] text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center gap-0.5">
-                    <iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-xs"></iconify-icon> Supprimer
-                  </button>
-                </div>
-                <!-- Formulaire édition -->
-                <div id="doc-edit-${d.id}" class="hidden mt-2 bg-[#F5EDE4] rounded-xl p-3 border border-[#8B3E22]/30">
-                  <input id="doc-edit-name-${d.id}" type="text" value="${label.replace(/"/g,'&quot;')}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] bg-white" />
-                  <input id="doc-edit-file-${d.id}" type="file" class="block text-xs text-[#767A55] cursor-pointer w-full mb-2" />
-                  <div class="flex gap-2">
-                    <button onclick="saveDocEdit('${d.id}','${safeUrl}','${clientId}')" class="flex-1 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A]">Enregistrer</button>
-                    <button onclick="toggleDocEdit('${d.id}')" class="px-3 py-1.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs">Annuler</button>
+          <!-- Sous-navigation documents -->
+          <div class="flex gap-1 bg-[#EDE6DB] rounded-xl p-1 overflow-x-auto">
+            <button id="adocs-btn-docs" onclick="switchAdminDocsTab('docs')" class="bg-white text-[#2C2416] shadow-sm rounded-lg py-2.5 px-3 text-sm font-medium whitespace-nowrap flex items-center gap-1.5">
+              <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+              Documents
+            </button>
+            <button id="adocs-btn-factures" onclick="switchAdminDocsTab('factures')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-3 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap flex items-center gap-1.5">
+              <iconify-icon icon="solar:bill-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+              Factures
+            </button>
+            <button id="adocs-btn-files" onclick="switchAdminDocsTab('files')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-3 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap flex items-center gap-1.5">
+              <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-base"></iconify-icon>
+              Fichiers déposés
+            </button>
+          </div>
+
+          <!-- Sous-onglet : Documents -->
+          <div id="adocs-subtab-docs">
+            <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+              <h3 class="text-sm font-medium text-[#2C2416] mb-3">Documents (${docsNonInv.length})</h3>
+              <div id="doc-items-box" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+              ${docsNonInv.length ? docsNonInv.map(d => {
+                const label   = d.name || d.file_name || 'Document';
+                const typeMap = { contrat:'Contrat', devis:'Devis', 'audit-instagram':'Audit', 'compte-rendu':'CR mensuel', autre:'Autre' };
+                const type    = typeMap[d.type] || d.type || '';
+                const isImg   = d.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(d.file_url);
+                const isPdf   = d.file_url && /\.pdf(\?|$)/i.test(d.file_url);
+                const safeUrl = (d.file_url||'').replace(/'/g,"\\'");
+                const icon    = isPdf ? 'solar:file-text-linear' : 'solar:document-text-linear';
+                return `<div class="flex flex-col" data-search="${label.toLowerCase()} ${(d.type||'').toLowerCase()}">
+                  <a href="${d.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors" style="height:90px;background:#F5EDE4">
+                    ${isImg?`<img src="${d.file_url}" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`:`<div style="height:130px;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:3rem"></iconify-icon></div>`}
+                  </a>
+                  <p class="text-xs font-medium text-[#2C2416] truncate mt-1.5">${label}</p>
+                  ${type ? `<p class="text-[10px] text-[#767A55]">${type}</p>` : ''}
+                  <div class="flex items-center gap-1 mt-1">
+                    <button onclick="toggleDocEdit('${d.id}')" class="flex-1 py-1 text-[10px] text-[#767A55] hover:text-[#8B3E22] hover:bg-[#EDE6DB] rounded-lg transition-colors flex items-center justify-center gap-0.5"><iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-xs"></iconify-icon> Modifier</button>
+                    <button onclick="deleteDoc('${d.id}','${safeUrl}','${clientId}')" class="flex-1 py-1 text-[10px] text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center gap-0.5"><iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-xs"></iconify-icon> Supprimer</button>
                   </div>
-                </div>
-              </div>`;
-            }).join('') : '<p class="text-xs text-[#2C2416]/30 italic col-span-full">Aucun document déposé</p>'}
+                  <div id="doc-edit-${d.id}" class="hidden mt-2 bg-[#F5EDE4] rounded-xl p-3 border border-[#8B3E22]/30">
+                    <input id="doc-edit-name-${d.id}" type="text" value="${label.replace(/"/g,'&quot;')}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] bg-white" />
+                    <input id="doc-edit-file-${d.id}" type="file" class="block text-xs text-[#767A55] cursor-pointer w-full mb-2" />
+                    <div class="flex gap-2">
+                      <button onclick="saveDocEdit('${d.id}','${safeUrl}','${clientId}')" class="flex-1 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A]">Enregistrer</button>
+                      <button onclick="toggleDocEdit('${d.id}')" class="px-3 py-1.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs">Annuler</button>
+                    </div>
+                  </div>
+                </div>`;
+              }).join('') : '<p class="text-xs text-[#2C2416]/30 italic col-span-full">Aucun document déposé</p>'}
+              </div>
             </div>
           </div>
 
-          <!-- Fichiers déposés par le client -->
-          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
-            <div class="flex items-center gap-2 mb-3">
-              <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>
-              <h3 class="text-sm font-medium text-[#2C2416]">Fichiers déposés par le client (${uploads?.length||0})</h3>
-            </div>
-            ${uploads?.length ? `<div class="relative mb-3">
-              <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
-              <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'file-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
-            </div>` : ''}
-            <div id="file-items-box" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
-              ${uploads?.length ? uploads.map(u => {
-                const isImg = u.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(u.file_url);
-                const isVid = u.file_url && /\.(mp4|mov|avi|webm)(\?|$)/i.test(u.file_url);
-                const isPdf = u.file_url && /\.pdf(\?|$)/i.test(u.file_url);
-                const date  = new Date(u.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
-                const icon  = isVid ? 'solar:videocamera-linear' : isPdf ? 'solar:file-text-linear' : 'solar:file-download-linear';
-                return `<div class="flex flex-col" data-search="${u.name.toLowerCase()}">
-                  <a href="${u.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors" style="height:90px;background:#F5EDE4">
-                    ${isImg
-                      ? `<img src="${u.file_url}" alt="${u.name}" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`
-                      : `<div style="height:130px;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:3rem"></iconify-icon></div>`
-                    }
+          <!-- Sous-onglet : Factures -->
+          <div id="adocs-subtab-factures" class="hidden">
+            <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+              <h3 class="text-sm font-medium text-[#2C2416] mb-3">Factures (${docsInv.length})</h3>
+              <div id="invoice-items-box" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+              ${docsInv.length ? docsInv.map(d => {
+                const label   = d.name || d.file_name || 'Facture';
+                const isImg   = d.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(d.file_url);
+                const isPdf   = d.file_url && /\.pdf(\?|$)/i.test(d.file_url);
+                const safeUrl = (d.file_url||'').replace(/'/g,"\\'");
+                const icon    = isPdf ? 'solar:file-text-linear' : 'solar:bill-linear';
+                return `<div class="flex flex-col" data-search="${label.toLowerCase()}">
+                  <a href="${d.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors" style="height:90px;background:#F5EDE4">
+                    ${isImg?`<img src="${d.file_url}" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`:`<div style="height:130px;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:3rem"></iconify-icon></div>`}
                   </a>
-                  <p class="text-xs text-[#2C2416]/70 truncate mt-1.5">${u.name}</p>
-                  <div class="flex items-center justify-between mt-1">
-                    <p class="text-[10px] text-[#767A55]">${date}</p>
-                    <button onclick="deleteUpload('${u.id}','${(u.file_url||'').replace(/'/g,"\\'")}','${clientId}')" class="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                      <iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-xs"></iconify-icon>
-                    </button>
+                  <p class="text-xs font-medium text-[#2C2416] truncate mt-1.5">${label}</p>
+                  <p class="text-[10px] text-[#767A55]">Facture</p>
+                  <div class="flex items-center gap-1 mt-1">
+                    <button onclick="toggleDocEdit('${d.id}')" class="flex-1 py-1 text-[10px] text-[#767A55] hover:text-[#8B3E22] hover:bg-[#EDE6DB] rounded-lg transition-colors flex items-center justify-center gap-0.5"><iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-xs"></iconify-icon> Modifier</button>
+                    <button onclick="deleteDoc('${d.id}','${safeUrl}','${clientId}')" class="flex-1 py-1 text-[10px] text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center gap-0.5"><iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-xs"></iconify-icon> Supprimer</button>
+                  </div>
+                  <div id="doc-edit-${d.id}" class="hidden mt-2 bg-[#F5EDE4] rounded-xl p-3 border border-[#8B3E22]/30">
+                    <input id="doc-edit-name-${d.id}" type="text" value="${label.replace(/"/g,'&quot;')}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] bg-white" />
+                    <input id="doc-edit-file-${d.id}" type="file" class="block text-xs text-[#767A55] cursor-pointer w-full mb-2" />
+                    <div class="flex gap-2">
+                      <button onclick="saveDocEdit('${d.id}','${safeUrl}','${clientId}')" class="flex-1 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A]">Enregistrer</button>
+                      <button onclick="toggleDocEdit('${d.id}')" class="px-3 py-1.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs">Annuler</button>
+                    </div>
                   </div>
                 </div>`;
-              }).join('') : '<p class="text-xs text-[#2C2416]/30 italic col-span-full">Aucun fichier déposé</p>'}
+              }).join('') : '<p class="text-xs text-[#2C2416]/30 italic col-span-full">Aucune facture déposée</p>'}
+              </div>
+            </div>
+          </div>
+
+          <!-- Sous-onglet : Fichiers déposés par le client -->
+          <div id="adocs-subtab-files" class="hidden">
+            <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+              <div class="flex items-center gap-2 mb-3">
+                <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>
+                <h3 class="text-sm font-medium text-[#2C2416]">Fichiers déposés par le client (${uploads?.length||0})</h3>
+              </div>
+              ${uploads?.length ? `<div class="relative mb-3">
+                <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
+                <input type="text" placeholder="Rechercher…" oninput="filterBySearch(this,'file-items-box')" class="w-full pl-8 pr-3 py-2 rounded-xl border border-[#D6CCC0] text-xs text-[#2C2416] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]" />
+              </div>` : ''}
+              <div id="file-items-box" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                ${uploads?.length ? uploads.map(u => {
+                  const uName = u.name || (() => { try { return decodeURIComponent((u.file_url||'').split('/').pop().replace(/^\d+-/,'')); } catch(e) { return 'Fichier'; } })();
+                  const isImg = u.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(u.file_url);
+                  const isVid = u.file_url && /\.(mp4|mov|avi|webm)(\?|$)/i.test(u.file_url);
+                  const isPdf = u.file_url && /\.pdf(\?|$)/i.test(u.file_url);
+                  const date  = new Date(u.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+                  const icon  = isVid ? 'solar:videocamera-linear' : isPdf ? 'solar:file-text-linear' : 'solar:file-download-linear';
+                  return `<div class="flex flex-col" data-search="${uName.toLowerCase()}">
+                    <a href="${u.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors" style="height:90px;background:#F5EDE4">
+                      ${isImg?`<img src="${u.file_url}" alt="${uName}" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`:`<div style="height:130px;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:3rem"></iconify-icon></div>`}
+                    </a>
+                    <p class="text-xs text-[#2C2416]/70 truncate mt-1.5">${uName}</p>
+                    <div class="flex items-center justify-between mt-1">
+                      <p class="text-[10px] text-[#767A55]">${date}</p>
+                      <button onclick="deleteUpload('${u.id}','${(u.file_url||'').replace(/'/g,"\\'")}','${clientId}')" class="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                        <iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-xs"></iconify-icon>
+                      </button>
+                    </div>
+                  </div>`;
+                }).join('') : '<p class="text-xs text-[#2C2416]/30 italic col-span-full">Aucun fichier déposé par le client</p>'}
+              </div>
             </div>
           </div>
         </div>
@@ -1064,6 +1125,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     // Switcher d'onglets client
+    window.switchAdminDocsTab = (sub) => {
+      ['docs','factures','files'].forEach(t => {
+        document.getElementById('adocs-subtab-' + t)?.classList.toggle('hidden', t !== sub);
+        const btn = document.getElementById('adocs-btn-' + t);
+        if (btn) {
+          btn.classList.toggle('bg-white', t === sub);
+          btn.classList.toggle('shadow-sm', t === sub);
+          btn.classList.toggle('text-[#2C2416]', t === sub);
+          btn.classList.toggle('text-[#2C2416]/50', t !== sub);
+        }
+      });
+    };
+
     window.switchClientTab = (tab) => {
       ['contenu','documents','notes'].forEach(t => {
         const panel = document.getElementById(`ctab-${t}-panel`);
@@ -1384,10 +1458,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     // ── Bulle discussion admin ────────────────────────────────────────────────
     window.toggleAdminDiscussion = () => {
-      const panel = document.getElementById('admin-discussion-panel');
+      const panel   = document.getElementById('admin-discussion-panel');
+      const overlay = document.getElementById('admin-discussion-overlay');
       if (!panel) return;
       const isOpen = !panel.classList.contains('hidden');
       panel.classList.toggle('hidden');
+      if (overlay) overlay.classList.toggle('hidden', isOpen);
       if (!isOpen) {
         const badge = document.getElementById('admin-discussion-badge');
         if (badge) { badge.classList.add('hidden'); badge.textContent = ''; }
