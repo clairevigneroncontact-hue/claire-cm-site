@@ -879,7 +879,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           ${hasRecentAct ? '<div class="absolute inset-y-0 left-0 w-1.5 bg-[#5A1E0E] rounded-l-2xl"></div>' : ''}
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3 min-w-0">
-              <div class="w-10 h-10 ${hasRecentAct ? 'bg-[#5A1E0E]' : 'bg-[#8B3E22]/10'} rounded-full flex items-center justify-center text-${hasRecentAct?'white':'[#8B3E22]'} font-medium text-sm shrink-0 overflow-hidden">
+              <div class="w-12 h-12 ${hasRecentAct ? 'bg-[#5A1E0E]' : 'bg-[#8B3E22]/10'} rounded-full flex items-center justify-center text-${hasRecentAct?'white':'[#8B3E22]'} font-semibold text-base shrink-0 overflow-hidden border-2 ${hasRecentAct ? 'border-[#5A1E0E]' : 'border-[#D6CCC0]'}">
                 ${c.avatar_url ? `<img src="${c.avatar_url}" alt="" class="w-full h-full object-cover" onerror="this.style.display='none'" />` : (c.full_name || c.email || '?')[0].toUpperCase()}
               </div>
               <div class="min-w-0">
@@ -1005,7 +1005,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <!-- En-tête client -->
         <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0] mb-5">
           <div class="flex items-center gap-4 mb-4">
-            <div class="w-12 h-12 bg-[#8B3E22]/10 rounded-full flex items-center justify-center text-[#8B3E22] font-medium text-lg shrink-0 overflow-hidden">
+            <div class="w-16 h-16 bg-[#8B3E22]/10 rounded-full flex items-center justify-center text-[#8B3E22] font-semibold text-2xl shrink-0 overflow-hidden border-2 border-[#D6CCC0]">
               ${c?.avatar_url ? `<img src="${c.avatar_url}" alt="" class="w-full h-full object-cover" onerror="this.style.display='none'" />` : (c?.full_name || c?.email || '?')[0].toUpperCase()}
             </div>
             <div>
