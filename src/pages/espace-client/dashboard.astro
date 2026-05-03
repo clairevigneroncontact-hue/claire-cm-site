@@ -215,16 +215,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <div id="tab-docs-panel" class="hidden">
         <!-- Sous-navigation -->
         <div class="flex gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-5 overflow-x-auto">
-          <button id="docs-sub-btn-docs" onclick="switchDocsTab('docs')" class="bg-white text-[#2C2416] shadow-sm rounded-lg py-2 px-3 text-xs font-medium whitespace-nowrap flex items-center gap-1.5">
-            <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+          <button id="docs-sub-btn-docs" onclick="switchDocsTab('docs')" class="bg-white text-[#2C2416] shadow-sm rounded-lg py-2.5 px-4 text-sm font-medium whitespace-nowrap flex items-center gap-2">
+            <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-base"></iconify-icon>
             Documents
           </button>
-          <button id="docs-sub-btn-factures" onclick="switchDocsTab('factures')" class="text-[#2C2416]/50 rounded-lg py-2 px-3 text-xs font-medium hover:text-[#2C2416] whitespace-nowrap flex items-center gap-1.5">
-            <iconify-icon icon="solar:bill-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+          <button id="docs-sub-btn-factures" onclick="switchDocsTab('factures')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-4 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap flex items-center gap-2">
+            <iconify-icon icon="solar:bill-linear" stroke-width="1.5" class="text-base"></iconify-icon>
             Factures
           </button>
-          <button id="docs-sub-btn-uploads" onclick="switchDocsTab('uploads')" class="text-[#2C2416]/50 rounded-lg py-2 px-3 text-xs font-medium hover:text-[#2C2416] whitespace-nowrap flex items-center gap-1.5">
-            <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+          <button id="docs-sub-btn-uploads" onclick="switchDocsTab('uploads')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-4 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap flex items-center gap-2">
+            <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-base"></iconify-icon>
             Fichiers déposés
           </button>
         </div>
@@ -869,7 +869,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div id="feedback-${item.id}" class="hidden mt-3">
             <textarea spellcheck="true" id="feedback-text-${item.id}" placeholder="Votre commentaire…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-red-400 resize-none"></textarea>
             <button onclick="validateWithFeedback('${item.id}')" class="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600">Envoyer le refus</button>
-          </div>` : ''}
+          </div>` : `
+          <div class="mt-3 pt-3 border-t border-[#D6CCC0]/50">
+            ${item.feedback ? `<div class="bg-[#F5EDE4] rounded-xl p-3 mb-2 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Commentaire</p><p class="text-sm text-[#2C2416]/70 leading-relaxed whitespace-pre-wrap">${item.feedback.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p></div>` : ''}
+            <button onclick="toggleEditComment('${item.id}')" class="text-[10px] text-[#767A55] hover:text-[#8B3E22] transition-colors hover:underline underline-offset-2">${item.feedback ? '✏️ Modifier le commentaire' : '+ Ajouter un commentaire'}</button>
+            <div id="edit-comment-${item.id}" class="hidden mt-2">
+              <textarea spellcheck="true" id="edit-comment-text-${item.id}" placeholder="Commentaire optionnel…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none">${item.feedback ? item.feedback.replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''}</textarea>
+              <button onclick="saveComment('${item.id}')" class="px-3 py-1.5 bg-[#8B3E22] text-white text-xs rounded-lg hover:bg-[#6B2E1A]">Enregistrer</button>
+            </div>
+          </div>`}
         </div>
       </div>`;
     }
@@ -949,18 +957,34 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const text = document.getElementById('approve-text-' + id)?.value.trim() || '';
       window.validate(id, 'approved', text);
     };
+    window.toggleEditComment = (id) => {
+      document.getElementById('edit-comment-' + id)?.classList.toggle('hidden');
+    };
+    window.saveComment = async (id) => {
+      const text = document.getElementById('edit-comment-text-' + id)?.value.trim() || '';
+      const sb2 = await getSB();
+      await sb2.from('content_items').update({ feedback: text, updated_at: new Date().toISOString() }).eq('id', id);
+      document.getElementById('edit-comment-' + id)?.classList.add('hidden');
+      window.location.reload();
+    };
 
     // ── Uploads : rendu inline + renommer + supprimer ────────────────────────
     const TYPE_LABELS_UPLOAD = { 'image':'Photo', 'video':'Vidéo', 'pdf':'PDF', 'document':'Document', 'photo':'Photo' };
 
+    function uploadDisplayName(f) {
+      if (f.name) return f.name;
+      try { return decodeURIComponent((f.file_url||'').split('/').pop().replace(/^\d+-/, '') || 'Fichier'); } catch(e) { return 'Fichier'; }
+    }
+
     function renderUploadItem(f) {
-      const ext  = (f.name || '').split('.').pop()?.toLowerCase() || '';
+      const rawName = uploadDisplayName(f);
+      const ext  = rawName.split('.').pop()?.toLowerCase() || '';
       const isImg = /^(jpg|jpeg|png|gif|webp|svg)$/.test(ext);
       const isPdf = ext === 'pdf';
       const isVid = /^(mp4|mov|avi|webm|mkv)$/.test(ext);
       const icon  = isImg ? 'solar:gallery-linear' : isPdf ? 'solar:file-text-linear' : isVid ? 'solar:videocamera-linear' : 'solar:paperclip-linear';
       const safeUrl = (f.file_url || '#').replace(/'/g, "\\'");
-      const safeName = (f.name || 'Fichier').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const safeName = rawName.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       return `<div class="flex items-center gap-3 py-2.5 border-b border-[#D6CCC0]/30 last:border-0 group" data-search="${(f.name||'').toLowerCase()}">
         <iconify-icon icon="${icon}" stroke-width="1.5" class="text-[#8B3E22] shrink-0 text-base"></iconify-icon>
         <div class="flex-1 min-w-0">
@@ -1082,7 +1106,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         if (error) { lastError = error.message || JSON.stringify(error); continue; }
         if (data) {
           const { data: urlData } = sb2.storage.from('client-uploads').getPublicUrl(path);
-          const { error: insertError } = await sb2.from('client_uploads').insert({ client_id: uid, name: file.name, file_url: urlData.publicUrl });
+          const { error: insertError } = await sb2.from('client_uploads').insert({ client_id: uid, file_url: urlData.publicUrl });
           if (insertError) { lastError = insertError.message || JSON.stringify(insertError); continue; }
           ok++;
         }
@@ -1128,13 +1152,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                         : n.type === 'message' ? 'solar:chat-round-dots-linear'
                         : 'solar:document-text-linear';
           const dateStr = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-          return `<div onclick="goToSection('${n.id}','${target?.id||''}','${n.type||''}')"
+          return `<div onclick="goToSection('${n.id}','${target?.id||''}','${n.type||''}','${n.content_id||''}')"
             class="flex items-start gap-2.5 px-4 py-3 cursor-pointer hover:bg-[#F5EDE4] transition-colors ${n.read ? 'bg-white' : 'bg-[#8B3E22]/10'}">
             <button onclick="event.stopPropagation(); markNotifRead('${n.id}')" title="Marquer comme lu"
               class="w-4 h-4 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center transition-colors ${n.read ? 'border-[#D6CCC0] bg-[#D6CCC0]/20 cursor-default' : 'border-[#8B3E22] hover:bg-[#8B3E22]/30'}">
               ${n.read ? '<iconify-icon icon="solar:check-linear" stroke-width="3" class="text-[#767A55]" style="font-size:8px"></iconify-icon>' : ''}
             </button>
-            <iconify-icon icon="${icon}" stroke-width="1.5" class="text-[#8B3E22] text-lg shrink-0 mt-0.5"></iconify-icon>
             <div class="flex-1 min-w-0">
               <p class="text-xs text-[#2C2416] leading-relaxed ${n.read ? '' : 'font-medium'}">${n.message}</p>
               <p class="text-[10px] text-[#767A55] mt-0.5">${dateStr}</p>
@@ -1155,7 +1178,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     // Clic sur notification → marquer lu + naviguer vers le bon endroit
-    window.goToSection = async (notifId, cardId, type) => {
+    window.goToSection = async (notifId, cardId, type, contentId) => {
       await sb.from('notifications').update({ read: true }).eq('id', notifId);
       document.getElementById('notif-panel').classList.add('hidden');
       document.getElementById('notif-overlay').classList.add('hidden');
@@ -1166,9 +1189,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         if (panel && panel.classList.contains('hidden')) window.toggleDiscussion();
         return;
       }
+      // Contenu : ouvrir le détail de l'item concerné si on a son id
+      if (type === 'content') {
+        window.switchTab('content');
+        setTimeout(() => {
+          if (contentId) {
+            const detail = document.getElementById('dash-detail-' + contentId);
+            if (detail && detail.classList.contains('hidden')) window.toggleDashContent(contentId);
+            const chev = document.getElementById('dash-chev-' + contentId);
+            setTimeout(() => {
+              const el = document.getElementById('dash-detail-' + contentId)?.closest('[data-search]') || document.getElementById('dash-detail-' + contentId);
+              if (el) { el.scrollIntoView({ behavior:'smooth', block:'center' }); }
+            }, 100);
+          } else {
+            document.getElementById('card-content')?.scrollIntoView({ behavior:'smooth', block:'center' });
+          }
+        }, 200);
+        return;
+      }
       if (cardId) {
-        if (cardId === 'card-content' || cardId === 'content-list') window.switchTab('content');
-        else if (cardId === 'card-docs') { window.switchTab('docs'); setTimeout(() => window.switchDocsTab?.('docs'), 50); }
+        if (cardId === 'card-docs') { window.switchTab('docs'); setTimeout(() => window.switchDocsTab?.('docs'), 50); }
         else if (cardId === 'card-invoices') { window.switchTab('docs'); setTimeout(() => window.switchDocsTab?.('factures'), 50); }
         setTimeout(() => {
           const card = document.getElementById(cardId);
@@ -1492,5 +1532,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     // Lancer le tutoriel si première connexion
     initTutorial(uid);
+
+    // Naviguer vers une section précise si ?goto= dans l'URL
+    const _goto = new URLSearchParams(window.location.search).get('goto');
+    if (_goto) {
+      const _map = { content: () => window.switchTab('content'),
+        docs:     () => window.switchTab('docs'),
+        factures: () => { window.switchTab('docs'); setTimeout(() => window.switchDocsTab('factures'), 50); },
+        uploads:  () => { window.switchTab('docs'); setTimeout(() => window.switchDocsTab('uploads'), 50); },
+        discussion: () => setTimeout(() => window.toggleDiscussion(), 200) };
+      if (_map[_goto]) _map[_goto]();
+    }
   });
 </script>

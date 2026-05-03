@@ -114,17 +114,30 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0] mb-4">
           <h2 class="text-lg text-[#2C2416] font-medium mb-4">Comment ça fonctionne ?</h2>
           <div class="space-y-4 text-sm text-[#2C2416]/70 font-light">
-            {[
-              ['Comment valider un contenu ?', 'Dans l\'onglet "Contenus à valider", cliquez sur un contenu pour voir le détail, puis utilisez ✓ Valider ou ✗ Refuser. Vous pouvez aussi ajouter un commentaire optionnel avant de valider.'],
-              ['Comment déposer des photos ou vidéos ?', 'Allez dans l\'onglet "Mes documents" → sous-onglet "Fichiers déposés". Cliquez sur la zone pour sélectionner vos fichiers. Ils seront transmis à Claire automatiquement.'],
-              ['Où trouver mes documents et factures ?', 'Dans l\'onglet "Mes documents" : sous-onglet "Documents" pour vos contrats et audits, "Factures" pour vos factures, "Fichiers déposés" pour vos envois.'],
-              ['Puis-je modifier mes informations ?', 'Oui, rendez-vous dans Paramètres → Mon compte pour mettre à jour votre nom, email, téléphone et compte Instagram.'],
-            ].map(([q, a]) => (
-              <div class="border-b border-[#D6CCC0] pb-4 last:border-0">
-                <p class="font-medium text-[#2C2416] mb-1">{q}</p>
-                <p>{a}</p>
-              </div>
-            ))}
+            <div class="border-b border-[#D6CCC0] pb-4">
+              <p class="font-medium text-[#2C2416] mb-1">Comment valider un contenu ?</p>
+              <p>Cliquez sur un contenu pour voir le détail, puis utilisez ✓ Valider ou ✗ Refuser. Vous pouvez aussi ajouter un commentaire optionnel.</p>
+              <a href="/espace-client/dashboard?goto=content" class="inline-flex items-center gap-1 mt-2 text-xs text-[#8B3E22] hover:underline font-medium">Voir mes contenus à valider <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon></a>
+            </div>
+            <div class="border-b border-[#D6CCC0] pb-4">
+              <p class="font-medium text-[#2C2416] mb-1">Comment déposer des photos ou vidéos ?</p>
+              <p>Allez dans "Mes documents" → sous-onglet "Fichiers déposés". Cliquez sur la zone pour sélectionner vos fichiers.</p>
+              <a href="/espace-client/dashboard?goto=uploads" class="inline-flex items-center gap-1 mt-2 text-xs text-[#8B3E22] hover:underline font-medium">Déposer des fichiers <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon></a>
+            </div>
+            <div class="border-b border-[#D6CCC0] pb-4">
+              <p class="font-medium text-[#2C2416] mb-1">Où trouver mes documents ?</p>
+              <p>Dans "Mes documents" → sous-onglet "Documents" pour vos contrats et audits.</p>
+              <a href="/espace-client/dashboard?goto=docs" class="inline-flex items-center gap-1 mt-2 text-xs text-[#8B3E22] hover:underline font-medium">Voir mes documents <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon></a>
+            </div>
+            <div class="border-b border-[#D6CCC0] pb-4">
+              <p class="font-medium text-[#2C2416] mb-1">Où trouver mes factures ?</p>
+              <p>Dans "Mes documents" → sous-onglet "Factures".</p>
+              <a href="/espace-client/dashboard?goto=factures" class="inline-flex items-center gap-1 mt-2 text-xs text-[#8B3E22] hover:underline font-medium">Voir mes factures <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon></a>
+            </div>
+            <div>
+              <p class="font-medium text-[#2C2416] mb-1">Puis-je modifier mes informations ?</p>
+              <p>Oui, rendez-vous dans l'onglet "Mon compte" ci-dessus pour mettre à jour vos informations.</p>
+            </div>
           </div>
         </div>
         <a href="/faq" target="_blank" class="flex items-center justify-between bg-[#EDE6DB] rounded-2xl p-5 hover:bg-[#D6CCC0]/40 transition-colors group">
