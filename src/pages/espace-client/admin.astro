@@ -15,12 +15,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <span class="text-[#8B3E22] text-xs ml-2 uppercase tracking-widest font-sans">Admin</span>
       </a>
       <div class="flex items-center gap-3">
+        <button id="admin-bell-btn" class="relative w-10 h-10 rounded-xl border border-[#F5EDE4]/20 flex items-center justify-center text-[#F5EDE4]/70 hover:text-white hover:border-white/40 hover:bg-white/10 transition-colors" title="Notifications">
+          <iconify-icon icon="solar:bell-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+          <span id="admin-notif-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#8B3E22] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none"></span>
+        </button>
         <button id="admin-settings-btn" class="w-10 h-10 rounded-xl border border-[#F5EDE4]/20 flex items-center justify-center text-[#F5EDE4]/70 hover:text-white hover:border-white/40 hover:bg-white/10 transition-colors" title="Paramètres">
           <iconify-icon icon="solar:settings-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
         </button>
         <button id="logout-btn" class="text-sm text-[#F5EDE4]/70 hover:text-white transition-colors px-4 py-2 rounded-xl border border-[#F5EDE4]/20 hover:bg-white/10">Déconnexion</button>
       </div>
     </header>
+
+    <!-- Panel notifications flottant (cloche, mobile/tablette) -->
+    <div id="admin-bell-float-panel" class="hidden fixed top-[76px] right-4 w-80 bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] z-50 overflow-hidden xl:hidden">
+      <div class="px-4 py-3 bg-[#2C2416] flex items-center justify-between">
+        <span class="text-sm font-semibold text-[#F5EDE4]">Notifications</span>
+        <button onclick="clearAllImpNotifs()" class="text-xs text-[#F5EDE4]/50 hover:text-[#F5EDE4] transition-colors">Tout effacer</button>
+      </div>
+      <div id="admin-bell-float-list" class="max-h-80 overflow-y-auto divide-y divide-[#D6CCC0]/30">
+        <p class="text-xs text-[#2C2416]/40 italic p-4 text-center">Aucune notification</p>
+      </div>
+    </div>
 
     <!-- Panel Paramètres admin -->
     <div id="admin-settings-overlay" class="hidden fixed inset-0 z-40 bg-[#2C2416]/40" onclick="toggleAdminSettings()"></div>
@@ -293,6 +308,23 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
       window._lastAdminNotifItems = items;
       renderImpNotifs(items);
+
+      // Re-trier les clients selon l'activité récente (backup si realtime manqué)
+      if (allClients.length) {
+        const latestByClient = {};
+        items.forEach(n => {
+          if (n.clientId && (!latestByClient[n.clientId] || n.date > latestByClient[n.clientId])) latestByClient[n.clientId] = n.date;
+        });
+        const oneHourAgo = new Date(Date.now() - 3600*1000).toISOString();
+        let changed = false;
+        Object.entries(latestByClient).forEach(([cid, date]) => {
+          if (date > oneHourAgo && !_recentActivity[cid]) { _recentActivity[cid] = Date.parse(date); changed = true; }
+        });
+        if (changed) {
+          allClients.sort((a, b) => (latestByClient[b.id]||'0') > (latestByClient[a.id]||'0') ? 1 : -1);
+          renderClients(allClients);
+        }
+      }
     }
 
     function dismissNotifRow(id) {
@@ -412,6 +444,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           }
         }, { passive: true });
       });
+
+      // Synchroniser le badge de la cloche
+      const bellBadge = document.getElementById('admin-notif-badge');
+      if (bellBadge) {
+        bellBadge.textContent = visible.length > 9 ? '9+' : String(visible.length);
+        bellBadge.classList.toggle('hidden', visible.length === 0);
+        bellBadge.classList.toggle('flex', visible.length > 0);
+      }
+
+      // Synchroniser le panel flottant si ouvert
+      const floatList = document.getElementById('admin-bell-float-list');
+      if (floatList) floatList.innerHTML = list.innerHTML;
     }
 
     window.dismissImpNotif = (id) => {
@@ -437,6 +481,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setTimeout(() => window.switchClientTab(tab||'contenu'), 600);
     };
 
+    // ─── Cloche : panel flottant fusionné avec le panel droit ────────────────
+    document.getElementById('admin-bell-btn').onclick = (e) => {
+      e.stopPropagation();
+      // Sur xl, scroller vers le panel droit; sinon toggle panel flottant
+      const impList = document.getElementById('imp-notif-list');
+      if (window.innerWidth >= 1280 && impList) {
+        impList.closest('.sticky')?.scrollIntoView({ behavior:'smooth', block:'start' });
+      } else {
+        const fp = document.getElementById('admin-bell-float-panel');
+        if (fp) {
+          fp.classList.toggle('hidden');
+          if (!fp.classList.contains('hidden') && window._lastAdminNotifItems) renderImpNotifs(window._lastAdminNotifItems);
+        }
+      }
+    };
+    document.addEventListener('click', (e) => {
+      const fp   = document.getElementById('admin-bell-float-panel');
+      const bell = document.getElementById('admin-bell-btn');
+      if (fp && !fp.contains(e.target) && bell && !bell.contains(e.target)) fp.classList.add('hidden');
+    });
     // renderImpNotifs est appelé directement depuis loadAdminNotifs (via _lastAdminNotifItems)
 
     // ─── Suivi activité clients (temps réel) ──────────────────────────────────
@@ -884,43 +948,41 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         return `<div class="border ${ct.status === 'rejected' ? 'border-red-200' : 'border-[#D6CCC0]'} rounded-xl mb-3 overflow-hidden" data-search="${safeTitle.toLowerCase()}"><div class="flex hover:bg-[#F5EDE4]/20 transition-colors"><div onclick="toggleContentDetail('${ct.id}')" class="w-16 sm:w-24 md:w-32 shrink-0 overflow-hidden rounded-l-xl flex items-center justify-center cursor-pointer" style="background:${tHex}18;height:90px">${file0?.url?`<img src="${file0.url}" alt="visuel" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`:`<iconify-icon icon="${tIcon}" stroke-width="1.5" style="color:${tHex};font-size:2rem"></iconify-icon>`}</div><div onclick="toggleContentDetail('${ct.id}')" class="flex-1 p-4 min-w-0 cursor-pointer"><div class="flex items-start justify-between gap-2 mb-1.5"><div class="flex flex-wrap items-center gap-2 min-w-0">${typeTag}<p class="font-semibold text-[#2C2416] text-sm truncate">${cleanT}</p></div><div class="flex items-center gap-1 shrink-0 ml-1" onclick="event.stopPropagation()"><a href="${file0?.url||'#'}" target="${file0?.url?'_blank':'_self'}" onclick="${file0?.url?'event.stopPropagation()':`event.preventDefault();event.stopPropagation();toggleContentDetail('${ct.id}')`}" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors"><iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon></a>${statusBadge(ct.status)}<iconify-icon id="chevron-${ct.id}" icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform"></iconify-icon></div></div>${shortDesc}<p class="text-xs text-[#767A55] mt-1.5">${schedDate}</p></div></div><div id="detail-${ct.id}" class="hidden border-t border-[#D6CCC0]/50 p-4">${fileBlock}${captionBlock}${feedbackBlock}<div class="flex gap-2 mt-3 flex-wrap"><button onclick="toggleEdit('${ct.id}')" class="px-4 py-2 border border-[#8B3E22] text-[#8B3E22] rounded-full text-xs font-medium hover:bg-[#8B3E22]/10 transition-colors">✏️ Modifier</button>${ct.status==='rejected'?`<button onclick="replyToRefused('${ct.id}','${clientId}')" class="px-4 py-2 border border-[#2C2416] text-[#2C2416] rounded-full text-xs font-medium hover:bg-[#EDE6DB] transition-colors">↩ Nouvelle version</button>`:''}<button onclick="deleteContent('${ct.id}','${file0?.url?file0.url.replace(/'/g,"\\'"):''}','${clientId}')" class="px-4 py-2 border border-red-300 text-red-500 rounded-full text-xs font-medium hover:bg-red-50 transition-colors">🗑 Supprimer</button></div>${editPanel}${replyPanel}</div></div>`;
       };
 
-      // Regrouper par mois si > 4 contenus
+      // Pending + rejected directement visibles, historique en accordéon fermé
       const ctItemsHtml = (() => {
         if (!content?.length) return '<p class="text-xs text-[#2C2416]/30 italic">Aucun contenu envoyé</p>';
-        if (content.length <= 4) return content.map(_renderCtItem).join('');
-        const groups = {};
-        content.forEach(ct => {
-          const d = ct.scheduled_at || ct.created_at;
-          const k = (d||'').slice(0,7) || '0000-00';
-          if (!groups[k]) groups[k] = { items:[], label: d ? new Date(d).toLocaleDateString('fr-FR',{month:'long',year:'numeric'}) : 'Sans date' };
-          groups[k].items.push(ct);
-        });
-        return Object.keys(groups).sort().reverse().map(k => {
-          const { items, label } = groups[k];
-          const cap         = label[0].toUpperCase() + label.slice(1);
-          const pending     = items.filter(i => i.status === 'pending');
-          const rejected    = items.filter(i => i.status === 'rejected');
-          const hasPending  = pending.length > 0;
-          const hasRejected = rejected.length > 0;
-          const hasAction   = hasPending || hasRejected;
-          const visible     = hasAction ? [...pending, ...rejected] : items;
-          const hiddenRest  = hasAction ? items.filter(i => i.status === 'approved') : [];
-          const border      = hasPending ? 'border-amber-300' : hasRejected ? 'border-red-300' : 'border-[#D6CCC0]';
-          const summaryBg   = hasPending ? 'bg-amber-50 hover:bg-amber-100' : hasRejected ? 'bg-red-50 hover:bg-red-100' : 'bg-[#F5EDE4] hover:bg-[#EDE6DB]';
-          const badgeParts  = [];
-          if (hasPending)  badgeParts.push('<span class="text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">' + pending.length + ' à valider</span>');
-          if (hasRejected) badgeParts.push('<span class="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded-full border border-red-200">' + rejected.length + ' refusé' + (rejected.length>1?'s':'') + '</span>');
-          const badge = badgeParts.length ? '<div class="flex gap-1">' + badgeParts.join('') + '</div>' : '<span class="text-xs text-[#767A55] bg-white px-2.5 py-1 rounded-full border border-[#D6CCC0]">' + items.length + ' contenu' + (items.length > 1 ? 's' : '') + '</span>';
-          const restHtml    = hiddenRest.length
-            ? '<div class="hidden" id="rest-' + k + '">' + hiddenRest.map(_renderCtItem).join('') + '</div>'
-              + '<button onclick="var r=document.getElementById(\'rest-' + k + '\');r.classList.toggle(\'hidden\');this.textContent=r.classList.contains(\'hidden\')?\'Voir tout (' + hiddenRest.length + ')\':\'Masquer\'" class="text-xs text-[#8B3E22] hover:underline mt-1 px-1">Voir tout (' + hiddenRest.length + ')</button>'
-            : '';
-          return '<details class="mb-2 border ' + border + ' rounded-xl overflow-hidden" ' + (hasPending ? 'open' : '') + '>'
-            + '<summary class="flex items-center justify-between px-4 py-3 ' + summaryBg + ' cursor-pointer transition-colors select-none">'
-            + '<span class="text-sm font-semibold text-[#2C2416] capitalize">' + cap + '</span>'
-            + badge
-            + '</summary><div class="p-2">' + visible.map(_renderCtItem).join('') + restHtml + '</div></details>';
-        }).join('');
+        const allPending  = (content||[]).filter(c => c.status === 'pending');
+        const allRejected = (content||[]).filter(c => c.status === 'rejected');
+        const allApproved = (content||[]).filter(c => c.status === 'approved');
+        let html = '';
+        if (allPending.length) {
+          html += '<p class="text-xs font-semibold text-amber-600 uppercase tracking-widest mb-2">⏳ En attente (' + allPending.length + ')</p>';
+          html += allPending.map(_renderCtItem).join('');
+        }
+        if (allRejected.length) {
+          html += (allPending.length ? '<div class="mt-4"></div>' : '') + '<p class="text-xs font-semibold text-red-600 uppercase tracking-widest mb-2">✗ Refusés (' + allRejected.length + ')</p>';
+          html += allRejected.map(_renderCtItem).join('');
+        }
+        if (allApproved.length) {
+          if (allPending.length || allRejected.length) html += '<p class="text-xs text-[#767A55] uppercase tracking-widest mt-5 mb-2">Historique</p>';
+          const groups = {};
+          allApproved.forEach(ct => {
+            const d = ct.scheduled_at || ct.created_at;
+            const k = (d||'').slice(0,7) || '0000-00';
+            if (!groups[k]) groups[k] = { items:[], label: d ? new Date(d).toLocaleDateString('fr-FR',{month:'long',year:'numeric'}) : 'Sans date' };
+            groups[k].items.push(ct);
+          });
+          html += Object.keys(groups).sort().reverse().map(k => {
+            const { items, label } = groups[k];
+            const cap = label[0].toUpperCase() + label.slice(1);
+            return '<details class="mb-2 border border-[#D6CCC0] rounded-xl overflow-hidden">'
+              + '<summary class="flex items-center justify-between px-4 py-3 bg-[#F5EDE4] hover:bg-[#EDE6DB] cursor-pointer transition-colors select-none">'
+              + '<span class="text-sm font-semibold text-[#2C2416] capitalize">' + cap + '</span>'
+              + '<span class="text-xs text-[#767A55] bg-white px-2.5 py-1 rounded-full border border-[#D6CCC0]">' + items.length + ' contenu' + (items.length>1?'s':'') + '</span>'
+              + '</summary><div class="p-2">' + items.map(_renderCtItem).join('') + '</div></details>';
+          }).join('');
+        }
+        return html || '<p class="text-xs text-[#2C2416]/30 italic">Aucun contenu envoyé</p>';
       })();
 
       document.getElementById('client-detail').innerHTML = `
