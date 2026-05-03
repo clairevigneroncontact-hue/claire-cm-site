@@ -857,17 +857,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           ${f0?.url && !isImg ? `<a href="${f0.url}" target="_blank" class="flex items-center gap-3 p-3 bg-[#EDE6DB] rounded-xl hover:bg-[#D6CCC0] transition-colors mb-3"><iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] text-2xl shrink-0"></iconify-icon><span class="text-sm text-[#2C2416] truncate">${f0.name||'Ouvrir'}</span></a>` : ''}
           ${item.description ? `<div class="bg-[#F5EDE4] rounded-xl p-3 mb-3 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Légende</p><p class="text-sm text-[#2C2416]/75 leading-relaxed whitespace-pre-wrap">${item.description}</p></div>` : ''}
           ${item.status === 'pending' ? `
-          <div class="flex gap-2 flex-wrap mt-2">
-            <button onclick="validate('${item.id}','approved')" class="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700">✓ Valider</button>
-            <button onclick="showFeedback('${item.id}')" class="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600">✗ Refuser</button>
-          </div>
-          <button onclick="toggleApproveNote('${item.id}')" class="mt-1.5 text-[10px] text-[#767A55] hover:text-[#8B3E22] transition-colors hover:underline underline-offset-2">+ Ajouter un commentaire avant de valider</button>
-          <div id="approve-note-${item.id}" class="hidden mt-2">
-            <textarea spellcheck="true" id="approve-text-${item.id}" placeholder="Commentaire optionnel…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-green-400 resize-none"></textarea>
-            <button onclick="validateWithNote('${item.id}')" class="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700">✓ Valider avec ce commentaire</button>
+          <div class="mt-3">
+            <textarea spellcheck="true" id="approve-text-${item.id}" placeholder="Commentaire optionnel…" rows="2"
+              class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] bg-[#F5EDE4]/50 text-sm mb-3 focus:outline-none focus:border-[#8B3E22] focus:bg-white resize-none transition-colors"></textarea>
+            <div class="flex gap-2 flex-wrap">
+              <button onclick="validateWithNote('${item.id}')" class="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700">✓ Valider</button>
+              <button onclick="showFeedback('${item.id}')" class="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600">✗ Refuser</button>
+            </div>
           </div>
           <div id="feedback-${item.id}" class="hidden mt-3">
-            <textarea spellcheck="true" id="feedback-text-${item.id}" placeholder="Votre commentaire…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-red-400 resize-none"></textarea>
+            <p class="text-xs text-[#767A55] mb-1">Motif du refus :</p>
+            <textarea spellcheck="true" id="feedback-text-${item.id}" placeholder="Expliquez ce que vous souhaitez modifier…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-red-400 resize-none"></textarea>
             <button onclick="validateWithFeedback('${item.id}')" class="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600">Envoyer le refus</button>
           </div>` : `
           <div class="mt-3 pt-3 border-t border-[#D6CCC0]/50">
@@ -1152,14 +1152,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                         : n.type === 'message' ? 'solar:chat-round-dots-linear'
                         : 'solar:document-text-linear';
           const dateStr = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-          return `<div onclick="goToSection('${n.id}','${target?.id||''}','${n.type||''}','${n.content_id||''}')"
+          return `<div data-notif-id="${n.id}" onclick="markNotifRowRead('${n.id}'); goToSection('${n.id}','${target?.id||''}','${n.type||''}','${n.content_id||''}')"
             class="flex items-start gap-2.5 px-4 py-3 cursor-pointer hover:bg-[#F5EDE4] transition-colors ${n.read ? 'bg-white' : 'bg-[#8B3E22]/10'}">
-            <button onclick="event.stopPropagation(); markNotifRead('${n.id}')" title="Marquer comme lu"
+            <button data-checkbox onclick="event.stopPropagation(); markNotifRead('${n.id}')" title="Marquer comme lu"
               class="w-4 h-4 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center transition-colors ${n.read ? 'border-[#D6CCC0] bg-[#D6CCC0]/20 cursor-default' : 'border-[#8B3E22] hover:bg-[#8B3E22]/30'}">
               ${n.read ? '<iconify-icon icon="solar:check-linear" stroke-width="3" class="text-[#767A55]" style="font-size:8px"></iconify-icon>' : ''}
             </button>
             <div class="flex-1 min-w-0">
-              <p class="text-xs text-[#2C2416] leading-relaxed ${n.read ? '' : 'font-medium'}">${n.message}</p>
+              <p data-notif-text class="text-xs text-[#2C2416] leading-relaxed ${n.read ? '' : 'font-medium'}">${n.message}</p>
               <p class="text-[10px] text-[#767A55] mt-0.5">${dateStr}</p>
             </div>
           </div>`;
@@ -1167,14 +1167,29 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     }
 
+    // Mise à jour visuelle immédiate d'une ligne notification
+    function markNotifRowRead(id) {
+      const row = document.querySelector(`[data-notif-id="${id}"]`);
+      if (!row) return;
+      row.classList.remove('bg-[#8B3E22]/10');
+      row.classList.add('bg-white');
+      const btn = row.querySelector('[data-checkbox]');
+      if (btn) {
+        btn.className = 'w-4 h-4 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center transition-colors border-[#D6CCC0] bg-[#D6CCC0]/20 cursor-default';
+        btn.innerHTML = '<iconify-icon icon="solar:check-linear" stroke-width="3" class="text-[#767A55]" style="font-size:8px"></iconify-icon>';
+      }
+      const txt = row.querySelector('[data-notif-text]');
+      if (txt) txt.classList.remove('font-medium');
+    }
+
     window.markNotifRead = async (id) => {
-      await sb.from('notifications').update({ read: true }).eq('id', id);
-      await loadNotifications();
+      markNotifRowRead(id);
+      sb.from('notifications').update({ read: true }).eq('id', id);
     };
 
     window.markAllNotifRead = async () => {
-      await sb.from('notifications').update({ read: true }).eq('client_id', uid);
-      await loadNotifications();
+      document.querySelectorAll('[data-notif-id]').forEach(row => markNotifRowRead(row.dataset.notifId));
+      sb.from('notifications').update({ read: true }).eq('client_id', uid);
     };
 
     // Clic sur notification → marquer lu + naviguer vers le bon endroit
@@ -1189,22 +1204,29 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         if (panel && panel.classList.contains('hidden')) window.toggleDiscussion();
         return;
       }
-      // Contenu : ouvrir le détail de l'item concerné si on a son id
+      // Contenu : ouvrir le détail de l'item concerné
       if (type === 'content') {
         window.switchTab('content');
         setTimeout(() => {
-          if (contentId) {
-            const detail = document.getElementById('dash-detail-' + contentId);
-            if (detail && detail.classList.contains('hidden')) window.toggleDashContent(contentId);
-            const chev = document.getElementById('dash-chev-' + contentId);
+          // Priorité : content_id fourni par la notif, sinon premier item en attente
+          const targetId = contentId || pending[0]?.id;
+          if (targetId) {
+            // Ouvrir le <details> parent si fermé
+            const detail = document.getElementById('dash-detail-' + targetId);
+            const detailsEl = detail?.closest('details');
+            if (detailsEl) detailsEl.open = true;
+            if (detail?.classList.contains('hidden')) window.toggleDashContent(targetId);
             setTimeout(() => {
-              const el = document.getElementById('dash-detail-' + contentId)?.closest('[data-search]') || document.getElementById('dash-detail-' + contentId);
-              if (el) { el.scrollIntoView({ behavior:'smooth', block:'center' }); }
+              const row = detail?.closest('[data-search]') || detail;
+              if (row) {
+                row.scrollIntoView({ behavior:'smooth', block:'center' });
+                row.style.transition = 'box-shadow 0.3s';
+                row.style.boxShadow = '0 0 0 3px #8B3E2250';
+                setTimeout(() => { row.style.boxShadow = ''; }, 2000);
+              }
             }, 100);
-          } else {
-            document.getElementById('card-content')?.scrollIntoView({ behavior:'smooth', block:'center' });
           }
-        }, 200);
+        }, 300);
         return;
       }
       if (cardId) {
