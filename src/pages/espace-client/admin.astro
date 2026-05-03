@@ -869,15 +869,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           if (!groups[k]) groups[k] = { items:[], label: d ? new Date(d).toLocaleDateString('fr-FR',{month:'long',year:'numeric'}) : 'Sans date' };
           groups[k].items.push(ct);
         });
-        const nowM = new Date().toISOString().slice(0,7);
         return Object.keys(groups).sort().reverse().map(k => {
           const { items, label } = groups[k];
-          const cap = label[0].toUpperCase() + label.slice(1);
-          return '<details class="mb-2 border border-[#D6CCC0] rounded-xl overflow-hidden" ' + (k >= nowM ? 'open' : '') + '>'
-            + '<summary class="flex items-center justify-between px-4 py-3 bg-[#F5EDE4] cursor-pointer hover:bg-[#EDE6DB] transition-colors select-none">'
+          const cap         = label[0].toUpperCase() + label.slice(1);
+          const pending     = items.filter(i => i.status === 'pending');
+          const hasPending  = pending.length > 0;
+          const visible     = hasPending ? pending : items;
+          const hiddenRest  = hasPending ? items.filter(i => i.status !== 'pending') : [];
+          const border      = hasPending ? 'border-amber-300' : 'border-[#D6CCC0]';
+          const summaryBg   = hasPending ? 'bg-amber-50 hover:bg-amber-100' : 'bg-[#F5EDE4] hover:bg-[#EDE6DB]';
+          const badge       = hasPending
+            ? '<span class="text-xs text-amber-600 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-200">' + pending.length + ' à valider</span>'
+            : '<span class="text-xs text-[#767A55] bg-white px-2.5 py-1 rounded-full border border-[#D6CCC0]">' + items.length + ' contenu' + (items.length > 1 ? 's' : '') + '</span>';
+          const restHtml    = hiddenRest.length
+            ? '<div class="hidden" id="rest-' + k + '">' + hiddenRest.map(_renderCtItem).join('') + '</div>'
+              + '<button onclick="var r=document.getElementById(\'rest-' + k + '\');r.classList.toggle(\'hidden\');this.textContent=r.classList.contains(\'hidden\')?\'Voir tout (' + hiddenRest.length + ')\':\'Masquer\'" class="text-xs text-[#8B3E22] hover:underline mt-1 px-1">Voir tout (' + hiddenRest.length + ')</button>'
+            : '';
+          return '<details class="mb-2 border ' + border + ' rounded-xl overflow-hidden" ' + (hasPending ? 'open' : '') + '>'
+            + '<summary class="flex items-center justify-between px-4 py-3 ' + summaryBg + ' cursor-pointer transition-colors select-none">'
             + '<span class="text-sm font-semibold text-[#2C2416] capitalize">' + cap + '</span>'
-            + '<span class="text-xs text-[#767A55] bg-white px-2.5 py-1 rounded-full border border-[#D6CCC0]">' + items.length + ' contenu' + (items.length > 1 ? 's' : '') + '</span>'
-            + '</summary><div class="p-2">' + items.map(_renderCtItem).join('') + '</div></details>';
+            + badge
+            + '</summary><div class="p-2">' + visible.map(_renderCtItem).join('') + restHtml + '</div></details>';
         }).join('');
       })();
 
