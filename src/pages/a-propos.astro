@@ -299,11 +299,11 @@ const projets = [
                   <div class="overflow-hidden rounded-xl">
                     <div class="flex transition-transform duration-500 ease-in-out" data-track>
                       {projet.images.map((img, ii) => (
-                        <div class="min-w-full rounded-xl overflow-hidden" style="height:420px">
+                        <div class="min-w-full flex justify-center rounded-xl">
                           <img
                             src={img}
                             alt={`${projet.client} — visuel ${ii + 1}`}
-                            class="w-full h-full object-cover rounded-xl"
+                            class="max-h-[420px] w-full object-contain rounded-xl"
                             loading="lazy"
                           />
                         </div>
