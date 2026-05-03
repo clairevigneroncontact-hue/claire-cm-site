@@ -558,6 +558,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const cid = payload.new?.client_id || payload.old?.client_id;
         if (cid) bumpClient(cid);
       })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
+        const cid = payload.new?.id;
+        if (!cid || payload.new?.role !== 'client') return;
+        // Mettre à jour l'avatar dans allClients sans recharger tout
+        const idx = allClients.findIndex(c => c.id === cid);
+        if (idx !== -1 && payload.new?.avatar_url) {
+          allClients[idx].avatar_url = payload.new.avatar_url;
+          sortAndRenderClients();
+        }
+        // Si la fiche du client est ouverte, rafraîchir l'avatar dans l'en-tête
+        if (window._currentAdminClientId === cid && payload.new?.avatar_url) {
+          const headerAvatar = document.querySelector('#client-detail .rounded-full img');
+          if (headerAvatar) headerAvatar.src = payload.new.avatar_url + '?t=' + Date.now();
+        }
+      })
       .subscribe();
 
     // ─── Calendrier admin ─────────────────────────────────────────────────────
