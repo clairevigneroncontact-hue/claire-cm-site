@@ -977,7 +977,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     }
     // IDs validés dans cette session → badge "Nouveau" sur le calendrier
-    const _calNewKey = 'calNewlyApproved_' + uid;
+    // Le badge disparaît à la prochaine connexion (access_token change à chaque login)
+    const _calNewKey     = 'calNewlyApproved_' + uid;
+    const _calTokenKey   = 'calSessionToken_'  + uid;
+    const _currentToken  = session.access_token?.slice(-16) || '';  // 16 derniers chars suffisent
+    const _storedToken   = sessionStorage.getItem(_calTokenKey);
+    if (_storedToken !== _currentToken) {
+      // Nouvelle connexion → effacer les badges NEW de la session précédente
+      sessionStorage.removeItem(_calNewKey);
+      sessionStorage.setItem(_calTokenKey, _currentToken);
+    }
     const _calNewItems = new Set(JSON.parse(sessionStorage.getItem(_calNewKey) || '[]'));
 
     window.validate = async (id, status, feedback = '') => {
