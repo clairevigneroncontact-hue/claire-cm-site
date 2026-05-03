@@ -6,6 +6,7 @@ const projets = [
     mission: 'Création et lancement du compte Instagram',
     duree: '3 mois',
     image: '/projets/bahati/bahati-02.png',
+    href: '/a-propos#bahati',
   },
   {
     client: 'Transakauto',
@@ -13,6 +14,7 @@ const projets = [
     mission: 'Création et développement du compte Instagram',
     duree: '1 an',
     image: '/projets/transakauto/transak-01.png',
+    href: '/a-propos#transakauto',
   },
   {
     client: 'Garage automobile',
@@ -20,6 +22,7 @@ const projets = [
     mission: 'Calendrier éditorial et stratégie de contenu',
     duree: '1 mois',
     image: '/projets/garage/garage-01.png',
+    href: '/a-propos#garage',
   },
 ];
 ---
@@ -39,7 +42,7 @@ const projets = [
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
       {projets.map(projet => (
-        <a href="/a-propos" class="group block bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+        <a href={projet.href} class="group block bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
           <div class="aspect-[4/5] overflow-hidden bg-[#F5EDE4]">
             <img
               src={projet.image}
