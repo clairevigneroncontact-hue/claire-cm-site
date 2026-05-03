@@ -3,55 +3,60 @@
 
 <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
 
-  <!-- Fenêtre chat -->
-  <div
-    id="chat-window"
-    class="hidden w-[calc(100vw-3rem)] sm:w-80 bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] overflow-hidden flex-col"
-    style="height: 460px; max-height: calc(100vh - 120px);"
-  >
-    <!-- Header -->
-    <div class="bg-[#2C2416] px-4 py-3 flex items-center justify-between shrink-0">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 bg-[#8B3E22] rounded-full flex items-center justify-center text-white text-sm font-serif font-bold">C</div>
-        <div>
-          <p class="text-[#F5EDE4] text-sm font-medium">Assistante IA · Claire CM</p>
-          <p class="text-[#F5EDE4]/50 text-xs">Intelligence artificielle · Répond instantanément</p>
+  <!-- Fenêtre chat + bouton fermer -->
+  <div class="relative">
+
+    <!-- Bouton fermer en haut à droite de la fenêtre -->
+    <button
+      id="chat-close-outside"
+      class="hidden absolute -top-3 -right-3 z-10 items-center gap-1.5 px-3 py-1.5 bg-[#2C2416] hover:bg-[#8B3E22] text-[#F5EDE4] text-xs font-medium rounded-full shadow-lg transition-all duration-200"
+      aria-label="Fermer le chat"
+    >
+      <iconify-icon icon="solar:close-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+      Fermer
+    </button>
+
+    <!-- Fenêtre chat -->
+    <div
+      id="chat-window"
+      class="hidden w-[calc(100vw-3rem)] sm:w-80 bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] overflow-hidden flex-col"
+      style="height: 460px; max-height: calc(100vh - 120px);"
+    >
+      <!-- Header -->
+      <div class="bg-[#2C2416] px-4 py-3 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-[#8B3E22] rounded-full flex items-center justify-center text-white text-sm font-serif font-bold">C</div>
+          <div>
+            <p class="text-[#F5EDE4] text-sm font-medium">Assistante IA · Claire CM</p>
+            <p class="text-[#F5EDE4]/50 text-xs">Intelligence artificielle · Répond instantanément</p>
+          </div>
         </div>
+        <button id="chat-close" class="text-[#F5EDE4]/50 hover:text-white transition-colors p-1">
+          <iconify-icon icon="solar:close-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+        </button>
       </div>
-      <button id="chat-close" class="text-[#F5EDE4]/50 hover:text-white transition-colors p-1">
-        <iconify-icon icon="solar:close-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
-      </button>
+
+      <!-- Messages -->
+      <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-[#F5EDE4]/20"></div>
+
+      <!-- Suggestions -->
+      <div id="chat-suggestions" class="px-3 py-2 flex flex-wrap gap-1.5 border-t border-[#D6CCC0] bg-white shrink-0 min-h-[44px]"></div>
+
+      <!-- Input -->
+      <div class="px-3 py-3 border-t border-[#D6CCC0] bg-white shrink-0 flex gap-2">
+        <input
+          id="chat-input"
+          type="text"
+          placeholder="Votre question…"
+          class="flex-1 text-sm px-3 py-2 rounded-xl border border-[#D6CCC0] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]/50"
+        />
+        <button id="chat-send" class="w-9 h-9 bg-[#8B3E22] rounded-xl flex items-center justify-center text-white hover:bg-[#6B2E1A] transition-colors shrink-0">
+          <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon>
+        </button>
+      </div>
     </div>
 
-    <!-- Messages -->
-    <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-[#F5EDE4]/20"></div>
-
-    <!-- Suggestions -->
-    <div id="chat-suggestions" class="px-3 py-2 flex flex-wrap gap-1.5 border-t border-[#D6CCC0] bg-white shrink-0 min-h-[44px]"></div>
-
-    <!-- Input -->
-    <div class="px-3 py-3 border-t border-[#D6CCC0] bg-white shrink-0 flex gap-2">
-      <input
-        id="chat-input"
-        type="text"
-        placeholder="Votre question…"
-        class="flex-1 text-sm px-3 py-2 rounded-xl border border-[#D6CCC0] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]/50"
-      />
-      <button id="chat-send" class="w-9 h-9 bg-[#8B3E22] rounded-xl flex items-center justify-center text-white hover:bg-[#6B2E1A] transition-colors shrink-0">
-        <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon>
-      </button>
-    </div>
   </div>
-
-  <!-- Bouton fermer (visible quand chat ouvert) -->
-  <button
-    id="chat-close-outside"
-    class="hidden items-center gap-2 px-4 py-2 bg-[#2C2416]/80 hover:bg-[#2C2416] text-[#F5EDE4] text-xs font-medium rounded-full shadow-lg transition-all duration-200"
-    aria-label="Fermer le chat"
-  >
-    <iconify-icon icon="solar:close-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
-    Fermer
-  </button>
 
   <!-- Bouton d'ouverture -->
   <button
