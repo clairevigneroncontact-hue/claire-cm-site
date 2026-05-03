@@ -861,8 +861,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const typeTag = tType ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${tColor} uppercase tracking-wide shrink-0">${tType}</span>` : '';
       const isPending = item.status === 'pending';
       return `
-      <div class="border ${isPending ? 'border-amber-200 bg-amber-50/30' : 'border-[#D6CCC0]'} rounded-xl overflow-hidden mb-3 last:mb-0" data-search="${(item.title + ' ' + (item.description||'')).toLowerCase().replace(/"/g,'').replace(/\[.*?\]/g,'').trim()}">
-        <!-- En-tête cliquable (image + titre + badge) -->
+      <div class="border border-[#D6CCC0] rounded-xl overflow-hidden mb-3 last:mb-0" data-search="${(item.title + ' ' + (item.description||'')).toLowerCase().replace(/"/g,'').replace(/\[.*?\]/g,'').trim()}">
         <div class="flex items-center justify-between gap-2 p-3 cursor-pointer hover:bg-[#F5EDE4]/50 transition-colors" onclick="toggleDashContent('${item.id}')">
           <div class="flex items-center gap-2 min-w-0">
             ${f0?.url
@@ -879,39 +878,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div class="flex items-center gap-1 shrink-0">
             ${f0?.url ? `<a href="${f0.url}" target="_blank" onclick="event.stopPropagation()" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors" title="Voir"><iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon></a>` : ''}
             ${statusBadge}
-            <iconify-icon id="dash-chev-${item.id}" icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform ml-1"></iconify-icon>
+            <iconify-icon id="dash-chev-${item.id}" icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform ml-1 ${isPending ? 'rotate-180' : ''}"></iconify-icon>
           </div>
         </div>
-
-        ${isPending ? `
-        <!-- Boutons de validation — toujours visibles pour les contenus en attente -->
-        <div class="px-3 pb-3 border-t border-amber-200/50 pt-3 bg-amber-50/20">
-          <textarea spellcheck="true" id="approve-text-${item.id}" placeholder="Commentaire optionnel avant de valider…" rows="2"
-            class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] bg-white text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none transition-colors"></textarea>
-          <div class="flex gap-2 flex-wrap">
-            <button onclick="validateWithNote('${item.id}')"
-              class="flex-1 py-2.5 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5">
-              <iconify-icon icon="solar:check-circle-linear" stroke-width="1.5" class="text-base"></iconify-icon>
-              Valider
-            </button>
-            <button onclick="showFeedback('${item.id}')"
-              class="flex-1 py-2.5 bg-red-500 text-white text-sm font-medium rounded-xl hover:bg-red-600 transition-colors flex items-center justify-center gap-1.5">
-              <iconify-icon icon="solar:close-circle-linear" stroke-width="1.5" class="text-base"></iconify-icon>
-              Refuser
-            </button>
-          </div>
-          <div id="feedback-${item.id}" class="hidden mt-2">
-            <p class="text-xs text-[#767A55] mb-1">Motif du refus :</p>
-            <textarea spellcheck="true" id="feedback-text-${item.id}" placeholder="Expliquez ce que vous souhaitez modifier…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-red-400 resize-none"></textarea>
-            <button onclick="validateWithFeedback('${item.id}')" class="w-full py-2 bg-red-500 text-white text-sm font-medium rounded-xl hover:bg-red-600 transition-colors">Envoyer le refus</button>
-          </div>
-        </div>` : ''}
-
-        <!-- Détail masqué (description, fichier, commentaire post-validation) -->
-        <div id="dash-detail-${item.id}" class="hidden border-t border-[#D6CCC0]/50 p-3">
+        <div id="dash-detail-${item.id}" class="${isPending ? '' : 'hidden'} border-t border-[#D6CCC0]/50 p-3">
           ${f0?.url && !isImg ? `<a href="${f0.url}" target="_blank" class="flex items-center gap-3 p-3 bg-[#EDE6DB] rounded-xl hover:bg-[#D6CCC0] transition-colors mb-3"><iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] text-2xl shrink-0"></iconify-icon><span class="text-sm text-[#2C2416] truncate">${f0.name||'Ouvrir'}</span></a>` : ''}
           ${item.description ? `<div class="bg-[#F5EDE4] rounded-xl p-3 mb-3 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Légende</p><p class="text-sm text-[#2C2416]/75 leading-relaxed whitespace-pre-wrap">${item.description}</p></div>` : ''}
-          ${!isPending ? `
+          ${isPending ? `
+          <div class="mt-2">
+            <textarea spellcheck="true" id="approve-text-${item.id}" placeholder="Commentaire optionnel…" rows="2"
+              class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] bg-[#F5EDE4]/50 text-sm mb-3 focus:outline-none focus:border-[#8B3E22] focus:bg-white resize-none transition-colors"></textarea>
+            <div class="flex gap-2 flex-wrap">
+              <button onclick="validateWithNote('${item.id}')" class="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700">✓ Valider</button>
+              <button onclick="showFeedback('${item.id}')" class="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600">✗ Refuser</button>
+            </div>
+          </div>
+          <div id="feedback-${item.id}" class="hidden mt-3">
+            <p class="text-xs text-[#767A55] mb-1">Motif du refus :</p>
+            <textarea spellcheck="true" id="feedback-text-${item.id}" placeholder="Expliquez ce que vous souhaitez modifier…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-red-400 resize-none"></textarea>
+            <button onclick="validateWithFeedback('${item.id}')" class="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600">Envoyer le refus</button>
+          </div>` : `
           <div class="mt-1">
             ${item.feedback ? `<div class="bg-[#F5EDE4] rounded-xl p-3 mb-2 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Commentaire</p><p class="text-sm text-[#2C2416]/70 leading-relaxed whitespace-pre-wrap">${item.feedback.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p></div>` : ''}
             <button onclick="toggleEditComment('${item.id}')" class="text-[10px] text-[#767A55] hover:text-[#8B3E22] transition-colors hover:underline underline-offset-2">${item.feedback ? '✏️ Modifier le commentaire' : '+ Ajouter un commentaire'}</button>
@@ -919,7 +905,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <textarea spellcheck="true" id="edit-comment-text-${item.id}" placeholder="Commentaire optionnel…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none">${item.feedback ? item.feedback.replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''}</textarea>
               <button onclick="saveComment('${item.id}')" class="px-3 py-1.5 bg-[#8B3E22] text-white text-xs rounded-lg hover:bg-[#6B2E1A]">Enregistrer</button>
             </div>
-          </div>` : ''}
+          </div>`}
         </div>
       </div>`;
     }
