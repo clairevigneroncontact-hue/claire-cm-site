@@ -368,11 +368,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       action: () => window.switchTab('home')
     },
     {
-      icon: 'solar:check-square-linear',
-      title: 'Contenus à valider',
-      text: 'Claire dépose ici vos posts, stories, reels et carrousels. Chaque contenu s\'ouvre pour afficher la légende et les boutons ✓ Valider / ✗ Refuser.',
-      tab: 'content', card: 'card-content',
-      action: () => window.switchTab('content')
+      icon: 'solar:checklist-minimalistic-linear',
+      title: 'Mes tâches',
+      text: 'Suivez vos actions à faire, ajoutées par Claire ou par vous. Cochez une tâche pour la marquer comme terminée.',
+      tab: 'home', card: 'card-tasks',
+      action: () => window.switchTab('home')
     },
     {
       icon: 'solar:calendar-linear',
@@ -380,6 +380,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       text: 'Visualisez toutes vos publications programmées mois par mois. Cliquez sur un jour pour voir le détail. Ajoutez vos notes personnelles via le crayon ✏️.',
       tab: 'home', card: 'card-calendar',
       action: () => window.switchTab('home')
+    },
+    {
+      icon: 'solar:check-square-linear',
+      title: 'Contenus à valider',
+      text: 'Claire dépose ici vos posts, stories, reels et carrousels. Chaque contenu s\'ouvre pour afficher la légende et les boutons ✓ Valider / ✗ Refuser.',
+      tab: 'content', card: 'card-content',
+      action: () => window.switchTab('content')
     },
     {
       icon: 'solar:document-text-linear',
@@ -394,13 +401,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       text: 'Partagez vos photos, vidéos ou documents avec Claire depuis l\'onglet "Fichiers déposés". Elle les utilisera pour créer vos contenus Instagram.',
       tab: 'docs', card: 'card-upload',
       action: () => { window.switchTab('docs'); setTimeout(() => window.switchDocsTab?.('uploads'), 50); }
-    },
-    {
-      icon: 'solar:checklist-minimalistic-linear',
-      title: 'Mes tâches',
-      text: 'Suivez vos actions à faire, ajoutées par Claire ou par vous. Cochez une tâche pour la marquer comme terminée.',
-      tab: 'home', card: 'card-tasks',
-      action: () => window.switchTab('home')
     },
     {
       icon: 'solar:chat-round-dots-linear',
