@@ -1845,6 +1845,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         scheduled_at: scheduledAt,
       });
 
+      // Envoyer l'email de notification au client (sans bloquer)
+      fetch('/api/send-content-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId, title, contentType: type, caption, scheduledAt }),
+      }).catch(() => {});
+
       document.getElementById('ct-title').value   = '';
       document.getElementById('ct-caption').value = '';
       document.getElementById('ct-file').value    = '';

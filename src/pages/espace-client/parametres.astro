@@ -288,6 +288,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     document.getElementById('p-phone').value     = p?.phone || meta.phone || '';
     document.getElementById('p-instagram').value = p?.instagram_handle || meta.instagram_handle || '';
 
+    // Charger préférences notifications
+    const notifEmailEl = document.getElementById('notif-email');
+    if (notifEmailEl) notifEmailEl.checked = p?.notif_email !== false;
+    notifEmailEl?.addEventListener('change', async () => {
+      await sb.from('profiles').update({ notif_email: notifEmailEl.checked }).eq('id', uid);
+    });
+
     // Afficher la photo de profil existante
     if (p?.avatar_url) {
       const img = document.getElementById('avatar-img');
