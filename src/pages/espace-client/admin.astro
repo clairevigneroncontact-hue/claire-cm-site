@@ -413,49 +413,69 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         badge.classList.toggle('flex', visible.length > 0);
       }
 
-      if (!visible.length) { list.innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4 text-center">Aucune notification</p>'; return; }
-      list.innerHTML = visible.map(item => {
+      if (!visible.length) {
+        const empty = '<p class="text-xs text-[#2C2416]/40 italic p-4 text-center">Aucune notification</p>';
+        list.innerHTML = empty;
+        const floatListE = document.getElementById('admin-bell-float-list');
+        if (floatListE) floatListE.innerHTML = empty;
+        updateImpBadge();
+        return;
+      }
+
+      const rowsHtml = visible.map(item => {
         const when = new Date(item.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
         const bg   = item.unread ? 'bg-[#8B3E22]/5' : 'bg-white';
-        return `<div data-imp-notif="${item.id}" class="relative overflow-hidden ${bg}"
-          style="transform:translateX(0);transition:transform 0.3s ease,opacity 0.3s ease">
+        const tab  = item.tab === 'fichiers' ? 'documents' : (item.tab || 'contenu');
+        return `<div data-imp-notif="${item.id}" data-client="${item.clientId}" data-tab="${tab}"
+          class="relative overflow-hidden ${bg} cursor-pointer hover:bg-[#F5EDE4] transition-colors"
+          style="transform:translateX(0);transition:transform 0.3s ease,opacity 0.3s ease"
+          onclick="dismissAndNavigate('${item.id}','${item.clientId}','${tab}')">
           <div class="flex items-start gap-3 px-4 py-3">
             <span class="text-xl shrink-0 mt-0.5 select-none">${item.icon}</span>
-            <div class="flex-1 min-w-0 cursor-pointer" onclick="openClientFromNotif('${item.clientId}','${item.tab==='fichiers'?'documents':item.tab}')">
+            <div class="flex-1 min-w-0">
               <p class="text-xs text-[#2C2416] leading-relaxed ${item.unread?'font-medium':''}">${item.text}</p>
               <p class="text-[10px] text-[#767A55] mt-0.5">${when}</p>
             </div>
-            <!-- Desktop : bouton cocher -->
-            <button onclick="dismissImpNotif('${item.id}')" title="Marquer comme traité"
-              class="shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ml-1 hidden md:flex
-              ${item.unread?'border-[#8B3E22]/40 hover:border-[#8B3E22] hover:bg-[#8B3E22]/10':'border-[#D6CCC0] bg-[#F5EDE4]'}">
-              ${!item.unread?'<iconify-icon icon="solar:check-linear" stroke-width="2.5" style="font-size:9px;color:#8B3E22"></iconify-icon>':''}
+            <button onclick="event.stopPropagation(); dismissImpNotif('${item.id}')" title="Supprimer"
+              class="shrink-0 w-6 h-6 rounded-lg flex items-center justify-center transition-colors text-[#D6CCC0] hover:text-[#8B3E22] hover:bg-[#8B3E22]/10">
+              <iconify-icon icon="solar:close-circle-linear" stroke-width="1.5" style="font-size:14px"></iconify-icon>
             </button>
           </div>
         </div>`;
       }).join('');
 
-      // Swipe to dismiss (mobile/tablet)
-      list.querySelectorAll('[data-imp-notif]').forEach(row => {
-        let startX = 0;
-        row.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
-        row.addEventListener('touchend', e => {
-          const dx = e.changedTouches[0].clientX - startX;
-          if (dx < -60) {
-            row.style.transform = 'translateX(-100%)';
-            row.style.opacity = '0';
-            setTimeout(() => dismissImpNotif(row.dataset.impNotif), 300);
-          }
-        }, { passive: true });
-      });
+      list.innerHTML = rowsHtml;
 
-      // Synchroniser le panel flottant (cloche)
+      // Synchroniser le panel flottant (cloche) — même HTML
       const floatList = document.getElementById('admin-bell-float-list');
-      if (floatList) floatList.innerHTML = list.innerHTML;
+      if (floatList) floatList.innerHTML = rowsHtml;
 
-      // Mettre à jour les badges (cloche + panel droit)
+      // Swipe to dismiss — les deux panels
+      function addSwipe(container) {
+        if (!container) return;
+        container.querySelectorAll('[data-imp-notif]').forEach(row => {
+          let startX = 0;
+          row.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+          row.addEventListener('touchend', e => {
+            const dx = e.changedTouches[0].clientX - startX;
+            if (dx < -60) { row.style.transform = 'translateX(-100%)'; row.style.opacity = '0'; setTimeout(() => dismissImpNotif(row.dataset.impNotif), 280); }
+          }, { passive: true });
+        });
+      }
+      addSwipe(list);
+      addSwipe(floatList);
+
+      // Mettre à jour les badges
       updateImpBadge();
     }
+
+    window.dismissAndNavigate = (id, clientId, tab) => {
+      dismissImpNotif(id);  // supprime des deux panels + badge
+      if (clientId) {
+        window.openClient(clientId);
+        setTimeout(() => window.switchClientTab(tab || 'contenu'), 600);
+      }
+    };
 
     window.dismissImpNotif = (id) => {
       const dismissed = new Set(JSON.parse(localStorage.getItem(IMP_DISMISSED_KEY)||'[]'));
