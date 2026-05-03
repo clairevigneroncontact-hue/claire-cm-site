@@ -37,12 +37,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <h2 class="text-lg text-[#2C2416] font-medium mb-5">Photo de profil</h2>
           <div class="flex flex-col items-center gap-4">
             <div class="relative">
-              <div id="avatar-wrap" class="w-32 h-32 rounded-full bg-[#8B3E22]/10 flex items-center justify-center overflow-hidden border-3 border-[#D6CCC0] shadow-md" style="border-width:3px">
-                <iconify-icon id="avatar-icon" icon="solar:user-circle-linear" stroke-width="1.5" class="text-6xl text-[#8B3E22]"></iconify-icon>
+              <div id="avatar-wrap" class="w-20 h-20 rounded-full bg-[#8B3E22]/10 flex items-center justify-center overflow-hidden border-2 border-[#D6CCC0] shadow-sm">
+                <iconify-icon id="avatar-icon" icon="solar:user-circle-linear" stroke-width="1.5" class="text-4xl text-[#8B3E22]"></iconify-icon>
                 <img id="avatar-img" class="hidden absolute inset-0 w-full h-full object-cover rounded-full" alt="Photo de profil" />
               </div>
-              <label class="absolute -bottom-1 -right-1 w-10 h-10 bg-[#8B3E22] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#6B2E1A] transition-colors shadow-lg border-2 border-white">
-                <iconify-icon icon="solar:camera-add-linear" stroke-width="1.5" class="text-white text-lg"></iconify-icon>
+              <label class="absolute -bottom-1 -right-1 w-7 h-7 bg-[#8B3E22] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#6B2E1A] transition-colors shadow-md border-2 border-white">
+                <iconify-icon icon="solar:camera-add-linear" stroke-width="1.5" class="text-white text-sm"></iconify-icon>
                 <input id="avatar-input" type="file" accept="image/*" class="hidden" />
               </label>
             </div>

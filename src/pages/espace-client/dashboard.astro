@@ -1150,14 +1150,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       return null;
     }
 
+    // Cache local des notifs rejetées (résiste aux échecs RLS)
+    const NOTIF_LOCAL_KEY = 'notifDismissed_' + uid;
+    function getLocalDismissed() { return new Set(JSON.parse(localStorage.getItem(NOTIF_LOCAL_KEY) || '[]')); }
+    function addLocalDismissed(id) {
+      const s = getLocalDismissed(); s.add(id);
+      localStorage.setItem(NOTIF_LOCAL_KEY, JSON.stringify([...s]));
+    }
+    function addAllLocalDismissed(ids) {
+      const s = getLocalDismissed(); ids.forEach(id => s.add(id));
+      localStorage.setItem(NOTIF_LOCAL_KEY, JSON.stringify([...s]));
+    }
+
     async function loadNotifications() {
       const { data: notifs } = await sb.from('notifications')
         .select('*').eq('client_id', uid).order('created_at', { ascending: false }).limit(20);
-      const unread = (notifs||[]).filter(n => !n.read);
+      const localDismissed = getLocalDismissed();
+      // Non-lues ET non rejetées localement
+      const unread = (notifs||[]).filter(n => !n.read && !localDismissed.has(n.id));
       const badge  = document.getElementById('notif-badge');
       const list   = document.getElementById('notif-list');
 
-      // Badge : nombre non lus
       if (unread.length > 0) {
         badge.textContent = unread.length > 9 ? '9+' : String(unread.length);
         badge.classList.remove('hidden');
@@ -1168,8 +1181,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
 
       if (list) {
-        // N'afficher que les notifications non lues — les lues disparaissent définitivement
-        const unreadNotifs = (notifs||[]).filter(n => !n.read);
+        const unreadNotifs = unread;
         if (!unreadNotifs.length) { list.innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4">Aucune notification</p>'; return; }
         list.innerHTML = unreadNotifs.map(n => {
           const target  = notifTarget(n.type);
@@ -1220,21 +1232,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     }
 
     window.markNotifRead = (id) => {
-      sb.from('notifications').update({ read: true }).eq('id', id);
+      addLocalDismissed(id);  // cache local immédiat
+      sb.from('notifications').update({ read: true }).eq('id', id);  // tentative DB
       removeNotifRow(id);
     };
 
     window.markAllNotifRead = () => {
       const ids = [...document.querySelectorAll('[data-notif-id]')].map(r => r.dataset.notifId);
+      addAllLocalDismissed(ids);  // cache local
       ids.forEach(id => removeNotifRow(id));
-      sb.from('notifications').update({ read: true }).eq('client_id', uid);
+      sb.from('notifications').update({ read: true }).eq('client_id', uid);  // tentative DB
     };
 
     // Clic sur notification → marquer lu + naviguer vers le bon endroit
     window.goToSection = async (notifId, cardId, type, contentId) => {
-      // Supprimer la ligne visuellement + décompte badge immédiatement
+      addLocalDismissed(notifId);  // cache local immédiat
       removeNotifRow(notifId);
-      // Marquer comme lu en DB (fire-and-forget)
       sb.from('notifications').update({ read: true }).eq('id', notifId);
       document.getElementById('notif-panel').classList.add('hidden');
       document.getElementById('notif-overlay').classList.add('hidden');
