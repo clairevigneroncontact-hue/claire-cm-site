@@ -1,0 +1,46 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Paiement confirmé — Claire Vigneron CM" hideChatWidget={true}>
+  <div class="min-h-screen bg-[#F5EDE4] flex flex-col items-center justify-center px-4 py-16">
+
+    <div class="max-w-md w-full text-center">
+
+      <!-- Icône -->
+      <div class="w-20 h-20 bg-[#8B3E22] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+        <iconify-icon icon="solar:check-circle-linear" stroke-width="1.5" class="text-4xl text-white"></iconify-icon>
+      </div>
+
+      <!-- Titre -->
+      <h1 class="text-3xl md:text-4xl font-serif text-[#2C2416] tracking-tight mb-3">
+        Merci pour votre confiance 🤍
+      </h1>
+
+      <!-- Message -->
+      <p class="text-[#767A55] font-light leading-relaxed mb-2">
+        Votre paiement a bien été reçu. La facture est disponible dans votre espace client, sous l'onglet <strong class="text-[#2C2416] font-medium">Documents → Factures</strong>.
+      </p>
+      <p class="text-[#767A55] font-light leading-relaxed mb-8">
+        Hâte de continuer à travailler ensemble — à très vite !
+      </p>
+
+      <!-- Signature -->
+      <p class="text-sm text-[#8B3E22] font-medium mb-8">Claire Vigneron · Community Manager</p>
+
+      <!-- Bouton -->
+      <a href="/espace-client/dashboard"
+        class="inline-flex items-center gap-2 px-6 py-3 bg-[#2C2416] text-[#F5EDE4] rounded-full text-sm font-medium hover:bg-[#8B3E22] transition-colors shadow-lg">
+        <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon>
+        Accéder à mon espace
+      </a>
+
+    </div>
+
+    <!-- Logo bas de page -->
+    <a href="/" class="mt-16 text-base font-serif text-[#2C2416]/30 hover:text-[#2C2416]/60 transition-colors tracking-tight">
+      Claire Vigneron <span class="text-[#767A55]">·</span> CM
+    </a>
+
+  </div>
+</BaseLayout>
