@@ -45,18 +45,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <button onclick="document.getElementById('notif-toast').classList.add('hidden')" class="text-[#F5EDE4]/40 hover:text-white ml-2 shrink-0">✕</button>
     </div>
 
-    <header class="bg-[#2C2416] px-6 py-5 flex items-center justify-between">
-      <a href="/" class="text-xl font-serif text-[#F5EDE4] tracking-tight">Claire Vigneron <span class="text-[#767A55]">·</span> CM</a>
-      <div class="flex items-center gap-3">
+    <header class="bg-[#2C2416] px-4 md:px-6 py-3 md:py-5 flex items-center justify-between gap-3">
+      <a href="/" class="text-base md:text-xl font-serif text-[#F5EDE4] tracking-tight shrink-0">Claire Vigneron <span class="text-[#767A55]">·</span> CM</a>
+      <div class="flex items-center gap-2 sm:gap-3">
         <!-- Cloche notifications -->
-        <button id="notif-btn" class="relative w-11 h-11 rounded-xl border border-[#F5EDE4]/40 flex items-center justify-center text-[#F5EDE4] hover:text-white hover:border-white/60 hover:bg-white/10 transition-colors">
-          <iconify-icon icon="solar:bell-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+        <button id="notif-btn" class="relative w-9 h-9 sm:w-11 sm:h-11 rounded-xl border border-[#F5EDE4]/40 flex items-center justify-center text-[#F5EDE4] hover:text-white hover:border-white/60 hover:bg-white/10 transition-colors shrink-0">
+          <iconify-icon icon="solar:bell-linear" stroke-width="1.5" class="text-lg sm:text-xl"></iconify-icon>
           <span id="notif-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#8B3E22] rounded-full text-[10px] text-white flex items-center justify-center font-bold px-1 leading-none"></span>
         </button>
-        <a href="/espace-client/parametres" id="header-avatar-btn" class="w-11 h-11 rounded-full border-2 border-[#F5EDE4]/40 flex items-center justify-center text-[#F5EDE4] hover:border-white/80 transition-colors overflow-hidden shrink-0" title="Paramètres">
-          <iconify-icon id="header-avatar-icon" icon="solar:settings-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+        <a href="/espace-client/parametres" id="header-avatar-btn" class="w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 border-[#F5EDE4]/40 flex items-center justify-center text-[#F5EDE4] hover:border-white/80 transition-colors overflow-hidden shrink-0" title="Paramètres">
+          <iconify-icon id="header-avatar-icon" icon="solar:settings-linear" stroke-width="1.5" class="text-lg sm:text-xl"></iconify-icon>
         </a>
-        <button id="logout-btn" class="text-sm text-[#F5EDE4] hover:text-white transition-colors px-4 py-2 rounded-xl border border-[#F5EDE4]/40 hover:bg-white/10 hover:border-white/60">Déconnexion</button>
+        <!-- Déconnexion : icône sur mobile, texte sur desktop -->
+        <button id="logout-btn" class="flex items-center gap-1.5 text-[#F5EDE4] hover:text-white transition-colors px-2 sm:px-4 py-2 rounded-xl border border-[#F5EDE4]/40 hover:bg-white/10 hover:border-white/60 shrink-0">
+          <iconify-icon icon="solar:logout-3-linear" stroke-width="1.5" class="text-lg shrink-0"></iconify-icon>
+          <span class="hidden sm:inline text-sm">Déconnexion</span>
+        </button>
       </div>
     </header>
 
@@ -77,17 +81,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     <!-- Cache la bulle discussion au clic ailleurs -->
     <div id="discussion-overlay" class="hidden fixed inset-0 z-[38]" onclick="document.getElementById('discussion-panel').classList.add('hidden'); document.getElementById('discussion-overlay').classList.add('hidden')"></div>
 
-    <main class="max-w-6xl mx-auto px-4 md:px-6 py-10">
-      <div class="mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
-        <div class="flex-1 flex items-center gap-4">
+    <main class="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-10">
+      <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex-1 flex items-center gap-3">
           <!-- Avatar visible dans le dashboard -->
-          <a href="/espace-client/parametres" id="dash-avatar-link" class="shrink-0 w-14 h-14 rounded-full bg-[#8B3E22]/10 border-2 border-[#D6CCC0] overflow-hidden flex items-center justify-center hover:border-[#8B3E22] transition-colors" title="Modifier ma photo">
-            <iconify-icon id="dash-avatar-icon" icon="solar:user-circle-linear" stroke-width="1.5" class="text-3xl text-[#8B3E22]"></iconify-icon>
+          <a href="/espace-client/parametres" id="dash-avatar-link" class="shrink-0 w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-[#8B3E22]/10 border-2 border-[#D6CCC0] overflow-hidden flex items-center justify-center hover:border-[#8B3E22] transition-colors" title="Modifier ma photo">
+            <iconify-icon id="dash-avatar-icon" icon="solar:user-circle-linear" stroke-width="1.5" class="text-2xl sm:text-3xl text-[#8B3E22]"></iconify-icon>
             <img id="dash-avatar-img" class="hidden w-full h-full object-cover" alt="" />
           </a>
           <div>
-            <h1 id="welcome" class="text-3xl md:text-4xl text-[#2C2416] tracking-tight">Bonjour 👋</h1>
-            <p id="offer-badge" class="text-[#767A55] text-sm mt-1 font-light"></p>
+            <h1 id="welcome" class="text-2xl sm:text-3xl md:text-4xl text-[#2C2416] tracking-tight">Bonjour 👋</h1>
+            <p id="offer-badge" class="text-[#767A55] text-sm mt-0.5 font-light"></p>
           </div>
         </div>
         <!-- Barre de recherche globale -->
