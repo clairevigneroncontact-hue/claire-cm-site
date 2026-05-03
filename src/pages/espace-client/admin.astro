@@ -265,7 +265,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           .order('updated_at', { ascending: false })
           .limit(20),
         sb2.from('client_uploads')
-          .select('id, name, created_at, client_id, profiles(full_name, email)')
+          .select('id, file_url, created_at, client_id, profiles(full_name, email)')
           .gte('created_at', since)
           .order('created_at', { ascending: false })
           .limit(10),
@@ -293,7 +293,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
       (uploads || []).forEach(u => {
         const client = u.profiles?.full_name || u.profiles?.email || 'Client';
-        const uName = u.name || (() => { try { return decodeURIComponent((u.file_url||'').split('/').pop().replace(/^\d+-/,'')); } catch(e) { return 'fichier'; } })();
+        const uName = (() => { try { return decodeURIComponent((u.file_url||'').split('/').pop().replace(/^\d+-/,'')) || 'fichier'; } catch(e) { return 'fichier'; } })();
         items.push({ id:'u-'+u.id, date:u.created_at, unread:u.created_at>lastSeen,
           icon:'📎', text:`${client} a déposé "${uName}"`, clientId:u.client_id, tab:'fichiers' });
       });
@@ -869,7 +869,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const [{ data: clients }, { data: recentContent }, { data: recentUploads }] = await Promise.all([
         sb.from('profiles').select('*').eq('role', 'client').order('created_at', { ascending: false }),
         sb.from('content_items').select('client_id, status, updated_at').order('updated_at', { ascending: false }),
-        sb.from('client_uploads').select('client_id, name, created_at').order('created_at', { ascending: false }),
+        sb.from('client_uploads').select('client_id, file_url, created_at').order('created_at', { ascending: false }),
       ]);
 
       if (refreshIcon) refreshIcon.classList.remove('animate-spin');
@@ -913,7 +913,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         }
         if (c.lastUpload) {
           const when = new Date(c.lastUpload.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
-          activity += `${activity ? ' &nbsp;·&nbsp; ' : ''}<span class="text-xs text-[#767A55]">📎 ${c.lastUpload.name||'Fichier déposé'} · ${when}</span>`;
+          const uploadLabel = (() => { try { return decodeURIComponent((c.lastUpload.file_url||'').split('/').pop().replace(/^\d+-/,'')) || 'Fichier déposé'; } catch(e) { return 'Fichier déposé'; } })();
+          activity += `${activity ? ' &nbsp;·&nbsp; ' : ''}<span class="text-xs text-[#767A55]">📎 ${uploadLabel} · ${when}</span>`;
         }
 
         return `
