@@ -72,28 +72,47 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
         </div>
 
-        <!-- Panel : Clients -->
-        <div id="mtab-clients-panel">
-          <!-- Barre de recherche -->
-          <div class="relative mb-4">
-            <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-4 top-1/2 -translate-y-1/2 text-[#767A55] text-lg pointer-events-none"></iconify-icon>
-            <input
-              id="client-search"
-              type="text"
-              placeholder="Rechercher un client par nom, email ou Instagram…"
-              class="w-full pl-11 pr-4 py-3 rounded-xl border border-[#D6CCC0] bg-white text-sm text-[#2C2416] focus:outline-none focus:border-[#8B3E22] transition-colors"
-            />
+        <!-- Layout 2 colonnes -->
+        <div class="flex flex-col xl:flex-row gap-6 items-start">
+
+          <!-- Colonne gauche : liste clients -->
+          <div class="flex-1 min-w-0">
+            <div id="mtab-clients-panel">
+              <!-- Barre de recherche -->
+              <div class="relative mb-4">
+                <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-4 top-1/2 -translate-y-1/2 text-[#767A55] text-lg pointer-events-none"></iconify-icon>
+                <input id="client-search" type="text" placeholder="Rechercher un client par nom, email ou Instagram…"
+                  class="w-full pl-11 pr-4 py-3 rounded-xl border border-[#D6CCC0] bg-white text-sm text-[#2C2416] focus:outline-none focus:border-[#8B3E22] transition-colors" />
+              </div>
+              <div class="flex items-center justify-between mb-3">
+                <p id="clients-count" class="text-sm text-[#2C2416]/50 font-light"></p>
+                <button id="refresh-btn" class="flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors">
+                  <iconify-icon icon="solar:refresh-linear" stroke-width="1.5"></iconify-icon>Actualiser
+                </button>
+              </div>
+              <div id="clients-list" class="space-y-3">
+                <p class="text-sm text-[#2C2416]/40 italic">Chargement des clients…</p>
+              </div>
+            </div>
           </div>
 
-          <div class="flex items-center justify-between mb-3">
-            <p id="clients-count" class="text-sm text-[#2C2416]/50 font-light"></p>
-            <button id="refresh-btn" class="flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors">
-              <iconify-icon icon="solar:refresh-linear" stroke-width="1.5"></iconify-icon>Actualiser
-            </button>
+          <!-- Colonne droite : notifications importantes -->
+          <div class="xl:w-80 w-full shrink-0">
+            <div class="bg-white rounded-2xl border border-[#D6CCC0] overflow-hidden sticky top-6">
+              <div class="px-4 py-3 bg-[#2C2416] flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <iconify-icon icon="solar:bell-bing-linear" stroke-width="1.5" class="text-[#8B3E22] text-lg"></iconify-icon>
+                  <span class="text-sm font-semibold text-[#F5EDE4]">Notifications</span>
+                  <span id="imp-notif-count" class="hidden min-w-[18px] h-[18px] bg-[#8B3E22] rounded-full text-[10px] text-white flex items-center justify-center font-bold px-1 leading-none"></span>
+                </div>
+                <button onclick="clearAllImpNotifs()" class="text-xs text-[#F5EDE4]/50 hover:text-[#F5EDE4] transition-colors">Tout effacer</button>
+              </div>
+              <div id="imp-notif-list" class="max-h-[70vh] overflow-y-auto divide-y divide-[#D6CCC0]/30">
+                <p class="text-xs text-[#2C2416]/40 italic p-4 text-center">Aucune notification</p>
+              </div>
+            </div>
           </div>
-          <div id="clients-list" class="space-y-3">
-            <p class="text-sm text-[#2C2416]/40 italic">Chargement des clients…</p>
-          </div>
+
         </div>
 
       </div>
@@ -251,6 +270,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         badge.classList.toggle('hidden', unread === 0);
       }
 
+      window._lastAdminNotifItems = items;
       const dismissed = new Set(JSON.parse(localStorage.getItem(NOTIFS_DISMISSED_KEY)||'[]'));
       const visible = items.filter(i => !dismissed.has(i.id));
 
@@ -324,22 +344,130 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     loadAdminNotifs();
     setInterval(loadAdminNotifs, 60000);
 
+    // ─── Panel notifications importantes ─────────────────────────────────────
+    const IMP_DISMISSED_KEY = 'impNotifsDismissed';
+
+    function renderImpNotifs(items) {
+      const dismissed = new Set(JSON.parse(localStorage.getItem(IMP_DISMISSED_KEY)||'[]'));
+      const visible = items.filter(n => !dismissed.has(n.id));
+      const list  = document.getElementById('imp-notif-list');
+      const badge = document.getElementById('imp-notif-count');
+      if (!list) return;
+
+      if (badge) {
+        badge.textContent = visible.length > 9 ? '9+' : String(visible.length);
+        badge.classList.toggle('hidden', visible.length === 0);
+        badge.classList.toggle('flex', visible.length > 0);
+      }
+
+      if (!visible.length) { list.innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4 text-center">Aucune notification</p>'; return; }
+      list.innerHTML = visible.map(item => {
+        const when = new Date(item.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+        const bg   = item.unread ? 'bg-[#8B3E22]/5' : 'bg-white';
+        return `<div data-imp-notif="${item.id}" class="relative overflow-hidden ${bg}"
+          style="transform:translateX(0);transition:transform 0.3s ease,opacity 0.3s ease">
+          <div class="flex items-start gap-3 px-4 py-3">
+            <span class="text-xl shrink-0 mt-0.5 select-none">${item.icon}</span>
+            <div class="flex-1 min-w-0 cursor-pointer" onclick="openClientFromNotif('${item.clientId}','${item.tab==='fichiers'?'documents':item.tab}')">
+              <p class="text-xs text-[#2C2416] leading-relaxed ${item.unread?'font-medium':''}">${item.text}</p>
+              <p class="text-[10px] text-[#767A55] mt-0.5">${when}</p>
+            </div>
+            <!-- Desktop : bouton cocher -->
+            <button onclick="dismissImpNotif('${item.id}')" title="Marquer comme traité"
+              class="shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ml-1 hidden md:flex
+              ${item.unread?'border-[#8B3E22]/40 hover:border-[#8B3E22] hover:bg-[#8B3E22]/10':'border-[#D6CCC0] bg-[#F5EDE4]'}">
+              ${!item.unread?'<iconify-icon icon="solar:check-linear" stroke-width="2.5" style="font-size:9px;color:#8B3E22"></iconify-icon>':''}
+            </button>
+          </div>
+        </div>`;
+      }).join('');
+
+      // Swipe to dismiss (mobile/tablet)
+      list.querySelectorAll('[data-imp-notif]').forEach(row => {
+        let startX = 0;
+        row.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+        row.addEventListener('touchend', e => {
+          const dx = e.changedTouches[0].clientX - startX;
+          if (dx < -60) {
+            row.style.transform = 'translateX(-100%)';
+            row.style.opacity = '0';
+            setTimeout(() => dismissImpNotif(row.dataset.impNotif), 300);
+          }
+        }, { passive: true });
+      });
+    }
+
+    window.dismissImpNotif = (id) => {
+      const dismissed = new Set(JSON.parse(localStorage.getItem(IMP_DISMISSED_KEY)||'[]'));
+      dismissed.add(id);
+      localStorage.setItem(IMP_DISMISSED_KEY, JSON.stringify([...dismissed]));
+      const row = document.querySelector(`[data-imp-notif="${id}"]`);
+      if (row) { row.style.transform = 'translateX(-100%)'; row.style.opacity = '0'; setTimeout(() => { row.remove(); updateImpBadge(); }, 300); }
+    };
+    window.clearAllImpNotifs = () => {
+      const items = document.querySelectorAll('[data-imp-notif]');
+      items.forEach(r => { const id = r.dataset.impNotif; const d = new Set(JSON.parse(localStorage.getItem(IMP_DISMISSED_KEY)||'[]')); d.add(id); localStorage.setItem(IMP_DISMISSED_KEY, JSON.stringify([...d])); });
+      document.getElementById('imp-notif-list').innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4 text-center">Aucune notification</p>';
+      updateImpBadge();
+    };
+    function updateImpBadge() {
+      const remaining = document.querySelectorAll('[data-imp-notif]').length;
+      const badge = document.getElementById('imp-notif-count');
+      if (badge) { badge.textContent = String(remaining); badge.classList.toggle('hidden', remaining === 0); badge.classList.toggle('flex', remaining > 0); }
+    }
+    window.openClientFromNotif = (clientId, tab) => {
+      window.openClient(clientId);
+      setTimeout(() => window.switchClientTab(tab||'contenu'), 600);
+    };
+
+    // Injecter les notifs importantes dans le panel lors du chargement
+    const _origLoadAdminNotifs = loadAdminNotifs;
+    loadAdminNotifs = async function() {
+      await _origLoadAdminNotifs();
+      // Récupérer les items déjà construits (partagés avec le panel cloche)
+      if (window._lastAdminNotifItems) renderImpNotifs(window._lastAdminNotifItems);
+    };
+
+    // ─── Suivi activité clients (temps réel) ──────────────────────────────────
+    const _recentActivity = {};  // clientId → timestamp
+
+    function bumpClient(clientId) {
+      if (!clientId) return;
+      _recentActivity[clientId] = Date.now();
+      // Remonter ce client en tête dans allClients
+      const idx = allClients.findIndex(c => c.id === clientId);
+      if (idx > 0) {
+        const [c] = allClients.splice(idx, 1);
+        allClients.unshift(c);
+      }
+      renderClients(allClients);
+    }
+
     // Realtime — nouvelles activités clients
     sb.channel('admin-realtime')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'content_items' }, (payload) => {
         if (['approved','rejected'].includes(payload.new?.status)) {
           loadAdminNotifs();
+          bumpClient(payload.new?.client_id);
           showAdminToast(payload.new.status === 'approved' ? '✅ Contenu validé par un client' : '❌ Contenu refusé par un client');
         }
       })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'client_uploads' }, () => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'client_uploads' }, (payload) => {
         loadAdminNotifs();
+        bumpClient(payload.new?.client_id);
         showAdminToast('📎 Nouveau fichier déposé par un client');
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, (payload) => {
         if (payload.new?.role === 'client') {
           loadAdminNotifs();
           showAdminToast('👤 Nouveau client inscrit');
+        }
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'client_notes' }, (payload) => {
+        if (!payload.new?.from_admin) {
+          loadAdminNotifs();
+          bumpClient(payload.new?.client_id);
+          showAdminToast('💬 Nouveau message d\'un client');
         }
       })
       .subscribe();
@@ -626,8 +754,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const now = Date.now();
       el.innerHTML = list.map(c => {
         const createdAt = new Date(c.created_at);
-        const isNew     = (now - createdAt.getTime()) < 24 * 3600 * 1000;
-        const dateStr   = createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+        const isNew        = (now - createdAt.getTime()) < 24 * 3600 * 1000;
+        const hasRecentAct = !!_recentActivity[c.id];
+        const borderClass  = hasRecentAct ? 'border-[#8B3E22] ring-2 ring-[#8B3E22]/30' : isNew ? 'border-[#8B3E22]' : 'border-[#D6CCC0]';
+        const dateStr      = createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 
         // Dernière activité
         let activity = '';
@@ -642,16 +772,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         }
 
         return `
-        <div class="bg-white rounded-2xl p-5 border ${isNew ? 'border-[#8B3E22]' : 'border-[#D6CCC0]'} cursor-pointer hover:border-[#8B3E22] transition-colors" onclick="openClient('${c.id}')">
+        <div class="bg-white rounded-2xl p-5 border ${borderClass} cursor-pointer hover:border-[#8B3E22] transition-all" onclick="openClient('${c.id}')">
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3 min-w-0">
-              <div class="w-10 h-10 bg-[#8B3E22]/10 rounded-full flex items-center justify-center text-[#8B3E22] font-medium text-sm shrink-0">
+              <div class="w-10 h-10 ${hasRecentAct ? 'bg-[#8B3E22]' : 'bg-[#8B3E22]/10'} rounded-full flex items-center justify-center text-${hasRecentAct?'white':'[#8B3E22]'} font-medium text-sm shrink-0">
                 ${(c.full_name || c.email || '?')[0].toUpperCase()}
               </div>
               <div class="min-w-0">
                 <div class="flex items-center gap-2">
                   <p class="font-medium text-[#2C2416] truncate">${c.full_name || c.email}</p>
-                  ${isNew ? '<span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full shrink-0">Nouveau</span>' : ''}
+                  ${hasRecentAct ? '<span class="text-xs px-2 py-0.5 bg-[#8B3E22] text-white rounded-full shrink-0 animate-pulse">Nouveau</span>' : isNew ? '<span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full shrink-0">Nouveau</span>' : ''}
                 </div>
                 <p class="text-xs text-[#767A55] truncate">${c.email}${c.instagram_handle ? ' · @' + c.instagram_handle : ''}</p>
               </div>
@@ -976,7 +1106,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div id="adocs-subtab-docs">
             <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
               <h3 class="text-sm font-medium text-[#2C2416] mb-3">Documents (${docsNonInv.length})</h3>
-              <div id="doc-items-box" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+              <div id="doc-items-box" class="divide-y divide-[#D6CCC0]/30">
               ${docsNonInv.length ? docsNonInv.map(d => {
                 const label   = d.name || d.file_name || 'Document';
                 const typeMap = { contrat:'Contrat', devis:'Devis', 'audit-instagram':'Audit', 'compte-rendu':'CR mensuel', autre:'Autre' };
@@ -985,17 +1115,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 const isPdf   = d.file_url && /\.pdf(\?|$)/i.test(d.file_url);
                 const safeUrl = (d.file_url||'').replace(/'/g,"\\'");
                 const icon    = isPdf ? 'solar:file-text-linear' : 'solar:document-text-linear';
-                return `<div class="flex flex-col" data-search="${label.toLowerCase()} ${(d.type||'').toLowerCase()}">
-                  <a href="${d.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors" style="height:90px;background:#F5EDE4">
-                    ${isImg?`<img src="${d.file_url}" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`:`<div style="height:130px;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:3rem"></iconify-icon></div>`}
-                  </a>
-                  <p class="text-xs font-medium text-[#2C2416] truncate mt-1.5">${label}</p>
-                  ${type ? `<p class="text-[10px] text-[#767A55]">${type}</p>` : ''}
-                  <div class="flex items-center gap-1 mt-1">
-                    <button onclick="toggleDocEdit('${d.id}')" class="flex-1 py-1 text-[10px] text-[#767A55] hover:text-[#8B3E22] hover:bg-[#EDE6DB] rounded-lg transition-colors flex items-center justify-center gap-0.5"><iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-xs"></iconify-icon> Modifier</button>
-                    <button onclick="deleteDoc('${d.id}','${safeUrl}','${clientId}')" class="flex-1 py-1 text-[10px] text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center gap-0.5"><iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-xs"></iconify-icon> Supprimer</button>
+                return `<div data-search="${label.toLowerCase()} ${(d.type||'').toLowerCase()}">
+                  <div class="flex items-center gap-3 py-2.5 group">
+                    <a href="${d.file_url||'#'}" target="_blank" class="w-11 h-11 rounded-lg overflow-hidden shrink-0 border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors flex items-center justify-center" style="background:#F5EDE4;min-width:44px">
+                      ${isImg?`<img src="${d.file_url}" style="width:44px;height:44px;object-fit:cover;display:block" onerror="this.parentElement.innerHTML='<iconify-icon icon=\\'${icon}\\' stroke-width=\\'1.5\\' style=\\'color:#8B3E22;font-size:1.4rem\\'></iconify-icon>'" />`:`<iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:1.4rem"></iconify-icon>`}
+                    </a>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-[#2C2416] truncate">${label}</p>
+                      ${type ? `<p class="text-xs text-[#767A55]">${type}</p>` : ''}
+                    </div>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      <button onclick="toggleDocEdit('${d.id}')" class="p-1.5 text-[#767A55] hover:text-[#8B3E22] hover:bg-[#EDE6DB] rounded-lg transition-colors" title="Modifier"><iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-sm"></iconify-icon></button>
+                      <button onclick="deleteDoc('${d.id}','${safeUrl}','${clientId}')" class="p-1.5 text-[#767A55] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Supprimer"><iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-sm"></iconify-icon></button>
+                    </div>
                   </div>
-                  <div id="doc-edit-${d.id}" class="hidden mt-2 bg-[#F5EDE4] rounded-xl p-3 border border-[#8B3E22]/30">
+                  <div id="doc-edit-${d.id}" class="hidden mb-3 bg-[#F5EDE4] rounded-xl p-3 border border-[#8B3E22]/30">
                     <input id="doc-edit-name-${d.id}" type="text" value="${label.replace(/"/g,'&quot;')}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] bg-white" />
                     <input id="doc-edit-file-${d.id}" type="file" class="block text-xs text-[#767A55] cursor-pointer w-full mb-2" />
                     <div class="flex gap-2">
@@ -1004,7 +1138,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                     </div>
                   </div>
                 </div>`;
-              }).join('') : '<p class="text-xs text-[#2C2416]/30 italic col-span-full">Aucun document déposé</p>'}
+              }).join('') : '<p class="text-xs text-[#2C2416]/30 italic">Aucun document déposé</p>'}
               </div>
             </div>
           </div>
@@ -1013,24 +1147,28 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div id="adocs-subtab-factures" class="hidden">
             <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
               <h3 class="text-sm font-medium text-[#2C2416] mb-3">Factures (${docsInv.length})</h3>
-              <div id="invoice-items-box" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+              <div id="invoice-items-box" class="divide-y divide-[#D6CCC0]/30">
               ${docsInv.length ? docsInv.map(d => {
                 const label   = d.name || d.file_name || 'Facture';
                 const isImg   = d.file_url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(d.file_url);
                 const isPdf   = d.file_url && /\.pdf(\?|$)/i.test(d.file_url);
                 const safeUrl = (d.file_url||'').replace(/'/g,"\\'");
                 const icon    = isPdf ? 'solar:file-text-linear' : 'solar:bill-linear';
-                return `<div class="flex flex-col" data-search="${label.toLowerCase()}">
-                  <a href="${d.file_url||'#'}" target="_blank" class="block rounded-xl overflow-hidden border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors" style="height:90px;background:#F5EDE4">
-                    ${isImg?`<img src="${d.file_url}" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`:`<div style="height:130px;display:flex;align-items:center;justify-content:center"><iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:3rem"></iconify-icon></div>`}
-                  </a>
-                  <p class="text-xs font-medium text-[#2C2416] truncate mt-1.5">${label}</p>
-                  <p class="text-[10px] text-[#767A55]">Facture</p>
-                  <div class="flex items-center gap-1 mt-1">
-                    <button onclick="toggleDocEdit('${d.id}')" class="flex-1 py-1 text-[10px] text-[#767A55] hover:text-[#8B3E22] hover:bg-[#EDE6DB] rounded-lg transition-colors flex items-center justify-center gap-0.5"><iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-xs"></iconify-icon> Modifier</button>
-                    <button onclick="deleteDoc('${d.id}','${safeUrl}','${clientId}')" class="flex-1 py-1 text-[10px] text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center gap-0.5"><iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-xs"></iconify-icon> Supprimer</button>
+                return `<div data-search="${label.toLowerCase()}">
+                  <div class="flex items-center gap-3 py-2.5 group">
+                    <a href="${d.file_url||'#'}" target="_blank" class="w-11 h-11 rounded-lg overflow-hidden shrink-0 border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors flex items-center justify-center" style="background:#F5EDE4;min-width:44px">
+                      ${isImg?`<img src="${d.file_url}" style="width:44px;height:44px;object-fit:cover;display:block" onerror="this.parentElement.innerHTML='<iconify-icon icon=\\'${icon}\\' stroke-width=\\'1.5\\' style=\\'color:#8B3E22;font-size:1.4rem\\'></iconify-icon>'" />`:`<iconify-icon icon="${icon}" stroke-width="1.5" style="color:#8B3E22;font-size:1.4rem"></iconify-icon>`}
+                    </a>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-[#2C2416] truncate">${label}</p>
+                      <p class="text-xs text-[#767A55]">Facture</p>
+                    </div>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      <button onclick="toggleDocEdit('${d.id}')" class="p-1.5 text-[#767A55] hover:text-[#8B3E22] hover:bg-[#EDE6DB] rounded-lg transition-colors" title="Modifier"><iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-sm"></iconify-icon></button>
+                      <button onclick="deleteDoc('${d.id}','${safeUrl}','${clientId}')" class="p-1.5 text-[#767A55] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Supprimer"><iconify-icon icon="solar:trash-bin-minimalistic-linear" stroke-width="1.5" class="text-sm"></iconify-icon></button>
+                    </div>
                   </div>
-                  <div id="doc-edit-${d.id}" class="hidden mt-2 bg-[#F5EDE4] rounded-xl p-3 border border-[#8B3E22]/30">
+                  <div id="doc-edit-${d.id}" class="hidden mb-3 bg-[#F5EDE4] rounded-xl p-3 border border-[#8B3E22]/30">
                     <input id="doc-edit-name-${d.id}" type="text" value="${label.replace(/"/g,'&quot;')}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] bg-white" />
                     <input id="doc-edit-file-${d.id}" type="file" class="block text-xs text-[#767A55] cursor-pointer w-full mb-2" />
                     <div class="flex gap-2">
@@ -1039,7 +1177,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                     </div>
                   </div>
                 </div>`;
-              }).join('') : '<p class="text-xs text-[#2C2416]/30 italic col-span-full">Aucune facture déposée</p>'}
+              }).join('') : '<p class="text-xs text-[#2C2416]/30 italic">Aucune facture déposée</p>'}
               </div>
             </div>
           </div>
@@ -1925,7 +2063,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
             <div class="flex items-center gap-2">
               ${heure ? `<div class="flex items-center gap-1.5 text-sm font-semibold text-[#2C2416]"><iconify-icon icon="solar:clock-circle-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>${heure}</div>` : ''}
-              ${!isPending ? `<button onclick="event.stopPropagation();document.getElementById('reschedule-${a.id}').classList.toggle('hidden')" class="text-xs px-2.5 py-1 rounded-lg bg-[#8B3E22]/10 text-[#8B3E22] hover:bg-[#8B3E22]/20 transition-colors font-medium shrink-0">✏️ Reprogrammer</button>` : ''}
+              ${isPending ? `
+              <div class="flex items-center gap-1.5">
+                <button onclick="event.stopPropagation(); closeClientCalFullDay(); switchClientTab('contenu'); setTimeout(()=>{toggleContentDetail('${a.id}');toggleEdit('${a.id}');document.getElementById('edit-${a.id}')?.scrollIntoView({behavior:'smooth',block:'center'})},300)" class="text-xs px-2.5 py-1 rounded-lg bg-[#8B3E22]/10 text-[#8B3E22] hover:bg-[#8B3E22]/20 transition-colors font-medium">✏️ Modifier</button>
+                <button onclick="event.stopPropagation(); if(confirm('Supprimer ce contenu ?')) deleteContent('${a.id}','${files[0]?.url?files[0].url.replace(/'/g,"\\'"):''}','${_clientCalClientId}')" class="text-xs px-2.5 py-1 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors font-medium">🗑 Supprimer</button>
+              </div>` : `<button onclick="event.stopPropagation();document.getElementById('reschedule-${a.id}').classList.toggle('hidden')" class="text-xs px-2.5 py-1 rounded-lg bg-[#8B3E22]/10 text-[#8B3E22] hover:bg-[#8B3E22]/20 transition-colors font-medium shrink-0">✏️ Reprogrammer</button>`}
             </div>
           </div>
           <!-- Corps : image + infos -->
