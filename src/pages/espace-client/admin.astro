@@ -756,7 +756,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const createdAt = new Date(c.created_at);
         const isNew        = (now - createdAt.getTime()) < 24 * 3600 * 1000;
         const hasRecentAct = !!_recentActivity[c.id];
-        const borderClass  = hasRecentAct ? 'border-[#8B3E22] ring-2 ring-[#8B3E22]/30' : isNew ? 'border-[#8B3E22]' : 'border-[#D6CCC0]';
+        const borderClass  = hasRecentAct ? 'border-2 border-[#5A1E0E] shadow-lg shadow-[#8B3E22]/20' : isNew ? 'border-[#8B3E22]' : 'border-[#D6CCC0]';
+        const cardBg       = hasRecentAct ? 'bg-[#FFF5F0]' : 'bg-white';
         const dateStr      = createdAt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 
         // Dernière activité
@@ -772,16 +773,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         }
 
         return `
-        <div class="bg-white rounded-2xl p-5 border ${borderClass} cursor-pointer hover:border-[#8B3E22] transition-all" onclick="openClient('${c.id}')">
+        <div class="relative overflow-hidden ${cardBg} rounded-2xl p-5 border ${borderClass} cursor-pointer hover:border-[#8B3E22] transition-all" onclick="openClient('${c.id}')">
+          ${hasRecentAct ? '<div class="absolute inset-y-0 left-0 w-1.5 bg-[#5A1E0E] rounded-l-2xl"></div>' : ''}
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3 min-w-0">
-              <div class="w-10 h-10 ${hasRecentAct ? 'bg-[#8B3E22]' : 'bg-[#8B3E22]/10'} rounded-full flex items-center justify-center text-${hasRecentAct?'white':'[#8B3E22]'} font-medium text-sm shrink-0">
+              <div class="w-10 h-10 ${hasRecentAct ? 'bg-[#5A1E0E]' : 'bg-[#8B3E22]/10'} rounded-full flex items-center justify-center text-${hasRecentAct?'white':'[#8B3E22]'} font-medium text-sm shrink-0">
                 ${(c.full_name || c.email || '?')[0].toUpperCase()}
               </div>
               <div class="min-w-0">
                 <div class="flex items-center gap-2">
                   <p class="font-medium text-[#2C2416] truncate">${c.full_name || c.email}</p>
-                  ${hasRecentAct ? '<span class="text-xs px-2 py-0.5 bg-[#8B3E22] text-white rounded-full shrink-0 animate-pulse">Nouveau</span>' : isNew ? '<span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full shrink-0">Nouveau</span>' : ''}
+                  ${hasRecentAct ? '<span class="text-xs px-2 py-0.5 bg-[#5A1E0E] text-white rounded-full shrink-0 animate-pulse">● Activité</span>' : isNew ? '<span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full shrink-0">Nouveau</span>' : ''}
                 </div>
                 <p class="text-xs text-[#767A55] truncate">${c.email}${c.instagram_handle ? ' · @' + c.instagram_handle : ''}</p>
               </div>
@@ -984,8 +986,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <div>
                 <label class="text-xs text-[#767A55] mb-1 block">Heure de publication</label>
                 <select id="ct-time" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white">
-                  <option value="">— Choisir l'heure —</option>
-                  ${Array.from({length:17},(_,i)=>`<option value="${String(7+i).padStart(2,'0')}:00">${String(7+i).padStart(2,'0')}h00</option>`).join('')}
+                  <option value="">— Heure —</option>
+                  ${Array.from({length:68},(_,i)=>{const t=7*60+i*15;const h=String(Math.floor(t/60)).padStart(2,'0');const m=String(t%60).padStart(2,'0');return `<option value="${h}:${m}">${h}:${m}</option>`;}).join('')}
                 </select>
               </div>
             </div>
