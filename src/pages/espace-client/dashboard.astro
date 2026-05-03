@@ -54,8 +54,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <span id="notif-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#8B3E22] rounded-full text-[10px] text-white flex items-center justify-center font-bold px-1 leading-none"></span>
         </button>
         <a href="/espace-client/parametres" id="header-avatar-btn" class="w-11 h-11 rounded-full border-2 border-[#F5EDE4]/40 flex items-center justify-center text-[#F5EDE4] hover:border-white/80 transition-colors overflow-hidden shrink-0" title="Paramètres">
-          <iconify-icon id="header-avatar-icon" icon="solar:user-circle-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
-          <img id="header-avatar-img" class="hidden w-full h-full object-cover" alt="" />
+          <iconify-icon id="header-avatar-icon" icon="solar:settings-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
         </a>
         <button id="logout-btn" class="text-sm text-[#F5EDE4] hover:text-white transition-colors px-4 py-2 rounded-xl border border-[#F5EDE4]/40 hover:bg-white/10 hover:border-white/60">Déconnexion</button>
       </div>
@@ -578,14 +577,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     document.getElementById('welcome').textContent = `Bonjour, ${prenom} 👋`;
 
-    // Afficher avatar dans le header (bouton paramètres) et dans le bloc de bienvenue
+    // Afficher avatar uniquement dans le bloc de bienvenue (le header garde l'icône paramètres)
     if (p?.avatar_url) {
       const ts = '?t=' + Date.now();
-      // Header
-      const hImg  = document.getElementById('header-avatar-img');
-      const hIcon = document.getElementById('header-avatar-icon');
-      if (hImg && hIcon) { hImg.src = p.avatar_url + ts; hImg.classList.remove('hidden'); hIcon.classList.add('hidden'); }
-      // Bloc bienvenue
       const dImg  = document.getElementById('dash-avatar-img');
       const dIcon = document.getElementById('dash-avatar-icon');
       if (dImg && dIcon) { dImg.src = p.avatar_url + ts; dImg.classList.remove('hidden'); dIcon.classList.add('hidden'); }
