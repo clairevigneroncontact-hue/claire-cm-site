@@ -821,7 +821,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const done     = (allItems||[]).filter(i => i.status !== 'pending');
     const contentEl = document.getElementById('content-list');
 
-    const TYPE_COLORS_DASH = { 'POST':'bg-blue-100 text-blue-700', 'REEL':'bg-purple-100 text-purple-700', 'CARROUSEL':'bg-emerald-100 text-emerald-700', 'PLANNING':'bg-orange-100 text-orange-700', 'AUDIT':'bg-gray-100 text-gray-500' };
+    const TYPE_COLORS_DASH = { 'POST':'bg-blue-100 text-blue-700', 'STORY':'bg-pink-100 text-pink-700', 'REEL':'bg-purple-100 text-purple-700', 'CARROUSEL':'bg-emerald-100 text-emerald-700', 'PLANNING':'bg-orange-100 text-orange-700', 'AUDIT':'bg-gray-100 text-gray-500' };
     function renderContentCard(item, statusBadge) {
       let files = [];
       try { files = Array.isArray(item.files) ? item.files : (item.files ? JSON.parse(item.files) : []); } catch(e) {}
@@ -1185,12 +1185,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     window.markNotifRead = async (id) => {
       markNotifRowRead(id);
-      sb.from('notifications').update({ read: true }).eq('id', id);
+      await sb.from('notifications').update({ read: true }).eq('id', id);
+      await loadNotifications();
     };
 
     window.markAllNotifRead = async () => {
       document.querySelectorAll('[data-notif-id]').forEach(row => markNotifRowRead(row.dataset.notifId));
-      sb.from('notifications').update({ read: true }).eq('client_id', uid);
+      await sb.from('notifications').update({ read: true }).eq('client_id', uid);
+      await loadNotifications();
     };
 
     // Clic sur notification → marquer lu + naviguer vers le bon endroit
@@ -1339,7 +1341,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     document.addEventListener('click', () => document.getElementById('cal-month-picker')?.classList.add('hidden'));
 
     // ─── Calendrier éditorial ────────────────────────────────────────────────
-    const TYPE_COLORS_CAL = { 'POST':'#3B82F6','REEL':'#8B5CF6','CARROUSEL':'#10B981','PLANNING':'#F59E0B','AUDIT':'#6B7280' };
+    const TYPE_COLORS_CAL = { 'POST':'#3B82F6','STORY':'#EC4899','REEL':'#8B5CF6','CARROUSEL':'#10B981','PLANNING':'#F59E0B','AUDIT':'#6B7280' };
     let calYear = new Date().getFullYear();
     let calMonth = new Date().getMonth();
     let calSelectedDate = null;
