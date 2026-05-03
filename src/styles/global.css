@@ -2,16 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Base ─────────────────────────────────────────────────────────────────── */
+html { height: -webkit-fill-available; }
+
 body {
   font-family: 'Manrope', sans-serif;
   background-color: #F5EDE4;
   color: #2C2416;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'DM Serif Display', serif;
 }
 
+/* ─── Mobile / Safari fixes ─────────────────────────────────────────────────── */
+
+/* Prevent iOS auto-zoom on inputs (< 16px triggers zoom) */
+@media screen and (max-width: 767px) {
+  input[type="text"], input[type="email"], input[type="tel"],
+  input[type="password"], input[type="date"], input[type="time"],
+  input[type="number"], input[type="search"], select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Remove tap highlight on mobile */
+a, button, input, select, textarea, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+/* Smooth scroll containers on iOS */
+.overflow-y-auto, .overflow-x-auto, .overflow-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safari: sticky in flex context */
+.sticky { position: -webkit-sticky; position: sticky; }
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #F5EDE4; }
 ::-webkit-scrollbar-thumb { background: #8B3E22; border-radius: 3px; }

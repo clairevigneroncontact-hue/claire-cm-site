@@ -32,6 +32,28 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <!-- Tab : Mon compte -->
       <div id="tab-compte" class="space-y-6">
 
+        <!-- Photo de profil -->
+        <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+          <h2 class="text-lg text-[#2C2416] font-medium mb-5">Photo de profil</h2>
+          <div class="flex items-center gap-5">
+            <div class="relative shrink-0">
+              <div id="avatar-wrap" class="w-20 h-20 rounded-full bg-[#8B3E22]/10 flex items-center justify-center overflow-hidden border-2 border-[#D6CCC0]">
+                <iconify-icon id="avatar-icon" icon="solar:user-circle-linear" stroke-width="1.5" class="text-4xl text-[#8B3E22]"></iconify-icon>
+                <img id="avatar-img" class="hidden absolute inset-0 w-full h-full object-cover rounded-full" alt="Photo de profil" />
+              </div>
+              <label class="absolute -bottom-1 -right-1 w-8 h-8 bg-[#8B3E22] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#6B2E1A] transition-colors shadow-md">
+                <iconify-icon icon="solar:camera-add-linear" stroke-width="1.5" class="text-white text-sm"></iconify-icon>
+                <input id="avatar-input" type="file" accept="image/*" class="hidden" />
+              </label>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-[#2C2416]">Changer la photo</p>
+              <p class="text-xs text-[#767A55] mt-0.5">JPG, PNG ou WEBP · Max 2 Mo</p>
+              <p id="avatar-status" class="text-xs mt-1 text-[#767A55]"></p>
+            </div>
+          </div>
+        </div>
+
         <!-- Mes informations -->
         <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
           <h2 class="text-lg text-[#2C2416] font-medium mb-5">Mes informations</h2>
@@ -254,6 +276,39 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     document.getElementById('p-email').value     = p?.email || session.user.email || '';
     document.getElementById('p-phone').value     = p?.phone || meta.phone || '';
     document.getElementById('p-instagram').value = p?.instagram_handle || meta.instagram_handle || '';
+
+    // Afficher la photo de profil existante
+    if (p?.avatar_url) {
+      const img = document.getElementById('avatar-img');
+      const icon = document.getElementById('avatar-icon');
+      img.src = p.avatar_url;
+      img.classList.remove('hidden');
+      if (icon) icon.classList.add('hidden');
+    }
+
+    // Upload photo de profil
+    document.getElementById('avatar-input').onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const status = document.getElementById('avatar-status');
+      if (file.size > 2 * 1024 * 1024) { status.textContent = '⚠ Fichier trop volumineux (max 2 Mo)'; return; }
+      status.textContent = 'Envoi en cours…';
+      const sb2 = await getSB();
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `${uid}/avatar.${ext}`;
+      const { data, error } = await sb2.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type });
+      if (error) { status.textContent = 'Erreur : ' + error.message; return; }
+      const { data: urlData } = sb2.storage.from('avatars').getPublicUrl(path);
+      const avatar_url = urlData.publicUrl + '?t=' + Date.now();
+      await sb2.from('profiles').update({ avatar_url: urlData.publicUrl }).eq('id', uid);
+      const img = document.getElementById('avatar-img');
+      const icon = document.getElementById('avatar-icon');
+      img.src = avatar_url;
+      img.classList.remove('hidden');
+      if (icon) icon.classList.add('hidden');
+      status.textContent = '✓ Photo mise à jour';
+      setTimeout(() => { status.textContent = ''; }, 3000);
+    };
 
     // Si le nom existe dans les métadonnées mais pas dans le profil, le sauvegarder
     if (fullName && !p?.full_name) {
