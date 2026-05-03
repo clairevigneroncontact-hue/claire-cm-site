@@ -48,23 +48,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div id="admin-set-pwd-msg" class="hidden mt-3 text-sm rounded-xl px-4 py-2"></div>
           <button onclick="saveAdminPassword()" class="mt-4 w-full py-2.5 bg-[#2C2416] text-white rounded-xl text-sm font-medium hover:bg-[#8B3E22] transition-colors">Changer le mot de passe</button>
         </div>
-        <!-- Aide & Support -->
+        <!-- Support admin -->
         <div class="border-t border-[#D6CCC0] pt-6">
-          <h2 class="text-sm font-semibold text-[#2C2416] uppercase tracking-widest mb-4">Aide & Support</h2>
-          <a href="/faq" target="_blank" class="flex items-center justify-between bg-[#EDE6DB] rounded-2xl p-4 hover:bg-[#D6CCC0]/40 transition-colors group">
-            <div class="flex items-center gap-3">
-              <iconify-icon icon="solar:question-circle-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl"></iconify-icon>
-              <div>
-                <p class="text-sm font-medium text-[#2C2416]">FAQ & Aide</p>
-                <p class="text-xs text-[#767A55] font-light">Toutes les questions fréquentes</p>
-              </div>
-            </div>
-            <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5" class="text-[#8B3E22] group-hover:translate-x-1 transition-transform"></iconify-icon>
-          </a>
-          <a href="mailto:clairevigneron.contact@gmail.com" class="flex items-center gap-3 mt-3 px-4 py-3 bg-white rounded-2xl border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors text-sm text-[#2C2416]/70 hover:text-[#8B3E22]">
-            <iconify-icon icon="solar:letter-linear" stroke-width="1.5" class="text-lg shrink-0"></iconify-icon>
-            clairevigneron.contact@gmail.com
-          </a>
+          <h2 class="text-sm font-semibold text-[#2C2416] uppercase tracking-widest mb-4">Support</h2>
+          <div class="bg-[#EDE6DB] rounded-2xl p-4 space-y-3">
+            <p class="text-xs text-[#767A55]">Pour toute question concernant l'espace admin, contacte le support technique.</p>
+            <a href="mailto:clairevigneron.contact@gmail.com" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors text-sm text-[#2C2416]/70 hover:text-[#8B3E22]">
+              <iconify-icon icon="solar:letter-linear" stroke-width="1.5" class="text-lg shrink-0"></iconify-icon>
+              clairevigneron.contact@gmail.com
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -299,6 +292,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       items.sort((a,b) => b.date.localeCompare(a.date));
 
       window._lastAdminNotifItems = items;
+      renderImpNotifs(items);
     }
 
     function dismissNotifRow(id) {
@@ -443,13 +437,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setTimeout(() => window.switchClientTab(tab||'contenu'), 600);
     };
 
-    // Injecter les notifs importantes dans le panel lors du chargement
-    const _origLoadAdminNotifs = loadAdminNotifs;
-    loadAdminNotifs = async function() {
-      await _origLoadAdminNotifs();
-      // Récupérer les items déjà construits (partagés avec le panel cloche)
-      if (window._lastAdminNotifItems) renderImpNotifs(window._lastAdminNotifItems);
-    };
+    // renderImpNotifs est appelé directement depuis loadAdminNotifs (via _lastAdminNotifItems)
 
     // ─── Suivi activité clients (temps réel) ──────────────────────────────────
     const _recentActivity = {};  // clientId → timestamp
@@ -493,6 +481,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           showAdminToast('💬 Nouveau message d\'un client');
         }
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
+        const cid = payload.new?.client_id || payload.old?.client_id;
+        if (cid) bumpClient(cid);
+      })
       .subscribe();
 
     // ─── Calendrier admin ─────────────────────────────────────────────────────
@@ -501,15 +493,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     let adminCalMonth = new Date().getMonth();
     let adminCalSel   = null;
     let adminCalApproved = [];
+    let adminCalPending  = [];
     let adminCalNotes    = [];
 
     async function loadAdminCalData() {
       const sb2 = await getSB();
-      const [{ data: approved }, { data: notes }] = await Promise.all([
-        sb2.from('content_items').select('id,title,updated_at,client_id,profiles(full_name,email)').eq('status','approved'),
+      const [{ data: approved }, { data: pending }, { data: notes }] = await Promise.all([
+        sb2.from('content_items').select('id,title,scheduled_at,updated_at,client_id,profiles(full_name,email)').eq('status','approved'),
+        sb2.from('content_items').select('id,title,scheduled_at,created_at,client_id,profiles(full_name,email)').eq('status','pending'),
         sb2.from('calendar_notes').select('*'),
       ]);
       adminCalApproved = approved || [];
+      adminCalPending  = pending  || [];
       adminCalNotes    = notes    || [];
       renderAdminCal();
     }
@@ -530,10 +525,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       for (let i = 0; i < startOffset; i++) { html += `<td class="border border-[#D6CCC0]/30 p-1 h-16 align-top bg-[#F5EDE4]/30"></td>`; col++; }
 
       for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr  = `${adminCalYear}-${String(adminCalMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-        const isToday  = dateStr === new Date().toISOString().slice(0,10);
-        const dayItems = adminCalApproved.filter(a => a.updated_at?.slice(0,10) === dateStr);
-        const dayNotes = adminCalNotes.filter(n => n.date === dateStr);
+        const dateStr      = `${adminCalYear}-${String(adminCalMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const isToday      = dateStr === new Date().toISOString().slice(0,10);
+        const dayItems     = adminCalApproved.filter(a => (a.scheduled_at||a.updated_at||'').slice(0,10) === dateStr);
+        const dayPendAdmin = adminCalPending.filter(a => (a.scheduled_at||a.created_at||'').slice(0,10) === dateStr);
+        const dayNotes     = adminCalNotes.filter(n => n.date === dateStr);
 
         let cellContent = '';
         dayItems.forEach(a => {
@@ -543,6 +539,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'').slice(0,16);
           const client = a.profiles?.full_name || a.profiles?.email || '';
           cellContent += `<div style="background:${color}15;color:${color};border-left:2px solid ${color}" class="text-[9px] leading-tight px-1 py-0.5 rounded-r mb-0.5 truncate font-medium" title="${client}">${clean}</div>`;
+        });
+        dayPendAdmin.forEach(a => {
+          const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'').slice(0,14);
+          const client = a.profiles?.full_name || a.profiles?.email || '';
+          cellContent += `<div style="background:#FEF3C715;color:#D97706;border-left:2px dashed #D97706" class="text-[9px] leading-tight px-1 py-0.5 rounded-r mb-0.5 truncate" title="⏳ ${client}">⏳ ${clean}</div>`;
         });
         dayNotes.forEach(n => {
           cellContent += `<div class="text-[9px] leading-tight px-1 py-0.5 rounded bg-[#EDE6DB] text-[#767A55] mb-0.5 truncate italic">${n.note.slice(0,18)}</div>`;
@@ -898,14 +899,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           const { items, label } = groups[k];
           const cap         = label[0].toUpperCase() + label.slice(1);
           const pending     = items.filter(i => i.status === 'pending');
+          const rejected    = items.filter(i => i.status === 'rejected');
           const hasPending  = pending.length > 0;
-          const visible     = hasPending ? pending : items;
-          const hiddenRest  = hasPending ? items.filter(i => i.status !== 'pending') : [];
-          const border      = hasPending ? 'border-amber-300' : 'border-[#D6CCC0]';
-          const summaryBg   = hasPending ? 'bg-amber-50 hover:bg-amber-100' : 'bg-[#F5EDE4] hover:bg-[#EDE6DB]';
-          const badge       = hasPending
-            ? '<span class="text-xs text-amber-600 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-200">' + pending.length + ' à valider</span>'
-            : '<span class="text-xs text-[#767A55] bg-white px-2.5 py-1 rounded-full border border-[#D6CCC0]">' + items.length + ' contenu' + (items.length > 1 ? 's' : '') + '</span>';
+          const hasRejected = rejected.length > 0;
+          const hasAction   = hasPending || hasRejected;
+          const visible     = hasAction ? [...pending, ...rejected] : items;
+          const hiddenRest  = hasAction ? items.filter(i => i.status === 'approved') : [];
+          const border      = hasPending ? 'border-amber-300' : hasRejected ? 'border-red-300' : 'border-[#D6CCC0]';
+          const summaryBg   = hasPending ? 'bg-amber-50 hover:bg-amber-100' : hasRejected ? 'bg-red-50 hover:bg-red-100' : 'bg-[#F5EDE4] hover:bg-[#EDE6DB]';
+          const badgeParts  = [];
+          if (hasPending)  badgeParts.push('<span class="text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">' + pending.length + ' à valider</span>');
+          if (hasRejected) badgeParts.push('<span class="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded-full border border-red-200">' + rejected.length + ' refusé' + (rejected.length>1?'s':'') + '</span>');
+          const badge = badgeParts.length ? '<div class="flex gap-1">' + badgeParts.join('') + '</div>' : '<span class="text-xs text-[#767A55] bg-white px-2.5 py-1 rounded-full border border-[#D6CCC0]">' + items.length + ' contenu' + (items.length > 1 ? 's' : '') + '</span>';
           const restHtml    = hiddenRest.length
             ? '<div class="hidden" id="rest-' + k + '">' + hiddenRest.map(_renderCtItem).join('') + '</div>'
               + '<button onclick="var r=document.getElementById(\'rest-' + k + '\');r.classList.toggle(\'hidden\');this.textContent=r.classList.contains(\'hidden\')?\'Voir tout (' + hiddenRest.length + ')\':\'Masquer\'" class="text-xs text-[#8B3E22] hover:underline mt-1 px-1">Voir tout (' + hiddenRest.length + ')</button>'
@@ -2107,7 +2112,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'');
         let files = []; try { files = Array.isArray(a.files) ? a.files : JSON.parse(a.files||'[]'); } catch(e){}
         const isImgF = files[0]?.url && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(files[0].url);
-        const heure  = a.scheduled_at ? new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+        const _heureVal = a.scheduled_at || a.updated_at;
+        const heure  = _heureVal ? new Date(_heureVal).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
         const isPending = a.status === 'pending';
         const reschedDate = (a.scheduled_at||'').slice(0,10);
         const reschedTime = (a.scheduled_at||'').slice(11,16);
