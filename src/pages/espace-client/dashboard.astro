@@ -9,32 +9,28 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   </div>
 
   <!-- Overlay sombre tutoriel -->
-  <div id="tuto-overlay" class="hidden fixed inset-0 z-40 bg-[#2C2416]/60 pointer-events-none"></div>
+  <div id="tuto-overlay" class="hidden fixed inset-0 z-40 bg-[#2C2416]/75 pointer-events-none"></div>
 
-  <!-- Tooltip tutoriel (fixé en bas) -->
+  <!-- Panel tutoriel (fixé en bas, thème sombre) -->
   <div id="tutorial" class="hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-6">
-    <div class="max-w-lg mx-auto bg-white rounded-3xl p-6 shadow-2xl border border-[#D6CCC0]">
-      <!-- Progress dots -->
-      <div class="flex gap-1.5 mb-4">
-        {[0,1,2,3,4,5].map(i => (
-          <div class={`tuto-dot h-1.5 rounded-full flex-1 transition-all`}></div>
-        ))}
-      </div>
+    <div class="max-w-lg mx-auto bg-[#2C2416] rounded-3xl p-6 shadow-2xl">
+      <!-- Barre de progression -->
+      <div id="tuto-dots" class="flex gap-1.5 mb-5"></div>
       <div class="flex items-start gap-4">
-        <div id="tuto-icon-wrap" class="w-11 h-11 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center shrink-0">
-          <iconify-icon id="tuto-icon" icon="solar:user-id-linear" stroke-width="1.5" class="text-xl text-[#8B3E22]"></iconify-icon>
+        <div class="w-12 h-12 bg-[#8B3E22] rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
+          <iconify-icon id="tuto-icon" icon="solar:hand-stars-linear" stroke-width="1.5" class="text-xl text-white"></iconify-icon>
         </div>
         <div class="flex-1 min-w-0">
-          <p id="tuto-step" class="text-xs uppercase tracking-widest text-[#767A55] mb-1">Étape 1 sur 5</p>
-          <h2 id="tuto-title" class="text-lg text-[#2C2416] tracking-tight mb-1">Mes informations</h2>
-          <p id="tuto-text" class="text-[#2C2416]/60 font-light leading-relaxed text-sm"></p>
+          <p id="tuto-step" class="text-[10px] uppercase tracking-widest text-[#F5EDE4]/40 mb-1">Étape 1</p>
+          <h2 id="tuto-title" class="text-base font-semibold text-[#F5EDE4] tracking-tight mb-1"></h2>
+          <p id="tuto-text" class="text-[#F5EDE4]/60 font-light leading-relaxed text-sm"></p>
         </div>
       </div>
-      <div class="flex items-center justify-between mt-5 pt-4 border-t border-[#D6CCC0]/50">
-        <button id="tuto-skip" class="text-xs text-[#2C2416]/40 hover:text-[#2C2416] transition-colors">Passer le tutoriel</button>
+      <div class="flex items-center justify-between mt-5 pt-4 border-t border-white/10">
+        <button id="tuto-skip" class="text-xs text-[#F5EDE4]/30 hover:text-[#F5EDE4]/70 transition-colors">Passer le tutoriel</button>
         <div class="flex gap-2">
-          <button id="tuto-prev" class="hidden px-4 py-2 border border-[#D6CCC0] text-[#2C2416]/60 rounded-full text-sm hover:bg-[#EDE6DB] transition-colors">← Préc.</button>
-          <button id="tuto-next" class="px-5 py-2 bg-[#8B3E22] text-[#F5EDE4] rounded-full text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Suivant →</button>
+          <button id="tuto-prev" class="hidden px-4 py-2 border border-white/20 text-[#F5EDE4]/60 rounded-full text-sm hover:bg-white/10 transition-colors">← Préc.</button>
+          <button id="tuto-next" class="px-5 py-2 bg-[#8B3E22] text-white rounded-full text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Suivant →</button>
         </div>
       </div>
     </div>
@@ -362,40 +358,53 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
   const TUTO_STEPS = [
     {
-      icon: 'solar:magnifer-linear',
-      title: 'Barre de recherche',
-      text: 'En haut à droite, cherchez n\'importe quoi : documents, contenus, tâches, notes. Les résultats s\'affichent instantanément.',
-      card: null
+      icon: 'solar:hand-stars-linear',
+      title: 'Bienvenue dans votre espace ! 👋',
+      text: 'Ce guide rapide vous présente chaque section en contexte. Cliquez "Suivant" pour commencer la visite.',
+      tab: 'home', card: null,
+      action: () => window.switchTab('home')
     },
     {
       icon: 'solar:check-square-linear',
-      title: 'Contenu à valider',
-      text: 'Claire y dépose vos posts, reels et carrousels. Cliquez pour voir le détail, puis validez ou refusez en un clic.',
-      card: 'card-content'
-    },
-    {
-      icon: 'solar:document-text-linear',
-      title: 'Mes documents',
-      text: 'Contrats, factures et documents déposés par Claire. Cliquez sur un fichier pour l\'ouvrir.',
-      card: 'card-docs'
-    },
-    {
-      icon: 'solar:upload-linear',
-      title: 'Déposer des fichiers',
-      text: 'Partagez vos photos et vidéos que Claire utilisera pour créer vos contenus.',
-      card: 'card-upload'
-    },
-    {
-      icon: 'solar:notebook-linear',
-      title: 'Discussion & tâches',
-      text: 'Utilisez la bulle en bas à droite pour discuter avec Claire. Gérez vos tâches depuis l\'onglet Accueil.',
-      card: 'card-tasks'
+      title: 'Contenus à valider',
+      text: 'Claire dépose ici vos posts, stories, reels et carrousels. Chaque contenu s\'ouvre pour afficher la légende et les boutons ✓ Valider / ✗ Refuser.',
+      tab: 'content', card: 'card-content',
+      action: () => window.switchTab('content')
     },
     {
       icon: 'solar:calendar-linear',
       title: 'Calendrier éditorial',
-      text: 'Visualisez vos publications programmées mois par mois. Cliquez sur un jour pour voir le détail. Ajoutez des notes via le ✏️.',
-      card: 'card-calendar'
+      text: 'Visualisez toutes vos publications programmées mois par mois. Cliquez sur un jour pour voir le détail. Ajoutez vos notes personnelles via le crayon ✏️.',
+      tab: 'home', card: 'card-calendar',
+      action: () => window.switchTab('home')
+    },
+    {
+      icon: 'solar:document-text-linear',
+      title: 'Mes documents',
+      text: 'Retrouvez vos contrats, factures et audits envoyés par Claire, organisés par type dans 3 sous-onglets : Documents, Factures, Fichiers déposés.',
+      tab: 'docs', card: 'card-docs',
+      action: () => { window.switchTab('docs'); window.switchDocsTab?.('docs'); }
+    },
+    {
+      icon: 'solar:upload-linear',
+      title: 'Déposer des fichiers',
+      text: 'Partagez vos photos, vidéos ou documents avec Claire depuis l\'onglet "Fichiers déposés". Elle les utilisera pour créer vos contenus Instagram.',
+      tab: 'docs', card: 'card-upload',
+      action: () => { window.switchTab('docs'); setTimeout(() => window.switchDocsTab?.('uploads'), 50); }
+    },
+    {
+      icon: 'solar:checklist-minimalistic-linear',
+      title: 'Mes tâches',
+      text: 'Suivez vos actions à faire, ajoutées par Claire ou par vous. Cochez une tâche pour la marquer comme terminée.',
+      tab: 'home', card: 'card-tasks',
+      action: () => window.switchTab('home')
+    },
+    {
+      icon: 'solar:chat-round-dots-linear',
+      title: 'Discussion avec Claire',
+      text: 'La bulle en bas à droite vous connecte directement à Claire. Vos messages sont instantanés. Cliquez en dehors pour refermer.',
+      tab: 'home', card: null,
+      action: () => { window.switchTab('home'); }
     },
   ];
 
@@ -477,7 +486,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const tuto    = document.getElementById('tutorial');
     const overlay = document.getElementById('tuto-overlay');
-    const dots    = document.querySelectorAll('.tuto-dot');
+    const dotsEl  = document.getElementById('tuto-dots');
     const iconEl  = document.getElementById('tuto-icon');
     const stepEl  = document.getElementById('tuto-step');
     const titleEl = document.getElementById('tuto-title');
@@ -486,53 +495,56 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const nextBtn = document.getElementById('tuto-next');
     const skipBtn = document.getElementById('tuto-skip');
 
-    function highlightCard(cardId) {
-      // Retirer l'ancien highlight
+    // Générer les dots dynamiquement
+    dotsEl.innerHTML = TUTO_STEPS.map(() => '<div class="tuto-dot h-1.5 rounded-full flex-1 transition-all bg-white/20"></div>').join('');
+
+    function clearHighlight() {
       if (prevCard) {
-        prevCard.classList.remove('ring-4', 'ring-[#8B3E22]', 'ring-offset-2', 'scale-[1.02]', 'relative', 'z-50', 'shadow-2xl');
+        prevCard.classList.remove('ring-4', 'ring-[#8B3E22]', 'ring-offset-4', 'relative', 'z-50', 'shadow-2xl');
         prevCard.style.transition = '';
         prevCard = null;
       }
-      if (!cardId) {
-        // Étape sans carte : scroll vers le header (paramètres)
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-      const card = document.getElementById(cardId);
-      if (card) {
-        card.classList.add('ring-4', 'ring-[#8B3E22]', 'ring-offset-2', 'relative', 'z-50', 'shadow-2xl', 'scale-[1.02]');
-        card.style.transition = 'all 0.4s ease';
+    }
+
+    function highlightCard(cardId) {
+      clearHighlight();
+      if (!cardId) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      // Chercher dans le DOM après que l'action ait changé l'onglet
+      setTimeout(() => {
+        const card = document.getElementById(cardId);
+        if (!card) return;
+        card.classList.add('ring-4', 'ring-[#8B3E22]', 'ring-offset-4', 'relative', 'z-50', 'shadow-2xl');
+        card.style.transition = 'all 0.35s ease';
         setTimeout(() => {
-          const rect = card.getBoundingClientRect();
-          const offset = window.scrollY + rect.top - 120;
-          window.scrollTo({ top: offset, behavior: 'smooth' });
-        }, 100);
+          const top = window.scrollY + card.getBoundingClientRect().top - 140;
+          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        }, 80);
         prevCard = card;
-      }
+      }, cardId === 'card-upload' || cardId === 'card-docs' ? 120 : 60);
     }
 
     function render() {
       const s = TUTO_STEPS[step];
       // Dots
-      dots.forEach((d, i) => {
-        d.className = `tuto-dot h-1.5 rounded-full flex-1 transition-all ${i <= step ? 'bg-[#8B3E22]' : 'bg-[#D6CCC0]'}`;
+      dotsEl.querySelectorAll('.tuto-dot').forEach((d, i) => {
+        d.className = `tuto-dot h-1.5 rounded-full flex-1 transition-all ${i < step ? 'bg-white/40' : i === step ? 'bg-[#8B3E22]' : 'bg-white/20'}`;
       });
       iconEl.setAttribute('icon', s.icon);
-      stepEl.textContent  = `Étape ${step+1} sur ${TUTO_STEPS.length}`;
+      stepEl.textContent  = `Étape ${step + 1} sur ${TUTO_STEPS.length}`;
       titleEl.textContent = s.title;
       textEl.textContent  = s.text;
       prevBtn.classList.toggle('hidden', step === 0);
-      nextBtn.textContent = step === TUTO_STEPS.length - 1 ? '✓ Commencer !' : 'Suivant →';
+      nextBtn.textContent = step === TUTO_STEPS.length - 1 ? '✓ C\'est parti !' : 'Suivant →';
+      // Naviguer vers la bonne section + highlight
+      if (s.action) s.action();
       highlightCard(s.card);
     }
 
     function close() {
       localStorage.setItem(key, '1');
+      clearHighlight();
       tuto.classList.add('hidden');
       overlay.classList.add('hidden');
-      if (prevCard) {
-        prevCard.classList.remove('ring-4', 'ring-[#8B3E22]', 'ring-offset-2', 'relative', 'z-50', 'shadow-2xl', 'scale-[1.02]');
-      }
     }
 
     tuto.classList.remove('hidden');
