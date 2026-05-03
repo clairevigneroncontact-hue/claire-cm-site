@@ -63,15 +63,23 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div id="admin-set-pwd-msg" class="hidden mt-3 text-sm rounded-xl px-4 py-2"></div>
           <button onclick="saveAdminPassword()" class="mt-4 w-full py-2.5 bg-[#2C2416] text-white rounded-xl text-sm font-medium hover:bg-[#8B3E22] transition-colors">Changer le mot de passe</button>
         </div>
-        <!-- Support admin -->
+        <!-- FAQ & Aide admin -->
         <div class="border-t border-[#D6CCC0] pt-6">
-          <h2 class="text-sm font-semibold text-[#2C2416] uppercase tracking-widest mb-4">Support</h2>
-          <div class="bg-[#EDE6DB] rounded-2xl p-4 space-y-3">
-            <p class="text-xs text-[#767A55]">Pour toute question concernant l'espace admin, contacte le support technique.</p>
-            <a href="mailto:clairevigneron.contact@gmail.com" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors text-sm text-[#2C2416]/70 hover:text-[#8B3E22]">
-              <iconify-icon icon="solar:letter-linear" stroke-width="1.5" class="text-lg shrink-0"></iconify-icon>
-              clairevigneron.contact@gmail.com
-            </a>
+          <h2 class="text-sm font-semibold text-[#2C2416] uppercase tracking-widest mb-4">FAQ & Aide — Espace Admin</h2>
+          <div class="space-y-2">
+            {[
+              ['Comment créer un nouvel espace client ?', 'Depuis la vue principale, clique sur "+ Nouveau client". Remplis l\'email, le nom, le téléphone, le compte Instagram et l\'offre. Le client reçoit un email pour définir son mot de passe.'],
+              ['Comment envoyer du contenu à valider ?', 'Ouvre la fiche d\'un client → onglet "Contenu" → section "Envoyer du contenu à valider". Choisis le type (Post, Story, Reel, Carrousel), saisis le titre, la légende, la date/heure de publication et le fichier, puis clique "Envoyer".'],
+              ['Comment fonctionne le calendrier éditorial ?', 'Le calendrier affiche les contenus validés (couleur pleine) et en attente (tirets ambre). Cliquer sur un jour affiche le détail. Tu peux décaler une publication en glissant-déposant sur une autre date ou via le bouton "Décaler".'],
+              ['Comment déposer un document ou une facture ?', 'Fiche client → onglet "Documents" → section "Déposer un document". Sélectionne le type (Contrat, Facture, Devis…), le fichier, et clique "Déposer". Le document apparaît immédiatement dans l\'espace du client.'],
+              ['Comment gérer les notifications ?', 'Les notifications importantes apparaissent dans le panneau de droite (vue liste clients) et dans la cloche. Les deux sont synchronisées. Cliquer sur une notification ouvre le client concerné. Glisser à gauche (mobile) ou cocher pour supprimer.'],
+              ['Comment utiliser la discussion avec un client ?', 'Ouvre la fiche d\'un client. La bulle de discussion est en bas à droite. Cliquer dessus ouvre le fil de messages. Les messages du client apparaissent dans les notifications.'],
+            ].map(([q, a]) => (
+              <details class="border border-[#D6CCC0] rounded-xl overflow-hidden">
+                <summary class="flex items-center justify-between px-4 py-3 bg-[#F5EDE4] cursor-pointer hover:bg-[#EDE6DB] transition-colors select-none text-sm font-medium text-[#2C2416]">{q}</summary>
+                <div class="px-4 py-3 text-sm text-[#2C2416]/70 font-light leading-relaxed border-t border-[#D6CCC0]/50">{a}</div>
+              </details>
+            ))}
           </div>
         </div>
       </div>
@@ -446,36 +454,37 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         }, { passive: true });
       });
 
-      // Synchroniser le badge de la cloche
-      const bellBadge = document.getElementById('admin-notif-badge');
-      if (bellBadge) {
-        bellBadge.textContent = visible.length > 9 ? '9+' : String(visible.length);
-        bellBadge.classList.toggle('hidden', visible.length === 0);
-        bellBadge.classList.toggle('flex', visible.length > 0);
-      }
-
-      // Synchroniser le panel flottant si ouvert
+      // Synchroniser le panel flottant (cloche)
       const floatList = document.getElementById('admin-bell-float-list');
       if (floatList) floatList.innerHTML = list.innerHTML;
+
+      // Mettre à jour les badges (cloche + panel droit)
+      updateImpBadge();
     }
 
     window.dismissImpNotif = (id) => {
       const dismissed = new Set(JSON.parse(localStorage.getItem(IMP_DISMISSED_KEY)||'[]'));
       dismissed.add(id);
       localStorage.setItem(IMP_DISMISSED_KEY, JSON.stringify([...dismissed]));
-      const row = document.querySelector(`[data-imp-notif="${id}"]`);
-      if (row) { row.style.transform = 'translateX(-100%)'; row.style.opacity = '0'; setTimeout(() => { row.remove(); updateImpBadge(); }, 300); }
+      // Re-rend les deux panels depuis la source commune
+      if (window._lastAdminNotifItems) renderImpNotifs(window._lastAdminNotifItems);
     };
     window.clearAllImpNotifs = () => {
-      const items = document.querySelectorAll('[data-imp-notif]');
-      items.forEach(r => { const id = r.dataset.impNotif; const d = new Set(JSON.parse(localStorage.getItem(IMP_DISMISSED_KEY)||'[]')); d.add(id); localStorage.setItem(IMP_DISMISSED_KEY, JSON.stringify([...d])); });
-      document.getElementById('imp-notif-list').innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4 text-center">Aucune notification</p>';
-      updateImpBadge();
+      if (window._lastAdminNotifItems) {
+        const d = new Set(JSON.parse(localStorage.getItem(IMP_DISMISSED_KEY)||'[]'));
+        window._lastAdminNotifItems.forEach(n => d.add(n.id));
+        localStorage.setItem(IMP_DISMISSED_KEY, JSON.stringify([...d]));
+        renderImpNotifs(window._lastAdminNotifItems);
+      }
     };
     function updateImpBadge() {
-      const remaining = document.querySelectorAll('[data-imp-notif]').length;
+      // Compter uniquement depuis imp-notif-list (source de vérité, pas le panel flottant)
+      const remaining = document.getElementById('imp-notif-list')?.querySelectorAll('[data-imp-notif]').length || 0;
       const badge = document.getElementById('imp-notif-count');
       if (badge) { badge.textContent = String(remaining); badge.classList.toggle('hidden', remaining === 0); badge.classList.toggle('flex', remaining > 0); }
+      // Synchroniser le badge de la cloche
+      const bellBadge = document.getElementById('admin-notif-badge');
+      if (bellBadge) { bellBadge.textContent = String(remaining); bellBadge.classList.toggle('hidden', remaining === 0); bellBadge.classList.toggle('flex', remaining > 0); }
     }
     window.openClientFromNotif = (clientId, tab) => {
       window.openClient(clientId);

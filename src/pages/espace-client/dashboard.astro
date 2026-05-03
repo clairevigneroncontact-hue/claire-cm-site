@@ -1168,21 +1168,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
 
       if (list) {
-        if (!(notifs||[]).length) { list.innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4">Aucune notification</p>'; return; }
-        list.innerHTML = (notifs||[]).map(n => {
+        // N'afficher que les notifications non lues — les lues disparaissent définitivement
+        const unreadNotifs = (notifs||[]).filter(n => !n.read);
+        if (!unreadNotifs.length) { list.innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4">Aucune notification</p>'; return; }
+        list.innerHTML = unreadNotifs.map(n => {
           const target  = notifTarget(n.type);
-          const icon    = n.type === 'content' ? 'solar:check-square-linear'
-                        : n.type === 'message' ? 'solar:chat-round-dots-linear'
-                        : 'solar:document-text-linear';
           const dateStr = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-          return `<div data-notif-id="${n.id}" onclick="markNotifRowRead('${n.id}'); goToSection('${n.id}','${target?.id||''}','${n.type||''}','${n.content_id||''}')"
-            class="flex items-start gap-2.5 px-4 py-3 cursor-pointer hover:bg-[#F5EDE4] transition-colors ${n.read ? 'bg-white' : 'bg-[#8B3E22]/10'}">
+          return `<div data-notif-id="${n.id}" onclick="markNotifRead('${n.id}'); goToSection('${n.id}','${target?.id||''}','${n.type||''}','${n.content_id||''}')"
+            class="flex items-start gap-2.5 px-4 py-3 cursor-pointer hover:bg-[#F5EDE4] transition-colors bg-[#8B3E22]/10">
             <button data-checkbox onclick="event.stopPropagation(); markNotifRead('${n.id}')" title="Marquer comme lu"
-              class="w-4 h-4 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center transition-colors ${n.read ? 'border-[#D6CCC0] bg-[#D6CCC0]/20 cursor-default' : 'border-[#8B3E22] hover:bg-[#8B3E22]/30'}">
-              ${n.read ? '<iconify-icon icon="solar:check-linear" stroke-width="3" class="text-[#767A55]" style="font-size:8px"></iconify-icon>' : ''}
+              class="w-4 h-4 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center transition-colors border-[#8B3E22] hover:bg-[#8B3E22]/30">
             </button>
             <div class="flex-1 min-w-0">
-              <p data-notif-text class="text-xs text-[#2C2416] leading-relaxed ${n.read ? '' : 'font-medium'}">${n.message}</p>
+              <p data-notif-text class="text-xs text-[#2C2416] leading-relaxed font-medium">${n.message}</p>
               <p class="text-[10px] text-[#767A55] mt-0.5">${dateStr}</p>
             </div>
           </div>`;
