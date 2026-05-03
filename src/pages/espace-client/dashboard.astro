@@ -1232,10 +1232,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     // Clic sur notification → marquer lu + naviguer vers le bon endroit
     window.goToSection = async (notifId, cardId, type, contentId) => {
-      await sb.from('notifications').update({ read: true }).eq('id', notifId);
+      // Supprimer la ligne visuellement + décompte badge immédiatement
+      removeNotifRow(notifId);
+      // Marquer comme lu en DB (fire-and-forget)
+      sb.from('notifications').update({ read: true }).eq('id', notifId);
       document.getElementById('notif-panel').classList.add('hidden');
       document.getElementById('notif-overlay').classList.add('hidden');
-      loadNotifications();
       // Discussion
       if (type === 'message') {
         const panel = document.getElementById('discussion-panel');

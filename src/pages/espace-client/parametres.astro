@@ -48,7 +48,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
             <div class="text-center">
               <p class="text-sm font-medium text-[#2C2416]">Cliquer pour changer la photo</p>
-              <p class="text-xs text-[#767A55] mt-0.5">JPG, PNG ou WEBP · Max 2 Mo</p>
+              <p class="text-xs text-[#767A55] mt-0.5">JPG, PNG ou WEBP · Max 10 Mo</p>
               <p id="avatar-status" class="text-xs mt-1 text-[#767A55]"></p>
             </div>
           </div>
@@ -291,7 +291,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const file = e.target.files?.[0];
       if (!file) return;
       const status = document.getElementById('avatar-status');
-      if (file.size > 2 * 1024 * 1024) { status.textContent = '⚠ Fichier trop volumineux (max 2 Mo)'; return; }
+      if (file.size > 10 * 1024 * 1024) { status.textContent = '⚠ Fichier trop volumineux (max 10 Mo)'; return; }
       status.textContent = 'Envoi en cours…';
       const sb2 = await getSB();
       const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
