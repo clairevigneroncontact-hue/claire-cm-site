@@ -286,27 +286,51 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (icon) icon.classList.add('hidden');
     }
 
+    // Compression image avant upload (redimensionne à 400px max, JPEG 85%)
+    function compressImage(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            const MAX = 400;
+            const scale = Math.min(MAX / img.width, MAX / img.height, 1);
+            const canvas = document.createElement('canvas');
+            canvas.width  = Math.round(img.width  * scale);
+            canvas.height = Math.round(img.height * scale);
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.85);
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
     // Upload photo de profil
     document.getElementById('avatar-input').onchange = async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
       const status = document.getElementById('avatar-status');
-      if (file.size > 10 * 1024 * 1024) { status.textContent = '⚠ Fichier trop volumineux (max 10 Mo)'; return; }
+      status.textContent = 'Compression en cours…';
+      let blob;
+      try { blob = await compressImage(file); }
+      catch(_) { blob = file; }
       status.textContent = 'Envoi en cours…';
       const sb2 = await getSB();
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-      const path = `${uid}/avatar.${ext}`;
-      const { data, error } = await sb2.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type });
+      const path = `${uid}/avatar.jpg`;
+      const { error } = await sb2.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
       if (error) { status.textContent = 'Erreur : ' + error.message; return; }
       const { data: urlData } = sb2.storage.from('avatars').getPublicUrl(path);
-      const avatar_url = urlData.publicUrl + '?t=' + Date.now();
+      const ts = '?t=' + Date.now();
       await sb2.from('profiles').update({ avatar_url: urlData.publicUrl }).eq('id', uid);
-      const img = document.getElementById('avatar-img');
+      const img  = document.getElementById('avatar-img');
       const icon = document.getElementById('avatar-icon');
-      img.src = avatar_url;
+      img.src = urlData.publicUrl + ts;
       img.classList.remove('hidden');
       if (icon) icon.classList.add('hidden');
-      status.textContent = '✓ Photo mise à jour';
+      // Mettre à jour l'avatar dans le header du dashboard si on y revient
+      status.textContent = '✓ Photo enregistrée';
       setTimeout(() => { status.textContent = ''; }, 3000);
     };
 

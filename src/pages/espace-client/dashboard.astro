@@ -84,9 +84,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     <main class="max-w-6xl mx-auto px-4 md:px-6 py-10">
       <div class="mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
-        <div class="flex-1">
-          <h1 id="welcome" class="text-3xl md:text-4xl text-[#2C2416] tracking-tight">Bonjour 👋</h1>
-          <p id="offer-badge" class="text-[#767A55] text-sm mt-1 font-light"></p>
+        <div class="flex-1 flex items-center gap-4">
+          <!-- Avatar visible dans le dashboard -->
+          <a href="/espace-client/parametres" id="dash-avatar-link" class="shrink-0 w-14 h-14 rounded-full bg-[#8B3E22]/10 border-2 border-[#D6CCC0] overflow-hidden flex items-center justify-center hover:border-[#8B3E22] transition-colors" title="Modifier ma photo">
+            <iconify-icon id="dash-avatar-icon" icon="solar:user-circle-linear" stroke-width="1.5" class="text-3xl text-[#8B3E22]"></iconify-icon>
+            <img id="dash-avatar-img" class="hidden w-full h-full object-cover" alt="" />
+          </a>
+          <div>
+            <h1 id="welcome" class="text-3xl md:text-4xl text-[#2C2416] tracking-tight">Bonjour 👋</h1>
+            <p id="offer-badge" class="text-[#767A55] text-sm mt-1 font-light"></p>
+          </div>
         </div>
         <!-- Barre de recherche globale -->
         <div class="relative w-full sm:w-80">
@@ -559,11 +566,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     document.getElementById('welcome').textContent = `Bonjour, ${prenom} 👋`;
 
-    // Afficher avatar dans le header
+    // Afficher avatar dans le header (bouton paramètres) et dans le bloc de bienvenue
     if (p?.avatar_url) {
-      const img  = document.getElementById('header-avatar-img');
-      const icon = document.getElementById('header-avatar-icon');
-      if (img && icon) { img.src = p.avatar_url; img.classList.remove('hidden'); icon.classList.add('hidden'); }
+      const ts = '?t=' + Date.now();
+      // Header
+      const hImg  = document.getElementById('header-avatar-img');
+      const hIcon = document.getElementById('header-avatar-icon');
+      if (hImg && hIcon) { hImg.src = p.avatar_url + ts; hImg.classList.remove('hidden'); hIcon.classList.add('hidden'); }
+      // Bloc bienvenue
+      const dImg  = document.getElementById('dash-avatar-img');
+      const dIcon = document.getElementById('dash-avatar-icon');
+      if (dImg && dIcon) { dImg.src = p.avatar_url + ts; dImg.classList.remove('hidden'); dIcon.classList.add('hidden'); }
     }
 
     // Sauvegarder le nom depuis les métadonnées si manquant
