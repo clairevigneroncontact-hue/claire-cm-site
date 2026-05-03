@@ -32,61 +32,98 @@ export async function onRequestPost(context) {
   }
 
   // ── Traitement de l'événement ─────────────────────────────────────────────
+  let customerEmail, pdfUrl, docName;
+
   if (event.type === 'invoice.payment_succeeded') {
-    const invoice       = event.data.object;
-    const customerEmail = invoice.customer_email?.toLowerCase().trim();
-    const pdfUrl        = invoice.invoice_pdf;
+    // Factures Stripe (abonnements récurrents)
+    const invoice   = event.data.object;
+    customerEmail   = invoice.customer_email?.toLowerCase().trim();
+    pdfUrl          = invoice.invoice_pdf;
     const invoiceNumber = invoice.number || invoice.id;
-    const amount        = ((invoice.amount_paid || 0) / 100).toFixed(2).replace('.', ',');
-    const currency      = (invoice.currency || 'eur').toUpperCase();
-    const invoiceDate   = new Date((invoice.created || Date.now() / 1000) * 1000)
+    const amount    = ((invoice.amount_paid || 0) / 100).toFixed(2).replace('.', ',');
+    const currency  = (invoice.currency || 'eur').toUpperCase();
+    const invoiceDate = new Date((invoice.created || Date.now() / 1000) * 1000)
       .toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+    docName = `Facture ${invoiceNumber} · ${amount} ${currency} · ${invoiceDate}`;
 
-    if (!customerEmail || !pdfUrl) {
-      console.warn('Facture sans email client ou sans PDF, ignorée.');
-      return new Response('Ignoré', { status: 200 });
-    }
+  } else if (event.type === 'checkout.session.completed') {
+    // Payment Links (paiements uniques via buy.stripe.com)
+    const session   = event.data.object;
+    if (session.payment_status !== 'paid') return new Response('Non payé', { status: 200 });
+    customerEmail   = session.customer_details?.email?.toLowerCase().trim();
+    pdfUrl          = null; // Stripe génère la facture en différé — on stocke le reçu
+    const amount    = ((session.amount_total || 0) / 100).toFixed(2).replace('.', ',');
+    const currency  = (session.currency || 'eur').toUpperCase();
+    const date      = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+    const product   = session.metadata?.product_name || 'Prestation';
+    docName         = `Reçu · ${product} · ${amount} ${currency} · ${date}`;
 
-    // Chercher le client dans Supabase par email
-    const profileRes = await fetch(
-      `${supabaseUrl}/rest/v1/profiles?email=eq.${encodeURIComponent(customerEmail)}&role=eq.client&select=id`,
-      { headers: supabaseHeaders(supabaseKey) }
-    );
-    const profiles = await profileRes.json();
-
-    if (!profiles?.length) {
-      console.warn(`Aucun client trouvé pour l'email ${customerEmail}`);
-      return new Response('Client introuvable', { status: 200 }); // 200 pour que Stripe ne réessaie pas
-    }
-
-    const clientId   = profiles[0].id;
-    const docName    = `Facture ${invoiceNumber} · ${amount} ${currency} · ${invoiceDate}`;
-
-    // Insérer la facture dans la table documents
-    const insertRes = await fetch(
-      `${supabaseUrl}/rest/v1/documents`,
-      {
-        method: 'POST',
-        headers: { ...supabaseHeaders(supabaseKey), 'Prefer': 'return=minimal' },
-        body: JSON.stringify({
-          client_id:  clientId,
-          name:       docName,
-          type:       'Facture',
-          file_url:   pdfUrl,
-          created_at: new Date().toISOString(),
-        }),
+    // Récupérer l'URL du reçu Stripe (disponible sur le payment_intent)
+    if (session.payment_intent) {
+      const piRes = await fetch(
+        `https://api.stripe.com/v1/payment_intents/${session.payment_intent}`,
+        { headers: { 'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}` } }
+      );
+      if (piRes.ok) {
+        const pi = await piRes.json();
+        const chargeId = pi.latest_charge;
+        if (chargeId) {
+          const chargeRes = await fetch(
+            `https://api.stripe.com/v1/charges/${chargeId}`,
+            { headers: { 'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}` } }
+          );
+          if (chargeRes.ok) {
+            const charge = await chargeRes.json();
+            pdfUrl = charge.receipt_url || null;
+          }
+        }
       }
-    );
-
-    if (!insertRes.ok) {
-      const err = await insertRes.text();
-      console.error('Erreur insertion Supabase :', err);
-      return new Response('Erreur Supabase', { status: 500 });
     }
-
-    console.log(`Facture ${invoiceNumber} sauvegardée pour ${customerEmail}`);
+  } else {
+    return new Response('Événement ignoré', { status: 200 });
   }
 
+  if (!customerEmail) {
+    console.warn('Aucun email client dans l\'événement, ignoré.');
+    return new Response('Ignoré', { status: 200 });
+  }
+
+  // Chercher le client dans Supabase par email
+  const profileRes = await fetch(
+    `${supabaseUrl}/rest/v1/profiles?email=eq.${encodeURIComponent(customerEmail)}&role=eq.client&select=id`,
+    { headers: supabaseHeaders(supabaseKey) }
+  );
+  const profiles = await profileRes.json();
+
+  if (!profiles?.length) {
+    console.warn(`Aucun client trouvé pour l'email ${customerEmail}`);
+    return new Response('Client introuvable', { status: 200 });
+  }
+
+  const clientId = profiles[0].id;
+
+  const insertRes = await fetch(
+    `${supabaseUrl}/rest/v1/documents`,
+    {
+      method: 'POST',
+      headers: { ...supabaseHeaders(supabaseKey), 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        client_id:  clientId,
+        name:       docName,
+        type:       'Facture',
+        file_url:   pdfUrl || '',
+        created_at: new Date().toISOString(),
+      }),
+    }
+  );
+
+  if (!insertRes.ok) {
+    const err = await insertRes.text();
+    console.error('Erreur insertion Supabase :', err);
+    return new Response('Erreur Supabase', { status: 500 });
+  }
+
+  console.log(`Document sauvegardé pour ${customerEmail} : ${docName}`);
   return new Response('OK', { status: 200 });
 }
 
