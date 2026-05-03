@@ -318,7 +318,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         items.forEach(n => {
           if (n.clientId && (!latestByClient[n.clientId] || n.date > latestByClient[n.clientId])) latestByClient[n.clientId] = n.date;
         });
-        const oneHourAgo = new Date(Date.now() - 3600*1000).toISOString();
+        const oneHourAgo = new Date(Date.now() - 24*3600*1000).toISOString();
         let changed = false;
         Object.entries(latestByClient).forEach(([cid, date]) => {
           if (date > oneHourAgo && !_recentActivity[cid] && !_activeQueue.includes(cid)) {
@@ -871,6 +871,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }));
 
       renderClients(allClients);
+      // Re-vérifier l'activité maintenant que allClients est peuplé
+      loadAdminNotifs();
     }
 
     function renderClients(list) {

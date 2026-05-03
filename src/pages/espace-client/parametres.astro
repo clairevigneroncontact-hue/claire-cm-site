@@ -129,6 +129,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
           <p class="text-xs text-[#767A55] mt-4">Ces préférences sont enregistrées automatiquement.</p>
         </div>
+
+        <!-- Tutoriel -->
+        <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+          <h2 class="text-lg text-[#2C2416] font-medium mb-2">Tutoriel de bienvenue</h2>
+          <p class="text-sm text-[#2C2416]/50 font-light mb-5">Relancer la visite guidée de votre espace à la prochaine connexion.</p>
+          <button id="reset-tuto-btn" class="w-full py-3 border border-[#8B3E22] text-[#8B3E22] rounded-xl text-sm font-medium hover:bg-[#8B3E22] hover:text-white transition-colors flex items-center justify-center gap-2">
+            <iconify-icon icon="solar:restart-linear" stroke-width="1.5"></iconify-icon>
+            Revoir le tutoriel à la prochaine connexion
+          </button>
+          <p id="reset-tuto-msg" class="hidden text-xs text-green-700 mt-3 text-center">✓ Le tutoriel sera affiché à votre prochaine connexion.</p>
+        </div>
       </div>
 
       <!-- Tab : FAQ & Aide -->
@@ -400,6 +411,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (confirm('Êtes-vous sûr ? Cette action est irréversible.')) {
         window.location.href = `mailto:clairevigneron.contact@gmail.com?subject=Demande de suppression de compte&body=Bonjour Claire, je souhaite supprimer mon compte client (${session.user.email}).`;
       }
+    };
+
+    // Réinitialiser le tutoriel
+    document.getElementById('reset-tuto-btn').onclick = () => {
+      localStorage.removeItem(`tuto_done_${uid}`);
+      const msg = document.getElementById('reset-tuto-msg');
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 3000);
     };
   });
 </script>
