@@ -1189,16 +1189,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (txt) txt.classList.remove('font-medium');
     }
 
-    window.markNotifRead = async (id) => {
+    window.markNotifRead = (id) => {
       markNotifRowRead(id);
-      await sb.from('notifications').update({ read: true }).eq('id', id);
-      await loadNotifications();
+      sb.from('notifications').update({ read: true }).eq('id', id);
     };
 
-    window.markAllNotifRead = async () => {
+    window.markAllNotifRead = () => {
       document.querySelectorAll('[data-notif-id]').forEach(row => markNotifRowRead(row.dataset.notifId));
-      await sb.from('notifications').update({ read: true }).eq('client_id', uid);
-      await loadNotifications();
+      sb.from('notifications').update({ read: true }).eq('client_id', uid);
     };
 
     // Clic sur notification → marquer lu + naviguer vers le bon endroit

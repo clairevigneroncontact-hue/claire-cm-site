@@ -15,22 +15,63 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <span class="text-[#8B3E22] text-xs ml-2 uppercase tracking-widest font-sans">Admin</span>
       </a>
       <div class="flex items-center gap-3">
-        <button id="admin-bell-btn" class="relative w-10 h-10 rounded-xl border border-[#F5EDE4]/20 flex items-center justify-center text-[#F5EDE4]/70 hover:text-white hover:border-white/40 hover:bg-white/10 transition-colors">
-          <iconify-icon icon="solar:bell-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
-          <span id="admin-notif-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#8B3E22] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none"></span>
+        <button id="admin-settings-btn" class="w-10 h-10 rounded-xl border border-[#F5EDE4]/20 flex items-center justify-center text-[#F5EDE4]/70 hover:text-white hover:border-white/40 hover:bg-white/10 transition-colors" title="Paramètres">
+          <iconify-icon icon="solar:settings-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
         </button>
         <button id="logout-btn" class="text-sm text-[#F5EDE4]/70 hover:text-white transition-colors px-4 py-2 rounded-xl border border-[#F5EDE4]/20 hover:bg-white/10">Déconnexion</button>
       </div>
     </header>
 
-    <!-- Panel notifications admin -->
-    <div id="admin-notif-panel" class="hidden fixed top-[76px] right-4 w-80 bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] z-50 overflow-hidden">
-      <div class="px-4 py-3 border-b border-[#D6CCC0] flex items-center justify-between">
-        <span class="text-sm font-semibold text-[#2C2416]">Notifications</span>
-        <button onclick="markAdminNotifsRead()" class="text-xs text-[#8B3E22] hover:underline">Tout marquer lu</button>
+    <!-- Panel Paramètres admin -->
+    <div id="admin-settings-overlay" class="hidden fixed inset-0 z-40 bg-[#2C2416]/40" onclick="toggleAdminSettings()"></div>
+    <div id="admin-settings-panel" class="hidden fixed top-0 right-0 h-full w-full sm:w-96 bg-white z-50 shadow-2xl overflow-y-auto">
+      <div class="bg-[#2C2416] px-6 py-5 flex items-center justify-between">
+        <span class="text-base font-semibold text-[#F5EDE4]">Paramètres</span>
+        <button onclick="toggleAdminSettings()" class="text-[#F5EDE4]/50 hover:text-white transition-colors">
+          <iconify-icon icon="solar:close-circle-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+        </button>
       </div>
-      <div id="admin-notif-list" class="max-h-[360px] overflow-y-auto divide-y divide-[#D6CCC0]/40">
-        <p class="text-xs text-[#2C2416]/40 italic p-4">Chargement…</p>
+      <div class="p-6 space-y-6">
+        <!-- Mon profil -->
+        <div>
+          <h2 class="text-sm font-semibold text-[#2C2416] uppercase tracking-widest mb-4">Mon profil</h2>
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-[#767A55] block mb-1">Nom complet</label>
+              <input id="admin-set-name" type="text" spellcheck="true" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+            </div>
+            <div>
+              <label class="text-xs text-[#767A55] block mb-1">Email</label>
+              <input id="admin-set-email" type="email" disabled class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm bg-[#F5EDE4] text-[#2C2416]/50 cursor-not-allowed" />
+            </div>
+            <div>
+              <label class="text-xs text-[#767A55] block mb-1">Téléphone</label>
+              <input id="admin-set-phone" type="tel" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" placeholder="+33 6 xx xx xx xx" />
+            </div>
+            <div>
+              <label class="text-xs text-[#767A55] block mb-1">Instagram</label>
+              <input id="admin-set-instagram" type="text" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" placeholder="@handle" />
+            </div>
+          </div>
+          <div id="admin-set-profile-msg" class="hidden mt-3 text-sm rounded-xl px-4 py-2"></div>
+          <button onclick="saveAdminProfile()" class="mt-4 w-full py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer le profil</button>
+        </div>
+        <!-- Mot de passe -->
+        <div class="border-t border-[#D6CCC0] pt-6">
+          <h2 class="text-sm font-semibold text-[#2C2416] uppercase tracking-widest mb-4">Changer le mot de passe</h2>
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-[#767A55] block mb-1">Nouveau mot de passe</label>
+              <input id="admin-set-pwd1" type="password" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" placeholder="••••••••" />
+            </div>
+            <div>
+              <label class="text-xs text-[#767A55] block mb-1">Confirmer</label>
+              <input id="admin-set-pwd2" type="password" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" placeholder="••••••••" />
+            </div>
+          </div>
+          <div id="admin-set-pwd-msg" class="hidden mt-3 text-sm rounded-xl px-4 py-2"></div>
+          <button onclick="saveAdminPassword()" class="mt-4 w-full py-2.5 bg-[#2C2416] text-white rounded-xl text-sm font-medium hover:bg-[#8B3E22] transition-colors">Changer le mot de passe</button>
+        </div>
       </div>
     </div>
 
@@ -263,41 +304,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       });
       items.sort((a,b) => b.date.localeCompare(a.date));
 
-      const unread = items.filter(i => i.unread).length;
-      const badge  = document.getElementById('admin-notif-badge');
-      if (badge) {
-        badge.textContent = unread > 9 ? '9+' : String(unread);
-        badge.classList.toggle('hidden', unread === 0);
-      }
-
       window._lastAdminNotifItems = items;
-      const dismissed = new Set(JSON.parse(localStorage.getItem(NOTIFS_DISMISSED_KEY)||'[]'));
-      const visible = items.filter(i => !dismissed.has(i.id));
-
-      const unreadVisible = visible.filter(i => i.unread).length;
-      const badge2 = document.getElementById('admin-notif-badge');
-      if (badge2) { badge2.textContent = unreadVisible > 9 ? '9+' : String(unreadVisible); badge2.classList.toggle('hidden', unreadVisible === 0); }
-
-      const list = document.getElementById('admin-notif-list');
-      if (!list) return;
-      if (!visible.length) { list.innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4">Aucune notification récente.</p>'; return; }
-      list.innerHTML = visible.map(item => {
-        const when = new Date(item.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-        return `<div data-admin-notif-id="${item.id}" onclick="dismissNotifRow('${item.id}'); window.openClient('${item.clientId}'); window.switchClientTab('${item.tab==='fichiers'?'documents':item.tab}'); window.toggleAdminNotifPanel()"
-          class="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-[#F5EDE4] transition-colors ${item.unread?'bg-[#8B3E22]/10':'bg-white'}">
-          <span class="text-base mt-0.5 shrink-0">${item.icon}</span>
-          <div class="flex-1 min-w-0">
-            <p data-admin-notif-text class="text-xs text-[#2C2416] leading-relaxed ${item.unread?'font-medium':''}">${item.text}</p>
-            <p class="text-[10px] text-[#767A55] mt-0.5">${when}</p>
-          </div>
-          <button onclick="event.stopPropagation(); dismissNotif('${item.id}')"
-            data-admin-checkbox
-            class="shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ml-1 ${item.unread?'border-[#8B3E22]/50 hover:bg-[#8B3E22]/10 hover:border-[#8B3E22]':'border-[#D6CCC0] bg-[#F5EDE4]'}"
-            title="Cocher comme traité">
-            ${!item.unread ? `<iconify-icon icon="solar:check-linear" stroke-width="2.5" style="font-size:9px;color:#8B3E22"></iconify-icon>` : ''}
-          </button>
-        </div>`;
-      }).join('');
     }
 
     function dismissNotifRow(id) {
@@ -326,20 +333,70 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       localStorage.setItem(NOTIFS_KEY, new Date().toISOString());
     };
 
-    window.toggleAdminNotifPanel = () => {
-      const panel = document.getElementById('admin-notif-panel');
+    window.toggleAdminNotifPanel = () => {}; // conservé pour compatibilité (plus de cloche)
+
+    // ─── Panel Paramètres admin ───────────────────────────────────────────────
+    window.toggleAdminSettings = () => {
+      const panel   = document.getElementById('admin-settings-panel');
+      const overlay = document.getElementById('admin-settings-overlay');
       if (!panel) return;
+      const isOpen = !panel.classList.contains('hidden');
       panel.classList.toggle('hidden');
-      if (!panel.classList.contains('hidden')) loadAdminNotifs();
+      overlay.classList.toggle('hidden', isOpen);
+      if (!isOpen) loadAdminProfileSettings();
     };
 
-    document.getElementById('admin-bell-btn').onclick = (e) => { e.stopPropagation(); window.toggleAdminNotifPanel(); };
+    document.getElementById('admin-settings-btn').onclick = () => window.toggleAdminSettings();
 
-    document.addEventListener('click', (e) => {
-      const panel = document.getElementById('admin-notif-panel');
-      const bell  = document.getElementById('admin-bell-btn');
-      if (panel && !panel.contains(e.target) && bell && !bell.contains(e.target)) panel.classList.add('hidden');
-    });
+    async function loadAdminProfileSettings() {
+      const sb2 = await getSB();
+      const { data: { session } } = await sb2.auth.getSession();
+      if (!session) return;
+      const { data: p } = await sb2.from('profiles').select('*').eq('id', session.user.id).single();
+      const meta = session.user.user_metadata || {};
+      document.getElementById('admin-set-name').value  = p?.full_name || meta.full_name || '';
+      document.getElementById('admin-set-email').value = session.user.email || '';
+      document.getElementById('admin-set-phone').value = p?.phone || '';
+      document.getElementById('admin-set-instagram').value = p?.instagram_handle || '';
+    }
+
+    window.saveAdminProfile = async () => {
+      const sb2  = await getSB();
+      const { data: { session } } = await sb2.auth.getSession();
+      if (!session) return;
+      const msg = document.getElementById('admin-set-profile-msg');
+      const full_name        = document.getElementById('admin-set-name').value.trim();
+      const phone            = document.getElementById('admin-set-phone').value.trim();
+      const instagram_handle = document.getElementById('admin-set-instagram').value.trim().replace('@','');
+      const { error } = await sb2.from('profiles').update({ full_name, phone, instagram_handle }).eq('id', session.user.id);
+      msg.className = `mt-3 text-sm rounded-xl px-4 py-2 ${error ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`;
+      msg.textContent = error ? `Erreur : ${error.message}` : 'Profil enregistré ✓';
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 3000);
+    };
+
+    window.saveAdminPassword = async () => {
+      const sb2 = await getSB();
+      const msg  = document.getElementById('admin-set-pwd-msg');
+      const pwd1 = document.getElementById('admin-set-pwd1').value;
+      const pwd2 = document.getElementById('admin-set-pwd2').value;
+      if (!pwd1 || pwd1.length < 6) {
+        msg.className = 'mt-3 text-sm rounded-xl px-4 py-2 bg-red-50 text-red-600';
+        msg.textContent = 'Le mot de passe doit faire au moins 6 caractères.';
+        msg.classList.remove('hidden'); return;
+      }
+      if (pwd1 !== pwd2) {
+        msg.className = 'mt-3 text-sm rounded-xl px-4 py-2 bg-red-50 text-red-600';
+        msg.textContent = 'Les mots de passe ne correspondent pas.';
+        msg.classList.remove('hidden'); return;
+      }
+      const { error } = await sb2.auth.updateUser({ password: pwd1 });
+      msg.className = `mt-3 text-sm rounded-xl px-4 py-2 ${error ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`;
+      msg.textContent = error ? `Erreur : ${error.message}` : 'Mot de passe modifié ✓';
+      msg.classList.remove('hidden');
+      if (!error) { document.getElementById('admin-set-pwd1').value = ''; document.getElementById('admin-set-pwd2').value = ''; }
+      setTimeout(() => msg.classList.add('hidden'), 4000);
+    };
 
     loadAdminNotifs();
     setInterval(loadAdminNotifs, 60000);
