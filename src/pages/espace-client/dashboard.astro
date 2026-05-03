@@ -78,6 +78,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     <!-- Cache le panel notifs au clic ailleurs -->
     <div id="notif-overlay" class="hidden fixed inset-0 z-40" onclick="document.getElementById('notif-panel').classList.add('hidden'); document.getElementById('notif-overlay').classList.add('hidden')"></div>
 
+    <!-- Cache la bulle discussion au clic ailleurs -->
+    <div id="discussion-overlay" class="hidden fixed inset-0 z-[38]" onclick="document.getElementById('discussion-panel').classList.add('hidden'); document.getElementById('discussion-overlay').classList.add('hidden')"></div>
+
     <main class="max-w-6xl mx-auto px-4 md:px-6 py-10">
       <div class="mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
         <div class="flex-1">
@@ -210,35 +213,77 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
       <!-- Onglet Mes documents -->
       <div id="tab-docs-panel" class="hidden">
-        <!-- Upload -->
-        <div id="card-upload" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] mb-5">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
-              <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
-            </div>
-            <h2 class="text-base text-[#2C2416] font-medium">Déposer des fichiers</h2>
-          </div>
-          <p class="text-xs text-[#2C2416]/50 font-light mb-4">Photos, vidéos, PDFs et autres documents.</p>
-          <label class="cursor-pointer block">
-            <input id="upload-input" type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.png,.jpg,.jpeg,.gif,.webp" multiple class="hidden" />
-            <div class="border-2 border-dashed border-[#D6CCC0] rounded-xl p-5 text-center hover:border-[#8B3E22] transition-colors">
-              <iconify-icon icon="solar:cloud-upload-linear" stroke-width="1.5" class="text-2xl text-[#D6CCC0] block mx-auto mb-2"></iconify-icon>
-              <span class="text-xs text-[#2C2416]/50">Cliquer pour sélectionner</span>
-              <p class="text-[10px] text-[#2C2416]/30 mt-1">Images, vidéos, PDF, Word, Excel…</p>
-            </div>
-          </label>
-          <div id="upload-status" class="mt-2 text-xs text-[#767A55]"></div>
+        <!-- Sous-navigation -->
+        <div class="flex gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-5 overflow-x-auto">
+          <button id="docs-sub-btn-docs" onclick="switchDocsTab('docs')" class="bg-white text-[#2C2416] shadow-sm rounded-lg py-2 px-3 text-xs font-medium whitespace-nowrap flex items-center gap-1.5">
+            <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+            Documents
+          </button>
+          <button id="docs-sub-btn-factures" onclick="switchDocsTab('factures')" class="text-[#2C2416]/50 rounded-lg py-2 px-3 text-xs font-medium hover:text-[#2C2416] whitespace-nowrap flex items-center gap-1.5">
+            <iconify-icon icon="solar:bill-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+            Factures
+          </button>
+          <button id="docs-sub-btn-uploads" onclick="switchDocsTab('uploads')" class="text-[#2C2416]/50 rounded-lg py-2 px-3 text-xs font-medium hover:text-[#2C2416] whitespace-nowrap flex items-center gap-1.5">
+            <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+            Fichiers déposés
+          </button>
         </div>
-        <!-- Documents fusionnés (envoyés par Claire + déposés par client) -->
-        <div id="card-docs" class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
-              <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+
+        <!-- Sous-onglet Documents -->
+        <div id="docs-subtab-docs">
+          <div id="card-docs" class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+                <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+              </div>
+              <h2 class="text-base text-[#2C2416] font-medium">Mes documents</h2>
             </div>
-            <h2 class="text-base text-[#2C2416] font-medium">Mes documents</h2>
+            <div id="docs-list" class="space-y-0.5"><p class="text-xs text-[#2C2416]/30 italic">Aucun document</p></div>
           </div>
-          <div id="docs-list" class="space-y-0.5"><p class="text-xs text-[#2C2416]/30 italic">Aucun document</p></div>
-          <div id="invoices-list" class="hidden"></div>
+        </div>
+
+        <!-- Sous-onglet Factures -->
+        <div id="docs-subtab-factures" class="hidden">
+          <div id="card-invoices" class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+                <iconify-icon icon="solar:bill-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+              </div>
+              <h2 class="text-base text-[#2C2416] font-medium">Mes factures</h2>
+            </div>
+            <div id="invoices-list" class="space-y-0.5"><p class="text-xs text-[#2C2416]/30 italic">Aucune facture</p></div>
+          </div>
+        </div>
+
+        <!-- Sous-onglet Fichiers déposés -->
+        <div id="docs-subtab-uploads" class="hidden">
+          <div id="card-upload" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] mb-5">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+                <iconify-icon icon="solar:upload-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+              </div>
+              <h2 class="text-base text-[#2C2416] font-medium">Déposer des fichiers</h2>
+            </div>
+            <p class="text-xs text-[#2C2416]/50 font-light mb-4">Photos, vidéos, PDFs et autres documents.</p>
+            <label class="cursor-pointer block">
+              <input id="upload-input" type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.png,.jpg,.jpeg,.gif,.webp" multiple class="hidden" />
+              <div class="border-2 border-dashed border-[#D6CCC0] rounded-xl p-5 text-center hover:border-[#8B3E22] transition-colors">
+                <iconify-icon icon="solar:cloud-upload-linear" stroke-width="1.5" class="text-2xl text-[#D6CCC0] block mx-auto mb-2"></iconify-icon>
+                <span class="text-xs text-[#2C2416]/50">Cliquer pour sélectionner</span>
+                <p class="text-[10px] text-[#2C2416]/30 mt-1">Images, vidéos, PDF, Word, Excel…</p>
+              </div>
+            </label>
+            <div id="upload-status" class="mt-2 text-xs text-[#767A55]"></div>
+          </div>
+          <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+                <iconify-icon icon="solar:paperclip-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+              </div>
+              <h2 class="text-base text-[#2C2416] font-medium">Fichiers déposés</h2>
+            </div>
+            <div id="uploads-list" class="space-y-0.5"><p class="text-xs text-[#2C2416]/30 italic">Aucun fichier déposé</p></div>
+          </div>
         </div>
       </div>
 
@@ -360,13 +405,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     });
   };
 
+  window.switchDocsTab = (sub) => {
+    ['docs','factures','uploads'].forEach(t => {
+      document.getElementById('docs-subtab-' + t)?.classList.toggle('hidden', t !== sub);
+      const btn = document.getElementById('docs-sub-btn-' + t);
+      if (btn) {
+        btn.classList.toggle('bg-white', t === sub);
+        btn.classList.toggle('shadow-sm', t === sub);
+        btn.classList.toggle('text-[#2C2416]', t === sub);
+        btn.classList.toggle('text-[#2C2416]/50', t !== sub);
+      }
+    });
+  };
+
   // ─── Bulle discussion ────────────────────────────────────────────────────
   window.toggleDiscussion = () => {
-    const panel = document.getElementById('discussion-panel');
-    const widget = document.getElementById('discussion-widget');
+    const panel   = document.getElementById('discussion-panel');
+    const overlay = document.getElementById('discussion-overlay');
     if (!panel) return;
     const isOpen = !panel.classList.contains('hidden');
     panel.classList.toggle('hidden');
+    if (overlay) overlay.classList.toggle('hidden', isOpen);
     if (!isOpen) {
       // Ouvre → clear badge unread
       const badge = document.getElementById('discussion-unread');
@@ -652,14 +711,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
       const results = [];
 
-      // Documents + fichiers déposés
+      // Documents
       document.querySelectorAll('#docs-list [data-search]').forEach(el => {
         if (!(el.dataset.search||'').includes(term)) return;
-        const label = el.querySelector('span.truncate, #uname-' + (el.id||''))?.textContent?.trim()
-          || el.querySelector('span.truncate')?.textContent?.trim()
-          || el.dataset.search.split(' ')[0];
+        const label = el.querySelector('span.truncate')?.textContent?.trim() || el.dataset.search.split(' ')[0];
         const badge = el.querySelector('.rounded-full')?.textContent?.trim() || 'Document';
-        results.push({ label: label.slice(0,50), section: 'Mes documents · ' + badge, icon:'solar:document-text-linear', el, tab:'docs' });
+        results.push({ label: label.slice(0,50), section: 'Documents · ' + badge, icon:'solar:document-text-linear', el, tab:'docs', docsSub:'docs' });
+      });
+      // Factures
+      document.querySelectorAll('#invoices-list [data-search]').forEach(el => {
+        if (!(el.dataset.search||'').includes(term)) return;
+        const label = el.querySelector('span.truncate')?.textContent?.trim() || el.dataset.search.split(' ')[0];
+        results.push({ label: label.slice(0,50), section: 'Factures', icon:'solar:bill-linear', el, tab:'docs', docsSub:'factures' });
+      });
+      // Fichiers déposés
+      document.querySelectorAll('#uploads-list [data-search]').forEach(el => {
+        if (!(el.dataset.search||'').includes(term)) return;
+        const label = el.querySelector('#uname-' + (el.id||''))?.textContent?.trim()
+          || el.querySelector('span.truncate, [id^="uname-"]')?.textContent?.trim()
+          || el.dataset.search.split(' ')[0];
+        results.push({ label: label.slice(0,50), section: 'Fichiers déposés', icon:'solar:upload-linear', el, tab:'docs', docsSub:'uploads' });
       });
 
       // Contenus à valider (full list)
@@ -715,6 +786,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
       // Ouvrir le bon onglet d'abord
       if (r.tab) window.switchTab(r.tab);
+      // Ouvrir le sous-onglet docs si besoin
+      if (r.docsSub) setTimeout(() => window.switchDocsTab?.(r.docsSub), 50);
       // Ouvrir la discussion si besoin
       if (r.openDiscussion) window.toggleDiscussion?.();
 
@@ -787,6 +860,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <div class="flex gap-2 flex-wrap mt-2">
             <button onclick="validate('${item.id}','approved')" class="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700">✓ Valider</button>
             <button onclick="showFeedback('${item.id}')" class="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600">✗ Refuser</button>
+          </div>
+          <button onclick="toggleApproveNote('${item.id}')" class="mt-1.5 text-[10px] text-[#767A55] hover:text-[#8B3E22] transition-colors hover:underline underline-offset-2">+ Ajouter un commentaire avant de valider</button>
+          <div id="approve-note-${item.id}" class="hidden mt-2">
+            <textarea spellcheck="true" id="approve-text-${item.id}" placeholder="Commentaire optionnel…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-green-400 resize-none"></textarea>
+            <button onclick="validateWithNote('${item.id}')" class="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700">✓ Valider avec ce commentaire</button>
           </div>
           <div id="feedback-${item.id}" class="hidden mt-3">
             <textarea spellcheck="true" id="feedback-text-${item.id}" placeholder="Votre commentaire…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-red-400 resize-none"></textarea>
@@ -864,6 +942,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       window.validate(id, 'rejected', text);
     };
 
+    window.toggleApproveNote = (id) => {
+      document.getElementById('approve-note-' + id)?.classList.toggle('hidden');
+    };
+    window.validateWithNote = (id) => {
+      const text = document.getElementById('approve-text-' + id)?.value.trim() || '';
+      window.validate(id, 'approved', text);
+    };
+
     // ── Uploads : rendu inline + renommer + supprimer ────────────────────────
     const TYPE_LABELS_UPLOAD = { 'image':'Photo', 'video':'Vidéo', 'pdf':'PDF', 'document':'Document', 'photo':'Photo' };
 
@@ -902,29 +988,42 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       </div>`;
     }
 
+    const TYPE_MAP_DOCS = { contrat:'Contrat', devis:'Devis', 'audit-instagram':'Audit', 'compte-rendu':'Bilan', post:'Post', reel:'Reel', carrousel:'Carrousel', planning:'Planning' };
+
+    function docRowHtml(d, icon) {
+      const label = d.name || d.file_name || 'Document';
+      const type  = TYPE_MAP_DOCS[d.type] || d.type || '';
+      return `<a href="${d.file_url||'#'}" target="_blank" data-search="${label.toLowerCase()}"
+        class="flex items-center justify-between gap-3 text-sm py-2.5 border-b border-[#D6CCC0]/30 last:border-0 hover:text-[#8B3E22] transition-colors">
+        <div class="flex items-center gap-2 min-w-0">
+          <iconify-icon icon="${icon}" stroke-width="1.5" class="text-[#8B3E22] shrink-0"></iconify-icon>
+          <span class="truncate">${label}</span>
+        </div>
+        ${type ? `<span class="text-[10px] text-[#767A55] shrink-0 bg-[#EDE6DB] px-2 py-0.5 rounded-full">${type}</span>` : ''}
+      </a>`;
+    }
+
     async function refreshDocsList() {
       const sb2 = await getSB();
       const [{ data: freshDocs }, { data: freshUploads }] = await Promise.all([
         sb2.from('documents').select('*').eq('client_id', uid).order('created_at', { ascending: false }),
         sb2.from('client_uploads').select('*').eq('client_id', uid).order('created_at', { ascending: false }),
       ]);
-      const docsHtml = (freshDocs||[]).map(d => {
-        const label = d.name || d.file_name || 'Document';
-        const type  = { contrat:'Contrat', facture:'Facture', devis:'Devis', 'audit-instagram':'Audit', 'compte-rendu':'Bilan' }[d.type] || d.type || '';
-        return `<a href="${d.file_url||'#'}" target="_blank" data-search="${label.toLowerCase()}"
-          class="flex items-center justify-between gap-3 text-sm py-2.5 border-b border-[#D6CCC0]/30 last:border-0 hover:text-[#8B3E22] transition-colors">
-          <div class="flex items-center gap-2 min-w-0">
-            <iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] shrink-0"></iconify-icon>
-            <span class="truncate">${label}</span>
-          </div>
-          ${type ? `<span class="text-[10px] text-[#767A55] shrink-0 bg-[#EDE6DB] px-2 py-0.5 rounded-full">${type}</span>` : ''}
-        </a>`;
-      }).join('');
-      const uploadsHtml = (freshUploads||[]).map(renderUploadItem).join('');
-      const el = document.getElementById('docs-list');
-      if (el) {
-        el.innerHTML = (docsHtml + uploadsHtml) || '<p class="text-xs text-[#2C2416]/30 italic">Aucun document</p>';
-      }
+
+      const nonInvoices = (freshDocs||[]).filter(d => d.type !== 'facture');
+      const invoices    = (freshDocs||[]).filter(d => d.type === 'facture');
+
+      const docsEl = document.getElementById('docs-list');
+      if (docsEl) docsEl.innerHTML = nonInvoices.map(d => docRowHtml(d, 'solar:file-download-linear')).join('')
+        || '<p class="text-xs text-[#2C2416]/30 italic">Aucun document</p>';
+
+      const invEl = document.getElementById('invoices-list');
+      if (invEl) invEl.innerHTML = invoices.map(d => docRowHtml(d, 'solar:bill-linear')).join('')
+        || '<p class="text-xs text-[#2C2416]/30 italic">Aucune facture</p>';
+
+      const uploadsEl = document.getElementById('uploads-list');
+      if (uploadsEl) uploadsEl.innerHTML = (freshUploads||[]).map(renderUploadItem).join('')
+        || '<p class="text-xs text-[#2C2416]/30 italic">Aucun fichier déposé</p>';
     }
 
     await refreshDocsList();
@@ -983,7 +1082,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         if (error) { lastError = error.message || JSON.stringify(error); continue; }
         if (data) {
           const { data: urlData } = sb2.storage.from('client-uploads').getPublicUrl(path);
-          const { error: insertError } = await sb2.from('client_uploads').insert({ client_id: uid, name: file.name, file_url: urlData.publicUrl, file_type: file.type.startsWith('video') ? 'video' : 'photo' });
+          const { error: insertError } = await sb2.from('client_uploads').insert({ client_id: uid, name: file.name, file_url: urlData.publicUrl });
           if (insertError) { lastError = insertError.message || JSON.stringify(insertError); continue; }
           ok++;
         }
@@ -991,7 +1090,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       status.textContent = ok > 0 ? `${ok} fichier(s) envoyé(s) ✓` : `Erreur : ${lastError || 'inconnu'}`;
       e.target.value = '';
       await refreshDocsList();
-      if (ok > 0) window.switchTab?.('docs');
+      if (ok > 0) { window.switchTab?.('docs'); setTimeout(() => window.switchDocsTab?.('uploads'), 50); }
     };
 
     // ─── Notifications ───────────────────────────────────────────────────────
@@ -1000,6 +1099,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (type === 'content')  return { id: 'card-content',  label: 'Contenu à valider' };
       if (type === 'document') return { id: 'card-docs',     label: 'Contrats & documents' };
       if (type === 'facture')  return { id: 'card-invoices', label: 'Factures' };
+      if (type === 'message')  return { id: 'discussion',    label: 'Discussion' };
       return null;
     }
 
@@ -1024,16 +1124,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         if (!(notifs||[]).length) { list.innerHTML = '<p class="text-xs text-[#2C2416]/40 italic p-4">Aucune notification</p>'; return; }
         list.innerHTML = (notifs||[]).map(n => {
           const target  = notifTarget(n.type);
-          const icon    = n.type === 'content' ? 'solar:check-square-linear' : 'solar:document-text-linear';
+          const icon    = n.type === 'content' ? 'solar:check-square-linear'
+                        : n.type === 'message' ? 'solar:chat-round-dots-linear'
+                        : 'solar:document-text-linear';
           const dateStr = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-          return `<div onclick="goToSection('${n.id}','${target?.id||''}')"
-            class="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-[#F5EDE4] transition-colors ${n.read ? 'bg-white' : 'bg-[#8B3E22]/10'}">
+          return `<div onclick="goToSection('${n.id}','${target?.id||''}','${n.type||''}')"
+            class="flex items-start gap-2.5 px-4 py-3 cursor-pointer hover:bg-[#F5EDE4] transition-colors ${n.read ? 'bg-white' : 'bg-[#8B3E22]/10'}">
+            <button onclick="event.stopPropagation(); markNotifRead('${n.id}')" title="Marquer comme lu"
+              class="w-4 h-4 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center transition-colors ${n.read ? 'border-[#D6CCC0] bg-[#D6CCC0]/20 cursor-default' : 'border-[#8B3E22] hover:bg-[#8B3E22]/30'}">
+              ${n.read ? '<iconify-icon icon="solar:check-linear" stroke-width="3" class="text-[#767A55]" style="font-size:8px"></iconify-icon>' : ''}
+            </button>
             <iconify-icon icon="${icon}" stroke-width="1.5" class="text-[#8B3E22] text-lg shrink-0 mt-0.5"></iconify-icon>
             <div class="flex-1 min-w-0">
               <p class="text-xs text-[#2C2416] leading-relaxed ${n.read ? '' : 'font-medium'}">${n.message}</p>
               <p class="text-[10px] text-[#767A55] mt-0.5">${dateStr}</p>
             </div>
-            ${!n.read ? '<span class="w-2 h-2 bg-[#8B3E22] rounded-full shrink-0 mt-1 flex-shrink-0"></span>' : ''}
           </div>`;
         }).join('');
       }
@@ -1049,15 +1154,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       await loadNotifications();
     };
 
-    // Clic sur notification → marquer lu + switcher onglet
-    window.goToSection = async (notifId, cardId) => {
+    // Clic sur notification → marquer lu + naviguer vers le bon endroit
+    window.goToSection = async (notifId, cardId, type) => {
       await sb.from('notifications').update({ read: true }).eq('id', notifId);
       document.getElementById('notif-panel').classList.add('hidden');
       document.getElementById('notif-overlay').classList.add('hidden');
       loadNotifications();
+      // Discussion
+      if (type === 'message') {
+        const panel = document.getElementById('discussion-panel');
+        if (panel && panel.classList.contains('hidden')) window.toggleDiscussion();
+        return;
+      }
       if (cardId) {
         if (cardId === 'card-content' || cardId === 'content-list') window.switchTab('content');
-        else if (cardId === 'card-docs' || cardId === 'card-invoices') window.switchTab('docs');
+        else if (cardId === 'card-docs') { window.switchTab('docs'); setTimeout(() => window.switchDocsTab?.('docs'), 50); }
+        else if (cardId === 'card-invoices') { window.switchTab('docs'); setTimeout(() => window.switchDocsTab?.('factures'), 50); }
         setTimeout(() => {
           const card = document.getElementById(cardId);
           if (card) {
