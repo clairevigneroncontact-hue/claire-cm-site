@@ -942,9 +942,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         }
       }
     }
+    // IDs validés dans cette session → badge "Nouveau" sur le calendrier
+    const _calNewKey = 'calNewlyApproved_' + uid;
+    const _calNewItems = new Set(JSON.parse(sessionStorage.getItem(_calNewKey) || '[]'));
+
     window.validate = async (id, status, feedback = '') => {
       const sb2 = await getSB();
       await sb2.from('content_items').update({ status, feedback, updated_at: new Date().toISOString() }).eq('id', id);
+      if (status === 'approved') {
+        _calNewItems.add(id);
+        sessionStorage.setItem(_calNewKey, JSON.stringify([..._calNewItems]));
+      }
       window.location.reload();
     };
 
@@ -1394,7 +1402,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           const color  = TYPE_COLORS_CAL[tType] || '#8B3E22';
           const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'').slice(0,18);
           const heure  = a.scheduled_at ? ' ' + new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
-          cellContent += `<div style="background:${color}15;color:${color};border-left:2px solid ${color};font-size:14px;font-weight:600;line-height:1.4;padding:2px 4px;border-radius:0 4px 4px 0;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${clean}${heure}</div>`;
+          const newBadge = _calNewItems.has(a.id) ? '<span style="background:#F59E0B;color:white;font-size:7px;font-weight:800;padding:0 3px;border-radius:3px;margin-right:3px;vertical-align:middle">NEW</span>' : '';
+          cellContent += `<div style="background:${color}15;color:${color};border-left:2px solid ${color};font-size:14px;font-weight:600;line-height:1.4;padding:2px 4px;border-radius:0 4px 4px 0;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${newBadge}${clean}${heure}</div>`;
         });
         dayNotes.forEach(n => {
           cellContent += `<div class="text-[12px] leading-tight px-1 py-0.5 rounded bg-[#EDE6DB] text-[#767A55] mb-0.5 truncate italic">${n.note.slice(0,22)}</div>`;
@@ -1492,7 +1501,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         html += `<div class="rounded-2xl border border-[#D6CCC0] overflow-hidden">
           <!-- En-tête : type + heure -->
           <div class="flex items-center justify-between px-4 py-3 border-b border-[#D6CCC0]/50 bg-[#F5EDE4]/30">
-            <span style="background:${color}20;color:${color}" class="text-xs font-bold px-2.5 py-1 rounded-full">${tType||'—'}</span>
+            <div class="flex items-center gap-2">
+              <span style="background:${color}20;color:${color}" class="text-xs font-bold px-2.5 py-1 rounded-full">${tType||'—'}</span>
+              ${_calNewItems.has(a.id) ? '<span class="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-semibold border border-amber-200">✦ Nouveau</span>' : ''}
+            </div>
             ${heure ? `<div class="flex items-center gap-1.5 text-sm font-semibold text-[#2C2416]"><iconify-icon icon="solar:clock-circle-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>${heure}</div>` : ''}
           </div>
           <!-- Corps -->

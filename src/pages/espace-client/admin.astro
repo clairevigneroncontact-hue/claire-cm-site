@@ -32,32 +32,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </button>
       </div>
       <div class="p-6 space-y-6">
-        <!-- Mon profil -->
-        <div>
-          <h2 class="text-sm font-semibold text-[#2C2416] uppercase tracking-widest mb-4">Mon profil</h2>
-          <div class="space-y-3">
-            <div>
-              <label class="text-xs text-[#767A55] block mb-1">Nom complet</label>
-              <input id="admin-set-name" type="text" spellcheck="true" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
-            </div>
-            <div>
-              <label class="text-xs text-[#767A55] block mb-1">Email</label>
-              <input id="admin-set-email" type="email" disabled class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm bg-[#F5EDE4] text-[#2C2416]/50 cursor-not-allowed" />
-            </div>
-            <div>
-              <label class="text-xs text-[#767A55] block mb-1">Téléphone</label>
-              <input id="admin-set-phone" type="tel" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" placeholder="+33 6 xx xx xx xx" />
-            </div>
-            <div>
-              <label class="text-xs text-[#767A55] block mb-1">Instagram</label>
-              <input id="admin-set-instagram" type="text" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" placeholder="@handle" />
-            </div>
-          </div>
-          <div id="admin-set-profile-msg" class="hidden mt-3 text-sm rounded-xl px-4 py-2"></div>
-          <button onclick="saveAdminProfile()" class="mt-4 w-full py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer le profil</button>
-        </div>
         <!-- Mot de passe -->
-        <div class="border-t border-[#D6CCC0] pt-6">
+        <div>
           <h2 class="text-sm font-semibold text-[#2C2416] uppercase tracking-widest mb-4">Changer le mot de passe</h2>
           <div class="space-y-3">
             <div>
@@ -71,6 +47,24 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
           <div id="admin-set-pwd-msg" class="hidden mt-3 text-sm rounded-xl px-4 py-2"></div>
           <button onclick="saveAdminPassword()" class="mt-4 w-full py-2.5 bg-[#2C2416] text-white rounded-xl text-sm font-medium hover:bg-[#8B3E22] transition-colors">Changer le mot de passe</button>
+        </div>
+        <!-- Aide & Support -->
+        <div class="border-t border-[#D6CCC0] pt-6">
+          <h2 class="text-sm font-semibold text-[#2C2416] uppercase tracking-widest mb-4">Aide & Support</h2>
+          <a href="/faq" target="_blank" class="flex items-center justify-between bg-[#EDE6DB] rounded-2xl p-4 hover:bg-[#D6CCC0]/40 transition-colors group">
+            <div class="flex items-center gap-3">
+              <iconify-icon icon="solar:question-circle-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl"></iconify-icon>
+              <div>
+                <p class="text-sm font-medium text-[#2C2416]">FAQ & Aide</p>
+                <p class="text-xs text-[#767A55] font-light">Toutes les questions fréquentes</p>
+              </div>
+            </div>
+            <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5" class="text-[#8B3E22] group-hover:translate-x-1 transition-transform"></iconify-icon>
+          </a>
+          <a href="mailto:clairevigneron.contact@gmail.com" class="flex items-center gap-3 mt-3 px-4 py-3 bg-white rounded-2xl border border-[#D6CCC0] hover:border-[#8B3E22] transition-colors text-sm text-[#2C2416]/70 hover:text-[#8B3E22]">
+            <iconify-icon icon="solar:letter-linear" stroke-width="1.5" class="text-lg shrink-0"></iconify-icon>
+            clairevigneron.contact@gmail.com
+          </a>
         </div>
       </div>
     </div>
@@ -343,37 +337,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const isOpen = !panel.classList.contains('hidden');
       panel.classList.toggle('hidden');
       overlay.classList.toggle('hidden', isOpen);
-      if (!isOpen) loadAdminProfileSettings();
     };
 
     document.getElementById('admin-settings-btn').onclick = () => window.toggleAdminSettings();
-
-    async function loadAdminProfileSettings() {
-      const sb2 = await getSB();
-      const { data: { session } } = await sb2.auth.getSession();
-      if (!session) return;
-      const { data: p } = await sb2.from('profiles').select('*').eq('id', session.user.id).single();
-      const meta = session.user.user_metadata || {};
-      document.getElementById('admin-set-name').value  = p?.full_name || meta.full_name || '';
-      document.getElementById('admin-set-email').value = session.user.email || '';
-      document.getElementById('admin-set-phone').value = p?.phone || '';
-      document.getElementById('admin-set-instagram').value = p?.instagram_handle || '';
-    }
-
-    window.saveAdminProfile = async () => {
-      const sb2  = await getSB();
-      const { data: { session } } = await sb2.auth.getSession();
-      if (!session) return;
-      const msg = document.getElementById('admin-set-profile-msg');
-      const full_name        = document.getElementById('admin-set-name').value.trim();
-      const phone            = document.getElementById('admin-set-phone').value.trim();
-      const instagram_handle = document.getElementById('admin-set-instagram').value.trim().replace('@','');
-      const { error } = await sb2.from('profiles').update({ full_name, phone, instagram_handle }).eq('id', session.user.id);
-      msg.className = `mt-3 text-sm rounded-xl px-4 py-2 ${error ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`;
-      msg.textContent = error ? `Erreur : ${error.message}` : 'Profil enregistré ✓';
-      msg.classList.remove('hidden');
-      setTimeout(() => msg.classList.add('hidden'), 3000);
-    };
 
     window.saveAdminPassword = async () => {
       const sb2 = await getSB();
@@ -1855,6 +1821,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
     document.addEventListener('click', () => document.getElementById('client-month-picker')?.classList.add('hidden'));
 
+    let _adminCalNewItems = new Set();
+
     async function loadClientCal() {
       const sb2 = await getSB();
       const cid = _clientCalClientId;
@@ -1863,13 +1831,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         sb2.from('content_items').select('id,title,status,description,scheduled_at,updated_at,files').eq('client_id', cid),
         sb2.from('calendar_notes').select('*').eq('client_id', cid),
       ]);
-      // Garder approuvés dans 'approved' pour compatibilité, mais aussi tous dans 'all'
       _clientCalData = {
         approved: (allContent||[]).filter(a => a.status === 'approved'),
         pending:  (allContent||[]).filter(a => a.status === 'pending'),
         rejected: (allContent||[]).filter(a => a.status === 'rejected'),
         notes:    notes||[],
       };
+      // Badge "Nouveau" : items validés depuis la dernière ouverture de ce calendrier
+      const lsKey   = 'adminCalLastOpen_' + cid;
+      const lastOpen = localStorage.getItem(lsKey) || new Date(Date.now() - 7*24*3600*1000).toISOString();
+      _adminCalNewItems = new Set(_clientCalData.approved.filter(a => (a.updated_at||'') > lastOpen).map(a => a.id));
+      localStorage.setItem(lsKey, new Date().toISOString());
       renderClientCal();
     }
 
@@ -1908,7 +1880,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'').slice(0,16);
           const heure  = a.scheduled_at ? ' · ' + new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
           const dragTime = (a.scheduled_at||'').slice(11,16) || '00:00';
-          cell += `<div draggable="true" data-drag-id="${a.id}" ondragstart="calDragStart(event,'${a.id}','${dragTime}')" ondragend="calDragEnd(event)" ontouchstart="calTouchStartItem(event,'${a.id}','${dragTime}',this)" style="background:${color}15;color:${color};border-left:2px solid ${color};font-size:14px;line-height:1.4;padding:2px 4px;border-radius:0 4px 4px 0;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:600;cursor:grab">${clean}${heure}</div>`;
+          const newDot = _adminCalNewItems.has(a.id) ? '<span style="display:inline-block;background:#F59E0B;color:white;font-size:7px;font-weight:800;padding:0 3px;border-radius:3px;margin-right:3px;vertical-align:middle">NEW</span>' : '';
+          cell += `<div draggable="true" data-drag-id="${a.id}" ondragstart="calDragStart(event,'${a.id}','${dragTime}')" ondragend="calDragEnd(event)" ontouchstart="calTouchStartItem(event,'${a.id}','${dragTime}',this)" style="background:${color}15;color:${color};border-left:2px solid ${color};font-size:14px;line-height:1.4;padding:2px 4px;border-radius:0 4px 4px 0;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:600;cursor:grab">${newDot}${clean}${heure}</div>`;
         });
         // Contenus en attente — jaune/ambre
         dayPending.forEach(a => {
@@ -2141,9 +2114,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         html += `<div class="rounded-2xl border ${isPending ? 'border-amber-300 bg-amber-50/30' : 'border-[#D6CCC0]'} overflow-hidden">
           <!-- En-tête : type + heure -->
           <div class="flex items-center justify-between px-4 py-3 border-b ${isPending ? 'border-amber-200 bg-amber-50' : 'border-[#D6CCC0]/50 bg-[#F5EDE4]/30'}">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <span style="background:${color}20;color:${color}" class="text-xs font-bold px-2.5 py-1 rounded-full">${tType||'—'}</span>
               ${isPending ? '<span class="text-xs text-amber-600 font-medium">⏳ En attente de validation</span>' : '<span class="text-xs text-green-600 font-medium">✓ Validé</span>'}
+              ${_adminCalNewItems.has(a.id) ? '<span class="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-semibold border border-amber-200">✦ Nouveau</span>' : ''}
             </div>
             <div class="flex items-center gap-2">
               ${heure ? `<div class="flex items-center gap-1.5 text-sm font-semibold text-[#2C2416]"><iconify-icon icon="solar:clock-circle-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>${heure}</div>` : ''}
