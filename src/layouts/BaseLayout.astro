@@ -43,5 +43,38 @@ const {
     <slot />
     {!hideChatWidget && <ChatWidget />}
     <ScrollHelpers />
+    <!-- Spellcheck + autocorrect globaux sur tous les champs texte -->
+    <script is:inline>
+      function _applySpellcheck(root) {
+        (root.querySelectorAll ? root.querySelectorAll('input[type="text"], textarea') : [root])
+          .forEach(function(el) {
+            if (el.dataset.noSpellcheck) return;
+            el.spellcheck = true;
+            el.setAttribute('autocorrect', 'on');
+            el.setAttribute('autocapitalize', 'sentences');
+            el.setAttribute('lang', 'fr');
+          });
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        _applySpellcheck(document);
+        new MutationObserver(function(muts) {
+          muts.forEach(function(m) {
+            m.addedNodes.forEach(function(n) {
+              if (n.nodeType !== 1) return;
+              if (n.matches && n.matches('input[type="text"], textarea')) {
+                if (!n.dataset.noSpellcheck) {
+                  n.spellcheck = true;
+                  n.setAttribute('autocorrect', 'on');
+                  n.setAttribute('autocapitalize', 'sentences');
+                  n.setAttribute('lang', 'fr');
+                }
+              } else if (n.querySelectorAll) {
+                _applySpellcheck(n);
+              }
+            });
+          });
+        }).observe(document.body, { childList: true, subtree: true });
+      });
+    </script>
   </body>
 </html>

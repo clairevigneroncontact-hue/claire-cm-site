@@ -94,7 +94,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <!-- Barre de recherche globale -->
         <div class="relative w-full sm:w-80">
           <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#767A55] text-sm pointer-events-none"></iconify-icon>
-          <input id="doc-search-input" type="text" placeholder="Rechercher dans mon espace…" oninput="globalSearch(this.value)" autocomplete="off"
+          <input id="doc-search-input" type="text" placeholder="Rechercher dans mon espace…" oninput="globalSearch(this.value)" autocomplete="off" data-no-spellcheck
             class="w-full pl-8 pr-3 py-2.5 rounded-xl border border-[#D6CCC0] bg-white text-sm text-[#2C2416] focus:outline-none focus:border-[#8B3E22] shadow-sm" />
           <!-- Panel de résultats -->
           <div id="search-results-panel" class="hidden absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl border border-[#D6CCC0] z-50 max-h-72 overflow-y-auto">
