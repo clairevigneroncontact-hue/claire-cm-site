@@ -106,18 +106,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       </div>
 
       <!-- Navigation par onglets -->
-      <div class="flex gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-6">
-        <button id="tab-btn-home" onclick="switchTab('home')" class="bg-white text-[#2C2416] shadow-sm rounded-lg py-3 flex-1 flex items-center justify-center" title="Accueil">
-          <iconify-icon icon="solar:home-2-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+      <div class="flex gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-6 overflow-x-auto">
+        <button id="tab-btn-home" onclick="switchTab('home')" class="bg-white text-[#2C2416] shadow-sm rounded-lg py-2.5 px-3 text-sm font-medium whitespace-nowrap flex-1 flex items-center justify-center gap-1.5">
+          <iconify-icon icon="solar:home-2-linear" stroke-width="1.5" class="text-base shrink-0"></iconify-icon>
+          <span>Accueil</span>
         </button>
-        <button id="tab-btn-content" onclick="switchTab('content')" class="text-[#2C2416]/50 rounded-lg py-3 hover:text-[#2C2416] flex-1 flex items-center justify-center" title="Contenus à valider">
-          <iconify-icon icon="solar:check-square-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+        <button id="tab-btn-content" onclick="switchTab('content')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-3 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap flex-1 flex items-center justify-center gap-1.5">
+          <iconify-icon icon="solar:check-square-linear" stroke-width="1.5" class="text-base shrink-0"></iconify-icon>
+          <span>Contenus</span>
         </button>
-        <button id="tab-btn-docs" onclick="switchTab('docs')" class="text-[#2C2416]/50 rounded-lg py-3 hover:text-[#2C2416] flex-1 flex items-center justify-center" title="Mes documents">
-          <iconify-icon icon="solar:folder-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+        <button id="tab-btn-docs" onclick="switchTab('docs')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-3 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap flex-1 flex items-center justify-center gap-1.5">
+          <iconify-icon icon="solar:folder-linear" stroke-width="1.5" class="text-base shrink-0"></iconify-icon>
+          <span>Documents</span>
         </button>
-        <button id="tab-btn-infos" onclick="switchTab('infos')" class="text-[#2C2416]/50 rounded-lg py-3 hover:text-[#2C2416] flex-1 flex items-center justify-center" title="Mes informations">
-          <iconify-icon icon="solar:user-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+        <button id="tab-btn-infos" onclick="switchTab('infos')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-3 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap flex-1 flex items-center justify-center gap-1.5">
+          <iconify-icon icon="solar:user-linear" stroke-width="1.5" class="text-base shrink-0"></iconify-icon>
+          <span>Infos</span>
         </button>
       </div>
 
