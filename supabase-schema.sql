@@ -107,3 +107,6 @@ create or replace trigger on_auth_user_created
 
 -- Colonne pour synchroniser les notifications dismissées entre appareils
 alter table profiles add column if not exists dismissed_notifs jsonb default '[]'::jsonb;
+
+-- Préférences de publication par client (jours + heures préférés)
+alter table profiles add column if not exists posting_prefs jsonb default null;

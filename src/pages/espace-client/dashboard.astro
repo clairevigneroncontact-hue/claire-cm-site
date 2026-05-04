@@ -194,7 +194,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <div id="cal-note-modal" class="hidden mt-4 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30">
               <p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Ajouter / modifier une note</p>
               <input id="cal-note-date-picker" type="date" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white mb-2" />
-              <textarea spellcheck="true" id="cal-note-input" rows="2" placeholder="Votre note…" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none bg-white mb-2"></textarea>
+              <div class="relative mb-2">
+                <textarea spellcheck="true" id="cal-note-input" rows="2" placeholder="Votre note…" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none bg-white"></textarea>
+                <button data-emoji-btn type="button" onclick="toggleEmojiPicker(this,'cal-note-input')" class="absolute bottom-1.5 right-1.5 text-base p-1 rounded-lg hover:bg-[#EDE6DB] text-[#767A55] hover:text-[#2C2416] transition-colors" title="Emoji">😊</button>
+              </div>
               <div class="flex gap-2">
                 <button onclick="saveCalNote()" class="px-4 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
                 <button onclick="document.getElementById('cal-note-modal').classList.add('hidden')" class="px-4 py-1.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs hover:bg-[#EDE6DB] transition-colors">Annuler</button>
@@ -351,6 +354,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <textarea spellcheck="true" id="new-note-ta" rows="2"
           placeholder="Votre message…"
           class="flex-1 px-4 py-2.5 rounded-xl border border-white/20 bg-white/10 text-[#F5EDE4] text-sm placeholder-[#F5EDE4]/40 resize-none focus:outline-none focus:border-[#8B3E22]"></textarea>
+        <button data-emoji-btn type="button" onclick="toggleEmojiPicker(this,'new-note-ta')" class="text-xl p-1.5 text-[#F5EDE4]/50 hover:text-[#F5EDE4] transition-colors shrink-0" title="Emoji">😊</button>
         <button onclick="addClientNote()" id="notes-send-msg-btn" class="px-4 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors shrink-0">Envoyer</button>
       </div>
       <span id="notes-send-msg" class="hidden text-xs text-green-400 px-5 pb-3 block">Envoyé ✓</span>
@@ -926,8 +930,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           ${item.description ? `<div class="bg-[#F5EDE4] rounded-xl p-3 mb-3 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Légende</p><p class="text-sm text-[#2C2416]/75 leading-relaxed whitespace-pre-wrap">${item.description}</p></div>` : ''}
           ${isPending ? `
           <div class="mt-2">
-            <textarea spellcheck="true" id="approve-text-${item.id}" placeholder="Commentaire optionnel…" rows="2"
-              class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] bg-[#F5EDE4]/50 text-sm mb-3 focus:outline-none focus:border-[#8B3E22] focus:bg-white resize-none transition-colors"></textarea>
+            <div class="relative mb-3"><textarea spellcheck="true" id="approve-text-${item.id}" placeholder="Commentaire optionnel…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] bg-[#F5EDE4]/50 text-sm focus:outline-none focus:border-[#8B3E22] focus:bg-white resize-none transition-colors"></textarea><button data-emoji-btn type="button" onclick="toggleEmojiPicker(this,'approve-text-${item.id}')" class="absolute bottom-1.5 right-1.5 text-base p-1 rounded-lg hover:bg-[#EDE6DB] text-[#767A55]" title="Emoji">😊</button></div>
             <div class="flex gap-2 flex-wrap">
               <button onclick="validateWithNote('${item.id}')" class="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700">✓ Valider</button>
               <button onclick="showFeedback('${item.id}')" class="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600">✗ Refuser</button>
@@ -935,14 +938,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
           <div id="feedback-${item.id}" class="hidden mt-3">
             <p class="text-xs text-[#767A55] mb-1">Motif du refus :</p>
-            <textarea spellcheck="true" id="feedback-text-${item.id}" placeholder="Expliquez ce que vous souhaitez modifier…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-red-400 resize-none"></textarea>
+            <div class="relative mb-2"><textarea spellcheck="true" id="feedback-text-${item.id}" placeholder="Expliquez ce que vous souhaitez modifier…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-red-400 resize-none"></textarea><button data-emoji-btn type="button" onclick="toggleEmojiPicker(this,'feedback-text-${item.id}')" class="absolute bottom-1.5 right-1.5 text-base p-1 rounded-lg hover:bg-[#EDE6DB] text-[#767A55]" title="Emoji">😊</button></div>
             <button onclick="validateWithFeedback('${item.id}')" class="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600">Envoyer le refus</button>
           </div>` : `
           <div class="mt-1">
             ${item.feedback ? `<div class="bg-[#F5EDE4] rounded-xl p-3 mb-2 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Commentaire</p><p class="text-sm text-[#2C2416]/70 leading-relaxed whitespace-pre-wrap">${item.feedback.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p></div>` : ''}
             <button onclick="toggleEditComment('${item.id}')" class="text-[10px] text-[#767A55] hover:text-[#8B3E22] transition-colors hover:underline underline-offset-2">${item.feedback ? '✏️ Modifier le commentaire' : '+ Ajouter un commentaire'}</button>
             <div id="edit-comment-${item.id}" class="hidden mt-2">
-              <textarea spellcheck="true" id="edit-comment-text-${item.id}" placeholder="Commentaire optionnel…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none">${item.feedback ? item.feedback.replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''}</textarea>
+              <div class="relative mb-2"><textarea spellcheck="true" id="edit-comment-text-${item.id}" placeholder="Commentaire optionnel…" rows="2" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none">${item.feedback ? item.feedback.replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''}</textarea><button data-emoji-btn type="button" onclick="toggleEmojiPicker(this,'edit-comment-text-${item.id}')" class="absolute bottom-1.5 right-1.5 text-base p-1 rounded-lg hover:bg-[#EDE6DB] text-[#767A55]" title="Emoji">😊</button></div>
               <button onclick="saveComment('${item.id}')" class="px-3 py-1.5 bg-[#8B3E22] text-white text-xs rounded-lg hover:bg-[#6B2E1A]">Enregistrer</button>
             </div>
           </div>`}
@@ -1696,4 +1699,53 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (_map[_goto]) _map[_goto]();
     }
   });
+
+  // ─── Emoji picker ─────────────────────────────────────────────────────────
+  (function() {
+    const EMOJIS = [
+      '😊','😍','🥰','😎','🤩','😂','🥹','🤣','😌','🙂','😁','😄','🥲','😇','🤗','😏','😜','🥳',
+      '🙌','👏','🙏','💪','👋','🤝','🫶','❤️‍🔥','✌️','🤞','🤙','👍','🤘',
+      '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🩷','💕','💖','💗','💓','💞','💝','💘','💔',
+      '✨','🌟','⭐','💫','🔥','⚡','🌈','🌙','☀️','💡','🪄',
+      '🌸','🌺','🌻','🌹','🌷','🌼','🍀','🌿','🌱','🍃','🌊','🦋','🐝',
+      '☕','🍵','🧋','🥂','🍾','🍰','🧁','🍓','🫐','🍋',
+      '🎯','📸','📷','📊','📈','💼','📣','📢','💬','💭','📱','💻','💯','✅','🏆','🥇','🆕','🔑','📌','🗓️','🔔',
+      '🎉','🎊','💎','👑','🎁','🎀','🎈',
+      '👉','👈','👆','👇','➡️','◾','🔷','📍','⚠️','🆙','🔝',
+    ];
+    const picker = document.createElement('div');
+    picker.id = 'emoji-picker';
+    picker.className = 'hidden fixed z-[300] bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] p-2';
+    picker.style.cssText = 'width:272px';
+    picker.innerHTML = '<div class="grid grid-cols-9 gap-0.5 max-h-52 overflow-y-auto">'
+      + EMOJIS.map(e => `<button type="button" onclick="window._pickEmoji('${e}')" class="text-xl p-1 rounded-lg hover:bg-[#EDE6DB] transition-colors leading-none">${e}</button>`).join('')
+      + '</div>';
+    document.body.appendChild(picker);
+    let _emojiTargetId = null;
+    window.toggleEmojiPicker = (btn, targetId) => {
+      const p = document.getElementById('emoji-picker');
+      if (!p) return;
+      if (!p.classList.contains('hidden') && _emojiTargetId === targetId) { p.classList.add('hidden'); return; }
+      _emojiTargetId = targetId;
+      const rect = btn.getBoundingClientRect();
+      const top  = Math.min(rect.bottom + 6, window.innerHeight - 230);
+      const left = Math.max(8, Math.min(rect.left - 100, window.innerWidth - 282));
+      p.style.top = top + 'px'; p.style.left = left + 'px';
+      p.classList.remove('hidden');
+    };
+    window._pickEmoji = (emoji) => {
+      const ta = _emojiTargetId ? document.getElementById(_emojiTargetId) : null;
+      if (ta) {
+        const s = ta.selectionStart ?? ta.value.length, e = ta.selectionEnd ?? ta.value.length;
+        ta.value = ta.value.slice(0, s) + emoji + ta.value.slice(e);
+        ta.selectionStart = ta.selectionEnd = s + emoji.length;
+        ta.focus();
+      }
+      document.getElementById('emoji-picker')?.classList.add('hidden');
+    };
+    document.addEventListener('click', ev => {
+      if (!ev.target.closest('#emoji-picker') && !ev.target.closest('[data-emoji-btn]'))
+        document.getElementById('emoji-picker')?.classList.add('hidden');
+    });
+  })();
 </script>
