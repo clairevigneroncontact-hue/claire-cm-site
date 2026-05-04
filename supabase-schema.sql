@@ -104,3 +104,6 @@ $$ language plpgsql security definer;
 create or replace trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure handle_new_user();
+
+-- Colonne pour synchroniser les notifications dismissées entre appareils
+alter table profiles add column if not exists dismissed_notifs jsonb default '[]'::jsonb;

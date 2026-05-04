@@ -92,8 +92,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <h1 class="text-2xl md:text-3xl text-[#2C2416] tracking-tight">Vue admin</h1>
             <p class="text-[#767A55] text-sm mt-1 font-light">Accès à tous les espaces clients</p>
           </div>
-          <button id="new-client-btn" class="px-5 py-2.5 bg-[#8B3E22] text-[#F5EDE4] rounded-full text-sm font-medium hover:bg-[#6B2E1A] transition-colors">
-            + Nouveau client
+          <button id="new-client-btn" class="self-start sm:self-auto flex items-center gap-1.5 px-3 py-2 sm:px-5 sm:py-2.5 bg-[#8B3E22] text-[#F5EDE4] rounded-full text-sm font-medium hover:bg-[#6B2E1A] transition-colors">
+            <iconify-icon icon="solar:user-plus-linear" stroke-width="1.5" class="text-base shrink-0"></iconify-icon>
+            <span class="hidden sm:inline">Nouveau client</span>
+            <span class="sm:hidden">Nouveau</span>
           </button>
         </div>
 
@@ -506,11 +508,38 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     };
 
+    // Sync dismissals Supabase → localStorage au démarrage (cross-appareils)
+    async function syncDismissedFromDB() {
+      try {
+        const sb2 = await getSB();
+        const { data: { user } } = await sb2.auth.getUser();
+        if (!user) return;
+        const { data } = await sb2.from('profiles').select('dismissed_notifs').eq('id', user.id).single();
+        if (data?.dismissed_notifs?.length) {
+          const local   = new Set(JSON.parse(localStorage.getItem(IMP_DISMISSED_KEY)||'[]'));
+          const remote  = new Set(data.dismissed_notifs);
+          const merged  = new Set([...local, ...remote]);
+          localStorage.setItem(IMP_DISMISSED_KEY, JSON.stringify([...merged]));
+        }
+      } catch(e) {}
+    }
+    syncDismissedFromDB().then(() => {
+      if (window._lastAdminNotifItems) renderImpNotifs(window._lastAdminNotifItems);
+    });
+
+    async function _saveDismissedToDB(ids) {
+      try {
+        const sb2 = await getSB();
+        const { data: { user } } = await sb2.auth.getUser();
+        if (user) await sb2.from('profiles').update({ dismissed_notifs: [...ids] }).eq('id', user.id);
+      } catch(e) {}
+    }
+
     window.dismissImpNotif = (id) => {
       const dismissed = new Set(JSON.parse(localStorage.getItem(IMP_DISMISSED_KEY)||'[]'));
       dismissed.add(id);
       localStorage.setItem(IMP_DISMISSED_KEY, JSON.stringify([...dismissed]));
-      // Re-rend les deux panels depuis la source commune
+      _saveDismissedToDB(dismissed);
       if (window._lastAdminNotifItems) renderImpNotifs(window._lastAdminNotifItems);
     };
     window.clearAllImpNotifs = () => {
@@ -518,6 +547,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const d = new Set(JSON.parse(localStorage.getItem(IMP_DISMISSED_KEY)||'[]'));
         window._lastAdminNotifItems.forEach(n => d.add(n.id));
         localStorage.setItem(IMP_DISMISSED_KEY, JSON.stringify([...d]));
+        _saveDismissedToDB(d);
         renderImpNotifs(window._lastAdminNotifItems);
       }
     };
@@ -1132,10 +1162,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </div>
 
         <!-- Onglets client -->
-        <div class="flex overflow-x-auto gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-5 scrollbar-none" style="-ms-overflow-style:none;scrollbar-width:none">
-          <button onclick="switchClientTab('contenu')"    id="ctab-contenu"    class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg bg-white text-[#2C2416] shadow-sm transition-all whitespace-nowrap">Contenu</button>
-          <button onclick="switchClientTab('documents')"  id="ctab-documents"  class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] whitespace-nowrap">Documents</button>
-          <button onclick="switchClientTab('notes')"      id="ctab-notes"      class="shrink-0 flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] whitespace-nowrap">Notes</button>
+        <div class="flex gap-1 bg-[#EDE6DB] rounded-xl p-1 mb-5">
+          <button onclick="switchClientTab('contenu')"    id="ctab-contenu"    class="flex-1 py-2 px-3 text-xs font-medium rounded-lg bg-white text-[#2C2416] shadow-sm transition-all text-center">Contenu</button>
+          <button onclick="switchClientTab('documents')"  id="ctab-documents"  class="flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] text-center">Documents</button>
+          <button onclick="switchClientTab('notes')"      id="ctab-notes"      class="flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] text-center">Notes</button>
         </div>
 
         <!-- Tab : Contenu -->
@@ -1827,9 +1857,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     };
 
-    // Enter = envoyer dans la bulle admin
+    // Enter = envoyer (desktop uniquement) — sur mobile, Enter = nouvelle ligne
+    const _isMobileDevice = () => window.matchMedia('(hover:none) and (pointer:coarse)').matches;
     document.getElementById('admin-reply-input').onkeydown = (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === 'Enter' && !e.shiftKey && !_isMobileDevice()) {
         e.preventDefault();
         window.sendAdminNote(window._currentAdminClientId);
       }
@@ -2391,7 +2422,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const replyInput = document.getElementById('admin-reply-input');
       if (replyInput) {
         replyInput.onkeydown = (e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
+          if (e.key === 'Enter' && !e.shiftKey && !_isMobileDevice()) {
             e.preventDefault();
             window.sendAdminNote(clientId);
           }
@@ -2548,13 +2579,24 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   // ─── Emoji picker ─────────────────────────────────────────────────────────
   (function() {
     const EMOJIS = [
-      '😊','😍','🥰','😎','🤩','😂','🙌','👏','🙏','💪','👋','🤝',
-      '❤️','🧡','💛','💚','💙','💜','🖤','🤍','💕','💖','💗','💓','💞',
-      '✨','🌟','⭐','💫','🔥','⚡','🌈','🌙','💡',
-      '🌸','🌺','🌻','🌹','🌷','🌼','🍀','🌿','🦋','🐝',
-      '🎯','📸','📊','📈','💼','📣','💬','📱','💻','💯','✅','🏆','🥇','🆕','🔑',
-      '🎉','🎊','💎','👑','🎁','🎀','🥂','🍾',
-      '👉','👈','👆','👇','➡️','📌','🔔','⚠️',
+      // Visages & réactions
+      '😊','😍','🥰','😎','🤩','😂','🥹','🤣','😌','🙂','😁','😄','🥲','😇','🤗','😏','😜','🤪','🥳',
+      // Gestes
+      '🙌','👏','🙏','💪','👋','🤝','🫶','❤️‍🔥','🫰','✌️','🤞','🤙','👍','🫁','🤘',
+      // Cœurs
+      '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🩷','🩶','💕','💖','💗','💓','💞','💝','💘','💔','🫀',
+      // Étoiles / feu / magie
+      '✨','🌟','⭐','💫','🔥','⚡','🌈','🌙','🌤️','☀️','💡','🪄','🎇','🎆',
+      // Nature & animaux
+      '🌸','🌺','🌻','🌹','🌷','🌼','🍀','🌿','🌱','🍃','🌊','🦋','🐝','🌴','🏔️','🌅',
+      // Food & lifestyle
+      '☕','🍵','🧋','🥂','🍾','🍰','🧁','🍓','🫐','🍋','🥗',
+      // Business / CM
+      '🎯','📸','📷','📊','📈','💼','📣','📢','💬','💭','📱','💻','🖥️','💯','✅','☑️','🏆','🥇','🆕','🔑','🔒','🛡️','📋','📌','🗓️','⏰','🔔','📬',
+      // Festif & luxe
+      '🎉','🎊','💎','👑','🎁','🎀','🎈','🎭','🎪',
+      // Direction / structure
+      '👉','👈','👆','👇','➡️','⬅️','⬆️','⬇️','▶️','◾','🔷','🔸','📍','⚠️','🆙','🔝',
     ];
     const picker = document.createElement('div');
     picker.id = 'emoji-picker';

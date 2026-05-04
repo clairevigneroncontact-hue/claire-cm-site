@@ -1670,11 +1670,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     loadTasks();
     loadCalData();
 
-    // Entrée = envoyer une note, Maj+Entrée = nouvelle ligne
+    // Entrée = envoyer (desktop uniquement), Maj+Entrée = nouvelle ligne, mobile = toujours nouvelle ligne
     const noteTa = document.getElementById('new-note-ta');
     if (noteTa) {
       noteTa.onkeydown = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        const isMobile = window.matchMedia('(hover:none) and (pointer:coarse)').matches;
+        if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
           e.preventDefault();
           window.addClientNote();
         }
