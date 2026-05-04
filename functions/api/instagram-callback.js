@@ -62,10 +62,17 @@ export async function onRequestGet({ request, env }) {
 
 async function _save(env, clientId, token, igAccountId, username) {
   if (!clientId || !env.SUPABASE_URL || !env.SUPABASE_SERVICE_KEY) return;
+  const key = String(env.SUPABASE_SERVICE_KEY).trim();
+  const url = String(env.SUPABASE_URL).trim();
   const expiresAt = new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString();
-  await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${clientId}`, {
+  await fetch(`${url}/rest/v1/profiles?id=eq.${clientId}`, {
     method: 'PATCH',
-    headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    headers: {
+      'apikey': key,
+      'Authorization': `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal',
+    },
     body: JSON.stringify({ ig_access_token: token, ig_account_id: igAccountId, ig_token_expires_at: expiresAt, ...(username ? { instagram_handle: username } : {}) }),
   });
 }
