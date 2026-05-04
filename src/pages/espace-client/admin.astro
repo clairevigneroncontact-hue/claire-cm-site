@@ -213,6 +213,45 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     </div>
 
   </div>
+
+  <!-- Modal "Décaler" — bottom sheet fixe -->
+  <div id="reschedule-overlay" class="hidden fixed inset-0 z-[198] bg-black/30" onclick="closeRescheduleModal()"></div>
+  <div id="reschedule-modal" class="hidden fixed inset-x-0 bottom-0 z-[199] bg-white rounded-t-2xl shadow-2xl border-t border-[#D6CCC0]" style="padding-bottom:max(1.25rem,env(safe-area-inset-bottom))">
+    <div class="px-5 pt-4 pb-2">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <iconify-icon icon="solar:calendar-linear" stroke-width="1.5" class="text-[#8B3E22] text-lg"></iconify-icon>
+          <p class="text-sm font-semibold text-[#2C2416]">Reprogrammer la publication</p>
+        </div>
+        <button onclick="closeRescheduleModal()" class="w-7 h-7 flex items-center justify-center rounded-full text-[#767A55] hover:bg-[#EDE6DB] hover:text-[#2C2416] transition-colors text-lg">×</button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+        <div>
+          <label class="text-xs text-[#767A55] block mb-1.5">Nouvelle date</label>
+          <input id="reschedule-modal-date" type="date" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+        </div>
+        <div>
+          <label class="text-xs text-[#767A55] block mb-1.5">Heure de publication</label>
+          <div class="flex items-center gap-2">
+            <select id="reschedule-modal-hour" class="flex-1 px-2 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white text-center">
+              <option value="">hh</option>
+              ${Array.from({length:24},(_,i)=>`<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`).join('')}
+            </select>
+            <span class="font-bold text-[#2C2416]">:</span>
+            <select id="reschedule-modal-min" class="flex-1 px-2 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white text-center">
+              <option value="">mm</option>
+              ${Array.from({length:60},(_,i)=>`<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="saveRescheduleModal()" class="flex-1 py-2.5 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
+        <button onclick="closeRescheduleModal()" class="px-5 py-2.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-sm hover:bg-[#EDE6DB] transition-colors">Annuler</button>
+      </div>
+    </div>
+  </div>
+
 </BaseLayout>
 
 <script is:inline>
@@ -2394,8 +2433,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const _heureVal = a.scheduled_at || a.updated_at;
         const heure  = _heureVal ? new Date(_heureVal).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
         const isPending = a.status === 'pending';
-        const reschedDate = (a.scheduled_at||'').slice(0,10);
-        const reschedTime = (a.scheduled_at||'').slice(11,16);
+        const reschedDate = (a.scheduled_at || a.updated_at || '').slice(0,10);
+        const reschedTime = (a.scheduled_at||'').slice(11,16) || '12:00';
         html += `<div class="rounded-2xl border ${isPending ? 'border-amber-300 bg-amber-50/30' : 'border-[#D6CCC0]'} overflow-hidden">
           <!-- En-tête : type + heure -->
           <div class="flex items-center justify-between px-4 py-3 border-b ${isPending ? 'border-amber-200 bg-amber-50' : 'border-[#D6CCC0]/50 bg-[#F5EDE4]/30'}">
@@ -2408,7 +2447,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               ${heure ? `<div class="flex items-center gap-1.5 text-sm font-semibold text-[#2C2416]"><iconify-icon icon="solar:clock-circle-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>${heure}</div>` : ''}
               <div class="flex items-center gap-1.5 flex-wrap">
                 ${isPending ? `<button onclick="event.stopPropagation(); closeClientCalFullDay(); switchClientTab('contenu'); setTimeout(()=>{toggleContentDetail('${a.id}');toggleEdit('${a.id}');document.getElementById('edit-${a.id}')?.scrollIntoView({behavior:'smooth',block:'center'})},300)" class="text-xs px-2.5 py-1 rounded-lg bg-[#8B3E22]/10 text-[#8B3E22] hover:bg-[#8B3E22]/20 transition-colors font-medium">✏️ Modifier</button>` : ''}
-                <button onclick="event.stopPropagation();document.getElementById('reschedule-${a.id}').classList.toggle('hidden')" class="text-xs px-2.5 py-1 rounded-lg bg-[#8B3E22]/10 text-[#8B3E22] hover:bg-[#8B3E22]/20 transition-colors font-medium shrink-0">📅 Décaler</button>
+                <button onclick="event.stopPropagation(); openRescheduleModal('${a.id}','${reschedDate}','${reschedTime}')" class="text-xs px-2.5 py-1 rounded-lg bg-[#8B3E22]/10 text-[#8B3E22] hover:bg-[#8B3E22]/20 transition-colors font-medium shrink-0">📅 Décaler</button>
                 ${isPending ? `<button onclick="event.stopPropagation(); if(confirm('Supprimer ce contenu ?')) deleteContent('${a.id}','${files[0]?.url?files[0].url.replace(/'/g,"\\'"):''}','${_clientCalClientId}')" class="text-xs px-2.5 py-1 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors font-medium">🗑 Supprimer</button>` : ''}
               </div>
             </div>
@@ -2420,15 +2459,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <p class="text-base font-semibold text-[#2C2416] mb-2">${clean}</p>
               ${a.description ? `<div class="bg-white rounded-xl p-3 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Légende / description</p><p class="text-sm text-[#2C2416]/80 leading-relaxed whitespace-pre-wrap">${a.description}</p></div>` : '<p class="text-xs text-[#2C2416]/30 italic">Aucune description</p>'}
               ${files[0]?.url ? `<a href="${files[0].url}" target="_blank" class="inline-flex items-center gap-1.5 mt-3 text-xs text-[#8B3E22] hover:underline font-medium"><iconify-icon icon="solar:eye-linear" stroke-width="1.5"></iconify-icon>Voir le fichier en grand</a>` : ''}
-            </div>
-          </div>
-          <div id="reschedule-${a.id}" class="hidden border-t border-[#D6CCC0]/50 px-4 py-3 bg-[#F5EDE4]/50">
-            <p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Reprogrammer la publication</p>
-            <div class="flex flex-wrap items-end gap-2">
-              <div><label class="text-xs text-[#767A55] block mb-1">Nouvelle date</label><input id="reschedule-date-${a.id}" type="date" value="${reschedDate}" class="px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" /></div>
-              <div><label class="text-xs text-[#767A55] block mb-1">Heure (24h)</label><input id="reschedule-time-${a.id}" type="time" value="${reschedTime}" class="px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" /></div>
-              <button onclick="saveReschedule('${a.id}')" class="px-4 py-2 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
-              <button onclick="document.getElementById('reschedule-${a.id}').classList.add('hidden')" class="px-4 py-2 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs hover:bg-[#EDE6DB] transition-colors">Annuler</button>
             </div>
           </div>
         </div>`;
@@ -2453,15 +2483,40 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       document.getElementById('cal-main-view').classList.remove('hidden');
     };
 
-    window.saveReschedule = async (contentId) => {
-      const sb2 = await getSB();
-      const dateVal = document.getElementById('reschedule-date-' + contentId)?.value;
-      const timeVal = document.getElementById('reschedule-time-' + contentId)?.value;
+    // ─── Modal "Décaler" ──────────────────────────────────────────────────────
+    let _rescheduleContentId = null;
+
+    window.openRescheduleModal = (contentId, date, time) => {
+      _rescheduleContentId = contentId;
+      const dateEl = document.getElementById('reschedule-modal-date');
+      const hourEl = document.getElementById('reschedule-modal-hour');
+      const minEl  = document.getElementById('reschedule-modal-min');
+      if (dateEl) dateEl.value = date || '';
+      if (hourEl) hourEl.value = (time || '12:00').slice(0,2);
+      if (minEl)  minEl.value  = (time || '12:00').slice(3,5);
+      document.getElementById('reschedule-modal')?.classList.remove('hidden');
+      document.getElementById('reschedule-overlay')?.classList.remove('hidden');
+    };
+
+    window.closeRescheduleModal = () => {
+      document.getElementById('reschedule-modal')?.classList.add('hidden');
+      document.getElementById('reschedule-overlay')?.classList.add('hidden');
+      _rescheduleContentId = null;
+    };
+
+    window.saveRescheduleModal = async () => {
+      if (!_rescheduleContentId) return;
+      const dateVal = document.getElementById('reschedule-modal-date')?.value;
+      const h = document.getElementById('reschedule-modal-hour')?.value;
+      const m = document.getElementById('reschedule-modal-min')?.value;
       if (!dateVal) { showAdminToast('⚠️ Sélectionne une date'); return; }
-      const scheduledAt = timeVal ? dateVal + 'T' + timeVal + ':00' : dateVal + 'T00:00:00';
-      const { error } = await sb2.from('content_items').update({ scheduled_at: scheduledAt }).eq('id', contentId);
+      const timeStr = (h && m) ? `${h}:${m}` : '12:00';
+      const scheduledAt = `${dateVal}T${timeStr}:00`;
+      const sb2 = await getSB();
+      const { error } = await sb2.from('content_items').update({ scheduled_at: scheduledAt }).eq('id', _rescheduleContentId);
       if (!error) {
         showAdminToast('✅ Date de publication mise à jour');
+        closeRescheduleModal();
         await loadClientCal();
         window.clientCalDayDetail(dateVal);
       } else {
