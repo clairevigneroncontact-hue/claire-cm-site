@@ -1126,6 +1126,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         document.getElementById('client-detail').innerHTML = `<div class="bg-red-50 rounded-2xl p-6 border border-red-200"><p class="text-sm font-medium text-red-700 mb-1">Erreur lors du chargement</p><p class="text-xs text-red-600 font-mono">${String(err?.message||err)}</p></div>`;
       }
     };
+
+    // Retour OAuth Instagram
+    (async () => {
+      const _igP = new URLSearchParams(window.location.search);
+      if (_igP.get('ig_connected') === '1') {
+        const _cid = _igP.get('open_client');
+        history.replaceState({}, '', window.location.pathname);
+        if (_cid) { await window.openClient(_cid); setTimeout(() => window.switchClientTab('stats'), 400); }
+      } else if (_igP.get('ig_error')) {
+        history.replaceState({}, '', window.location.pathname);
+        showAdminToast('⚠️ Connexion Instagram échouée — réessaie depuis l\'onglet Stats.');
+      }
+    })();
     async function _openClientInner(clientId) {
 
       const sb = await getSB();
@@ -1347,6 +1360,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <button onclick="switchClientTab('contenu')"    id="ctab-contenu"    class="flex-1 py-2 px-3 text-xs font-medium rounded-lg bg-white text-[#2C2416] shadow-sm transition-all text-center">Contenu</button>
           <button onclick="switchClientTab('documents')"  id="ctab-documents"  class="flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] text-center">Documents</button>
           <button onclick="switchClientTab('notes')"      id="ctab-notes"      class="flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] text-center">Notes</button>
+          <button onclick="switchClientTab('stats')"      id="ctab-stats"      class="flex-1 py-2 px-3 text-xs font-medium rounded-lg text-[#2C2416]/50 transition-all hover:text-[#2C2416] text-center">📊 Stats</button>
         </div>
 
         <!-- Tab : Contenu -->
@@ -1679,6 +1693,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
         </div>
 
+        <!-- Tab : Stats Instagram -->
+        <div id="ctab-stats-panel" class="hidden space-y-4">
+          <div id="ig-stats-container">
+            <div class="text-center py-8">
+              <div class="w-6 h-6 border-2 border-[#8B3E22] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <p class="text-sm text-[#767A55]">Chargement…</p>
+            </div>
+          </div>
+        </div>
+
       `;
 
       // Initialiser les créneaux — rétrocompatibilité tous formats
@@ -1725,7 +1749,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     window.switchClientTab = (tab) => {
-      ['contenu','documents','notes'].forEach(t => {
+      ['contenu','documents','notes','stats'].forEach(t => {
         const panel = document.getElementById(`ctab-${t}-panel`);
         if (panel) panel.classList.toggle('hidden', t !== tab);
         const btn = document.getElementById(`ctab-${t}`);
@@ -1737,8 +1761,82 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         }
       });
       if (tab === 'contenu') loadClientCal();
-      if (tab === 'notes') loadAdminTasks(_clientCalClientId || '');
+      if (tab === 'notes')   loadAdminTasks(_clientCalClientId || '');
       if (tab === 'notes')   loadAdminClientNotes(window._currentAdminClientId);
+      if (tab === 'stats')   loadIgStats(window._currentAdminClientId);
+    };
+
+    window.loadIgStats = async (clientId) => {
+      const container = document.getElementById('ig-stats-container');
+      if (!container || !clientId) return;
+      container.innerHTML = '<div class="text-center py-8"><div class="w-6 h-6 border-2 border-[#8B3E22] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div><p class="text-sm text-[#767A55]">Chargement…</p></div>';
+      try {
+        const res  = await fetch(`/api/instagram-stats?clientId=${clientId}`);
+        const data = await res.json();
+        if (data.error === 'no_token' || data.error === 'token_invalid') {
+          container.innerHTML = `<div class="bg-white rounded-2xl p-8 border border-[#D6CCC0] text-center">
+            <iconify-icon icon="mdi:instagram" class="text-5xl text-[#8B3E22]/30 mb-4 block"></iconify-icon>
+            <h3 class="text-sm font-medium text-[#2C2416] mb-2">Compte Instagram non connecté</h3>
+            <p class="text-xs text-[#767A55] mb-6">Connecte le compte Instagram Pro pour accéder aux statistiques.</p>
+            <a href="/api/instagram-auth?clientId=${clientId}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
+              <iconify-icon icon="mdi:instagram" class="text-lg"></iconify-icon>
+              Connecter Instagram
+            </a>
+          </div>`;
+          return;
+        }
+        const p     = data.profile || {};
+        const media = data.media   || [];
+        const totalEng  = media.reduce((s, m) => s + (m.like_count || 0) + (m.comments_count || 0), 0);
+        const avgEngage = (media.length && p.followers_count)
+          ? ((totalEng / media.length) / p.followers_count * 100).toFixed(2)
+          : '—';
+        container.innerHTML = `
+          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0] mb-4">
+            <div class="flex items-center gap-4 mb-4">
+              ${p.profile_picture_url
+                ? `<img src="${p.profile_picture_url}" class="w-14 h-14 rounded-full object-cover border-2 border-[#D6CCC0]" />`
+                : `<div class="w-14 h-14 rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] flex items-center justify-center"><iconify-icon icon="mdi:instagram" class="text-2xl text-white"></iconify-icon></div>`}
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-[#2C2416]">@${p.username || '—'}</p>
+                ${p.biography ? `<p class="text-xs text-[#767A55] mt-0.5 line-clamp-2">${p.biography}</p>` : ''}
+              </div>
+              <a href="/api/instagram-auth?clientId=${clientId}" class="shrink-0 text-xs px-3 py-1.5 border border-[#D6CCC0] text-[#767A55] rounded-full hover:border-[#8B3E22] hover:text-[#8B3E22] transition-colors">↺ Reconnecter</a>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="text-center bg-[#F5EDE4] rounded-xl p-3">
+                <p class="text-xl font-bold text-[#2C2416]">${(p.followers_count || 0).toLocaleString('fr-FR')}</p>
+                <p class="text-[10px] text-[#767A55] uppercase tracking-widest mt-0.5">Abonnés</p>
+              </div>
+              <div class="text-center bg-[#F5EDE4] rounded-xl p-3">
+                <p class="text-xl font-bold text-[#2C2416]">${(p.media_count || 0).toLocaleString('fr-FR')}</p>
+                <p class="text-[10px] text-[#767A55] uppercase tracking-widest mt-0.5">Publications</p>
+              </div>
+              <div class="text-center bg-[#F5EDE4] rounded-xl p-3">
+                <p class="text-xl font-bold text-[#2C2416]">${avgEngage}%</p>
+                <p class="text-[10px] text-[#767A55] uppercase tracking-widest mt-0.5">Engagement</p>
+              </div>
+            </div>
+          </div>
+          ${media.length ? `<div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+            <h3 class="text-sm font-medium text-[#2C2416] mb-3">9 dernières publications</h3>
+            <div class="grid grid-cols-3 gap-2">
+              ${media.map(m => {
+                const img     = m.media_type === 'VIDEO' ? (m.thumbnail_url || '') : (m.media_url || '');
+                const typeIco = m.media_type === 'VIDEO' ? '🎬' : m.media_type === 'CAROUSEL_ALBUM' ? '🖼️' : '📸';
+                return `<a href="${m.permalink || '#'}" target="_blank" class="relative aspect-square rounded-xl overflow-hidden bg-[#EDE6DB] group block">
+                  ${img ? `<img src="${img}" class="w-full h-full object-cover" loading="lazy" onerror="this.style.display='none'" />` : ''}
+                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-end p-1.5">
+                    <div class="opacity-0 group-hover:opacity-100 transition-opacity text-white text-[10px] font-medium">❤️ ${m.like_count || 0} &nbsp;💬 ${m.comments_count || 0}</div>
+                  </div>
+                  <span class="absolute top-1 right-1 text-xs drop-shadow">${typeIco}</span>
+                </a>`;
+              }).join('')}
+            </div>
+          </div>` : ''}`;
+      } catch(err) {
+        container.innerHTML = `<div class="bg-red-50 rounded-2xl p-6 border border-red-200"><p class="text-sm text-red-700">Erreur lors du chargement des stats Instagram.</p></div>`;
+      }
     };
 
     // Sauvegarder infos client
