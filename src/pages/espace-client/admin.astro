@@ -2710,36 +2710,89 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
   // ─── Emoji picker ─────────────────────────────────────────────────────────
   (function() {
-    const EMOJIS = [
-      // Visages & réactions
-      '😊','😍','🥰','😎','🤩','😂','🥹','🤣','😌','🙂','😁','😄','🥲','😇','🤗','😏','😜','🤪','🥳',
-      // Gestes
-      '🙌','👏','🙏','💪','👋','🤝','🫶','❤️‍🔥','🫰','✌️','🤞','🤙','👍','🫁','🤘',
-      // Cœurs
-      '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🩷','🩶','💕','💖','💗','💓','💞','💝','💘','💔','🫀',
-      // Étoiles / feu / magie
-      '✨','🌟','⭐','💫','🔥','⚡','🌈','🌙','🌤️','☀️','💡','🪄','🎇','🎆',
-      // Nature & animaux
-      '🌸','🌺','🌻','🌹','🌷','🌼','🍀','🌿','🌱','🍃','🌊','🦋','🐝','🌴','🏔️','🌅',
-      // Food & lifestyle
-      '☕','🍵','🧋','🥂','🍾','🍰','🧁','🍓','🫐','🍋','🥗',
-      // Business / CM
-      '🎯','📸','📷','📊','📈','💼','📣','📢','💬','💭','📱','💻','🖥️','💯','✅','☑️','🏆','🥇','🆕','🔑','🔒','🛡️','📋','📌','🗓️','⏰','🔔','📬',
-      // Festif & luxe
-      '🎉','🎊','💎','👑','🎁','🎀','🎈','🎭','🎪',
-      // Direction / structure
-      '👉','👈','👆','👇','➡️','⬅️','⬆️','⬇️','▶️','◾','🔷','🔸','📍','⚠️','🆙','🔝',
+    // [emoji, mots-clés français pour la recherche]
+    const ED = [
+      ['😊','sourire heureux content joie smile'],['😍','amoureux admiration yeux coeur'],['🥰','amour tender doux'],['😎','cool lunettes classe'],['🤩','excite etoile star waouh'],
+      ['😂','rire mort pleurer drole lol'],['🥹','emu larme touchant'],['🤣','rouler rire drole'],['😌','serein calme soulagé detente'],['🙂','sourire subtil ok'],
+      ['😁','grand sourire joie dents'],['😄','joie heureux rire'],['🥲','larme sourire emu'],['😇','ange innocent gentil'],['🤗','calin tendresse bisou'],
+      ['😏','malicieux complice clin oeil'],['😜','tire langue rigolo fou'],['🤪','fou rigolo silly'],['🥳','fete anniversaire chapeau'],['😴','sommeil fatigue nuit'],
+      ['🤔','reflechir question doute penser'],['😅','sueur gêne soulagement'],['🫡','salut respect militaire'],['🤭','chut secret surprise bouche'],['😬','grimace gêne tension'],
+      ['😤','frustration colere nez'],['😩','epuise fatigue desespere'],['😭','pleurer triste larme'],['🥺','suppliant doux regard triste'],['😱','peur choc surprise horror'],
+      ['🙌','applaudir celebration felicitation lever mains'],['👏','applaudir bravo clap'],['🙏','merci priere respect namasté'],['💪','force muscle fort bras'],
+      ['👋','salut bonjour au revoir coucou'],['🤝','accord poignee main partenaire'],['🫶','coeur mains amour tendresse'],['✌️','victoire paix deux doigts'],
+      ['🤞','croiser doigts chance espoir'],['🤙','appel telephone cool shaka'],['👍','ok bien super pouce'],['👎','non mauvais pouce bas'],['👌','parfait ok excellent'],
+      ['🫰','clic doigts facile rapide'],['🤘','rock metal cool'],['✋','stop main cinq'],['🖐️','main cinq doigts'],['☝️','premier un doigt'],
+      ['❤️','coeur rouge amour love passion'],['🧡','coeur orange energie'],['💛','coeur jaune soleil amitie'],['💚','coeur vert nature sante'],
+      ['💙','coeur bleu calme confiance'],['💜','coeur violet magie spiritualite'],['🖤','coeur noir style sombre'],['🤍','coeur blanc pur douceur'],
+      ['🩷','coeur rose doux romantique'],['🩶','coeur gris neutre'],['💕','deux coeurs amour couple'],['💖','coeur etincelle brillant amour'],
+      ['💗','coeur rose battement'],['💓','coeur battement coeur'],['💞','coeurs tournants amour'],['💝','coeur ruban cadeau amour'],['💘','coeur fleche cupidon'],
+      ['💔','coeur brise rupture tristesse'],['❤️‍🔥','coeur feu passion intense amour'],
+      ['✨','etincelle magie brillant sparkle'],['🌟','etoile brillante star vedette'],['⭐','etoile favori top'],['💫','etoile filante magie tournant'],
+      ['🔥','feu flame chaud trending hot'],['⚡','eclair energie rapide electrique'],['🌈','arc ciel couleurs diversite'],['🌙','lune nuit bonne nuit'],
+      ['☀️','soleil journee beau temps'],['🌤️','soleil nuage meteo'],['💡','idee ampoule lumiere astuce'],['🪄','magie baguette tour'],
+      ['🎇','feu artifice celebration'],['🎆','feu artifice fete'],['🌠','etoile filante nuit ciel'],['🌌','galaxie univers cosmos'],
+      ['🌸','fleur cerisier rose printemps'],['🌺','hibiscus fleur tropique'],['🌻','tournesol soleil fleur'],['🌹','rose fleur amour romantique'],
+      ['🌷','tulipe fleur printemps'],['🌼','marguerite fleur jaune'],['🍀','trefle chance porte bonheur'],['🌿','herbe nature vert plante'],
+      ['🌱','graine pousse nature croissance'],['🍃','feuille vent nature'],['🌊','vague mer ocean eau'],['🌴','palmier tropical plage'],
+      ['🏔️','montagne sommet neige'],['🌅','lever soleil matin aube'],['🌄','coucher soleil soir'],['🍂','feuille automne chute'],['🌾','ble recolte nature'],
+      ['🦋','papillon transformation legere'],['🐝','abeille miel travail'],['🦄','licorne magique unique'],['🐱','chat mignon animal'],['🦊','renard ruse'],
+      ['🌶️','piment épicé fort rouge'],['🫚','huile olive cuisine'],
+      ['☕','cafe chaud matin energie'],['🍵','the infusion chaud doux'],['🧋','bubble tea boisson'],['🥂','champagne toast celebrer'],
+      ['🍾','champagne bouteille fete anniversaire'],['🍰','gateau part anniversaire douceur'],['🧁','cupcake gateau douceur'],
+      ['🍓','fraise fruit rouge'],['🫐','myrtille fruit bleu'],['🍋','citron jaune acide'],['🥗','salade saine vert manger'],
+      ['🍕','pizza repas'],['🥪','sandwich repas'],['🍜','ramen nouilles soupe'],['🧃','jus boisson fruit'],['🥤','boisson paille'],
+      ['🎯','cible objectif but precision'],['📸','appareil photo photo shoot'],['📷','camera photo'],['📊','graphique statistiques donnees'],
+      ['📈','progression hausse croissance tendance'],['📉','baisse chute diminution'],['💼','mallette travail professionnel business'],
+      ['📣','megaphone annonce communication'],['📢','haut parleur annonce'],['💬','bulle message discussion'],['💭','pensee reflexion bulle'],
+      ['📱','telephone mobile smartphone'],['💻','ordinateur laptop'],['🖥️','ecran ordinateur bureau'],['⌨️','clavier saisie'],
+      ['💯','cent parfait excellent valide'],['✅','coche valide ok confirme'],['☑️','case cochee valide'],['❎','croix erreur non'],
+      ['🏆','trophee victoire champion premier'],['🥇','medaille or premier champion'],['🥈','medaille argent deuxieme'],['🥉','medaille bronze troisieme'],
+      ['🆕','nouveau new recent'],['🔑','cle acces entree'],['🔒','cadenas securite verrouille'],['🔓','deverrouille ouvert'],
+      ['📋','presse papier liste notes'],['📌','epingle important marquer'],['🗓️','calendrier date planning'],['⏰','reveil heure alarme'],
+      ['🔔','cloche notification alerte'],['📬','boite lettres email courrier'],['📧','email courriel message'],['📝','stylo note ecriture'],
+      ['🗺️','carte plan navigation'],['📍','localisation position epingle'],['🏠','maison chez soi home'],['🏪','boutique magasin shop'],
+      ['🚀','fusee lancement demarrage decolle'],['✈️','avion voyage deplacement'],['🚗','voiture transport'],['🛍️','sac shopping achats'],
+      ['🎉','confettis celebration fete'],['🎊','fete celebration boule'],['💎','diamant luxe precieux'],['👑','couronne roi reine luxe'],
+      ['🎁','cadeau surprise present'],['🎀','ruban noeud cadeau'],['🎈','ballon fete anniversaire'],['🎭','theatre masque spectacle'],
+      ['🥳','chapeau fete'],['🎶','musique note chanson'],['🎵','note musique'],['🎤','micro chant karaoké'],['🎸','guitare musique rock'],
+      ['🏋️','sport musculation fitness'],['🧘','yoga meditation zen'],['🤸','acrobatie sport souplesse'],
+      ['👉','fleche droite pointer direction'],['👈','fleche gauche pointer'],['👆','fleche haut pointer'],['👇','fleche bas pointer'],
+      ['➡️','fleche droite suivant'],['⬅️','fleche gauche retour'],['⬆️','fleche haut monter'],['⬇️','fleche bas descendre'],
+      ['▶️','play lecture lancer'],['⏸️','pause stop'],['⏭️','suivant avancer'],['🔄','rafraichir actualiser boucle'],
+      ['◾','carre point bullet liste'],['🔷','losange bleu'],['🔸','losange orange'],['⚠️','attention avertissement danger'],
+      ['🆙','up haut nouveau'],['🔝','top haut premier'],['💥','explosion impact boom'],['🌀','tourbillon cyclone'],
     ];
+    const allBtns = ED.map(([e, k]) =>
+      `<button type="button" data-e="${e}" data-k="${k}" onclick="window._pickEmoji('${e.replace(/'/g,'&#39;')}')" class="text-xl p-1 rounded-lg hover:bg-[#EDE6DB] transition-colors leading-none" title="${k.split(' ')[0]}">${e}</button>`
+    ).join('');
+
     const picker = document.createElement('div');
     picker.id = 'emoji-picker';
-    picker.className = 'hidden fixed z-[300] bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] p-2';
-    picker.style.cssText = 'width:272px';
-    picker.innerHTML = '<div class="grid grid-cols-9 gap-0.5 max-h-52 overflow-y-auto">'
-      + EMOJIS.map(e => `<button type="button" onclick="window._pickEmoji('${e}')" class="text-xl p-1 rounded-lg hover:bg-[#EDE6DB] transition-colors leading-none">${e}</button>`).join('')
-      + '</div>';
+    picker.className = 'hidden fixed z-[300] bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] overflow-hidden';
+    picker.style.cssText = 'width:296px';
+    picker.innerHTML =
+      `<div class="px-2 pt-2 pb-1 border-b border-[#EDE6DB]">
+        <input id="emoji-search" type="text" placeholder="🔍 Rechercher un emoji…"
+          oninput="window._filterEmojis(this.value)"
+          class="w-full px-3 py-1.5 text-xs rounded-xl border border-[#D6CCC0] focus:outline-none focus:border-[#8B3E22] bg-[#F5EDE4]/50" />
+      </div>
+      <div id="emoji-grid" class="grid grid-cols-9 gap-0.5 max-h-52 overflow-y-auto p-1.5">${allBtns}</div>
+      <p id="emoji-empty" class="hidden text-xs text-[#2C2416]/30 italic text-center py-4">Aucun résultat</p>`;
     document.body.appendChild(picker);
 
     let _emojiTargetId = null;
+
+    window._filterEmojis = (q) => {
+      const term = q.toLowerCase().trim();
+      let count = 0;
+      document.querySelectorAll('#emoji-grid button[data-e]').forEach(btn => {
+        const show = !term || btn.dataset.k.includes(term) || btn.dataset.e.includes(term);
+        btn.style.display = show ? '' : 'none';
+        if (show) count++;
+      });
+      const empty = document.getElementById('emoji-empty');
+      if (empty) empty.classList.toggle('hidden', count > 0);
+    };
 
     window.toggleEmojiPicker = (btn, targetId) => {
       const p = document.getElementById('emoji-picker');
@@ -2747,18 +2800,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (!p.classList.contains('hidden') && _emojiTargetId === targetId) { p.classList.add('hidden'); return; }
       _emojiTargetId = targetId;
       const rect = btn.getBoundingClientRect();
-      const top  = Math.min(rect.bottom + 6, window.innerHeight - 230);
-      const left = Math.max(8, Math.min(rect.left - 100, window.innerWidth - 282));
-      p.style.top  = top  + 'px';
-      p.style.left = left + 'px';
+      const top  = Math.min(rect.bottom + 6, window.innerHeight - 280);
+      const left = Math.max(8, Math.min(rect.left - 120, window.innerWidth - 306));
+      p.style.top = top + 'px'; p.style.left = left + 'px';
       p.classList.remove('hidden');
+      const search = document.getElementById('emoji-search');
+      if (search) { search.value = ''; window._filterEmojis(''); search.focus(); }
     };
 
     window._pickEmoji = (emoji) => {
       const ta = _emojiTargetId ? document.getElementById(_emojiTargetId) : null;
       if (ta) {
-        const s = ta.selectionStart ?? ta.value.length;
-        const e = ta.selectionEnd   ?? ta.value.length;
+        const s = ta.selectionStart ?? ta.value.length, e = ta.selectionEnd ?? ta.value.length;
         ta.value = ta.value.slice(0, s) + emoji + ta.value.slice(e);
         ta.selectionStart = ta.selectionEnd = s + emoji.length;
         ta.focus();
