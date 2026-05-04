@@ -221,6 +221,85 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
   </div>
 
+  <!-- Modal éditeur de bilan mensuel -->
+  <div id="bilan-overlay" class="hidden fixed inset-0 z-[198] bg-black/40" onclick="closeBilanModal()"></div>
+  <div id="bilan-modal" class="hidden fixed inset-x-0 bottom-0 z-[199] bg-white rounded-t-2xl shadow-2xl" style="max-height:92vh;overflow-y:auto;padding-bottom:max(1.5rem,env(safe-area-inset-bottom))">
+    <div class="sticky top-0 bg-white z-10 px-5 pt-4 pb-3 border-b border-[#D6CCC0] flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <iconify-icon icon="solar:chart-2-linear" stroke-width="1.5" class="text-[#8B3E22] text-xl"></iconify-icon>
+        <p class="text-sm font-semibold text-[#2C2416]">Éditer le bilan mensuel</p>
+      </div>
+      <button onclick="closeBilanModal()" class="w-7 h-7 flex items-center justify-center rounded-full text-[#767A55] hover:bg-[#EDE6DB] transition-colors text-base">×</button>
+    </div>
+
+    <div class="px-5 py-4 space-y-4">
+      <!-- Mois + Année -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-[#767A55] block mb-1.5">Mois</label>
+          <select id="bilan-month" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white">
+            <option value="janvier">Janvier</option><option value="février">Février</option>
+            <option value="mars">Mars</option><option value="avril">Avril</option>
+            <option value="mai">Mai</option><option value="juin">Juin</option>
+            <option value="juillet">Juillet</option><option value="août">Août</option>
+            <option value="septembre">Septembre</option><option value="octobre">Octobre</option>
+            <option value="novembre">Novembre</option><option value="décembre">Décembre</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-[#767A55] block mb-1.5">Année</label>
+          <input id="bilan-year" type="number" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+        </div>
+      </div>
+
+      <!-- Statistiques -->
+      <div>
+        <p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Statistiques du mois</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-[#767A55] block mb-1.5">Contenus publiés</label>
+            <input id="bilan-contenus" type="text" placeholder="ex : 12" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+          </div>
+          <div>
+            <label class="text-xs text-[#767A55] block mb-1.5">Nouveaux abonnés</label>
+            <input id="bilan-abonnes" type="text" placeholder="ex : +47" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+          </div>
+          <div>
+            <label class="text-xs text-[#767A55] block mb-1.5">Portée moyenne</label>
+            <input id="bilan-portee" type="text" placeholder="ex : 1 240" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+          </div>
+          <div>
+            <label class="text-xs text-[#767A55] block mb-1.5">Engagement moyen</label>
+            <input id="bilan-engagement" type="text" placeholder="ex : 4,2 %" class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Highlights / message perso -->
+      <div>
+        <label class="text-xs text-[#767A55] block mb-1.5">Points forts du mois (optionnel)</label>
+        <textarea spellcheck="true" id="bilan-highlights" rows="3" placeholder="ex : Le reel sur l'atelier a bien performé, on continue sur ce format en juin…"
+          class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none bg-white"></textarea>
+      </div>
+
+      <!-- Prochain mois -->
+      <div>
+        <label class="text-xs text-[#767A55] block mb-1.5">Orientations pour le mois prochain (optionnel)</label>
+        <textarea spellcheck="true" id="bilan-next" rows="2" placeholder="ex : Focus sur les reels, objectif +50 abonnés…"
+          class="w-full px-3 py-2.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none bg-white"></textarea>
+      </div>
+
+      <div id="bilan-send-msg" class="hidden text-sm rounded-xl px-4 py-2.5"></div>
+
+      <div class="flex gap-2 pt-1">
+        <button onclick="sendBilanFromModal()" class="flex-1 py-3 bg-[#8B3E22] text-white rounded-xl text-sm font-semibold hover:bg-[#6B2E1A] transition-colors flex items-center justify-center gap-2">
+          <iconify-icon icon="solar:letter-linear" stroke-width="1.5"></iconify-icon>
+          Envoyer le bilan
+        </button>
+        <button onclick="closeBilanModal()" class="px-5 py-3 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-sm hover:bg-[#EDE6DB] transition-colors">Annuler</button>
+      </div>
+    </div>
+  </div>
 
 </BaseLayout>
 
@@ -2804,20 +2883,66 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     await loadAdminTemplates();
   };
 
-  // Envoi manuel du bilan mensuel pour un client
-  window.sendMonthlyReport = async (clientId) => {
-    if (!confirm('Envoyer le bilan mensuel à ce client par email ?')) return;
-    const now  = new Date();
-    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const res  = await fetch('/api/send-notification', {
+  // Bilan mensuel — modal d'édition avant envoi
+  let _bilanClientId = null;
+
+  window.sendMonthlyReport = (clientId) => {
+    _bilanClientId = clientId;
+    // Pré-remplir mois et année précédents
+    const prev  = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
+    const mois  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    const sel   = document.getElementById('bilan-month');
+    const yr    = document.getElementById('bilan-year');
+    if (sel) sel.value = mois[prev.getMonth()];
+    if (yr)  yr.value  = prev.getFullYear();
+    // Vider les champs éditables
+    ['bilan-contenus','bilan-abonnes','bilan-portee','bilan-engagement','bilan-highlights','bilan-next'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    const msg = document.getElementById('bilan-send-msg');
+    if (msg) msg.classList.add('hidden');
+    document.getElementById('bilan-modal')?.classList.remove('hidden');
+    document.getElementById('bilan-overlay')?.classList.remove('hidden');
+  };
+
+  window.closeBilanModal = () => {
+    document.getElementById('bilan-modal')?.classList.add('hidden');
+    document.getElementById('bilan-overlay')?.classList.add('hidden');
+    _bilanClientId = null;
+  };
+
+  window.sendBilanFromModal = async () => {
+    if (!_bilanClientId) return;
+    const month      = document.getElementById('bilan-month')?.value || '';
+    const year       = parseInt(document.getElementById('bilan-year')?.value) || new Date().getFullYear();
+    const contenus   = document.getElementById('bilan-contenus')?.value.trim() || '—';
+    const abonnes    = document.getElementById('bilan-abonnes')?.value.trim() || '—';
+    const portee     = document.getElementById('bilan-portee')?.value.trim() || '—';
+    const engagement = document.getElementById('bilan-engagement')?.value.trim() || '—';
+    const highlights = document.getElementById('bilan-highlights')?.value.trim() || '';
+    const next       = document.getElementById('bilan-next')?.value.trim() || '';
+
+    const btn = document.querySelector('#bilan-modal button[onclick="sendBilanFromModal()"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Envoi en cours…'; }
+
+    const res = await fetch('/api/send-notification', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientId, type: 'bilan', data: {
-        month: prev.toLocaleDateString('fr-FR', { month:'long' }),
-        year:  prev.getFullYear(),
-      }}),
+      body: JSON.stringify({
+        clientId: _bilanClientId,
+        type: 'bilan',
+        data: { month, year, contenusPublies: contenus, nouveauxAbonnes: abonnes, porteeMovenne: portee, engagementMoyen: engagement, highlights, next },
+      }),
     });
     const d = await res.json().catch(()=>({}));
-    showAdminToast(d.sent ? '✅ Bilan mensuel envoyé' : '❌ Erreur lors de l\'envoi');
+
+    if (btn) { btn.disabled = false; btn.innerHTML = '<iconify-icon icon="solar:letter-linear" stroke-width="1.5"></iconify-icon> Envoyer le bilan'; }
+    const msg = document.getElementById('bilan-send-msg');
+    if (msg) {
+      msg.className = `text-sm rounded-xl px-4 py-2.5 ${d.sent ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`;
+      msg.textContent = d.sent ? '✅ Bilan envoyé avec succès' : `❌ Erreur : ${d.error || 'inconnue'}`;
+      msg.classList.remove('hidden');
+    }
+    if (d.sent) setTimeout(closeBilanModal, 2000);
   };
 
   // ─── Créneaux de publication ──────────────────────────────────────────────

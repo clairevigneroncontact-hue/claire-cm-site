@@ -179,7 +179,9 @@ function buildEmail(type, prenom, data) {
                 <td align="right" style="padding:8px 0"><p style="margin:0;color:#8B3E22;font-weight:600;font-size:13px">${data.engagementMoyen ?? '—'}</p></td>
               </tr>
             </table>
-            <p style="color:#767A55;font-size:11px;font-style:italic;margin:16px 0 16px">Les statistiques détaillées seront disponibles prochainement dans votre espace client.</p>
+            ${data.highlights ? `<div style="margin:16px 0 0;padding:12px 16px;background:#fff;border-radius:10px;border-left:3px solid #8B3E22"><p style="color:#8B3E22;font-size:11px;font-weight:600;text-transform:uppercase;margin:0 0 6px">Points forts du mois</p><p style="color:#2C2416;font-size:13px;margin:0;line-height:1.6">${String(data.highlights).replace(/\n/g,'<br>')}</p></div>` : ''}
+        ${data.next ? `<div style="margin:12px 0 0;padding:12px 16px;background:#fff;border-radius:10px;border-left:3px solid #D6CCC0"><p style="color:#767A55;font-size:11px;font-weight:600;text-transform:uppercase;margin:0 0 6px">Le mois prochain</p><p style="color:#2C2416;font-size:13px;margin:0;line-height:1.6">${String(data.next).replace(/\n/g,'<br>')}</p></div>` : ''}
+        <p style="color:#767A55;font-size:11px;font-style:italic;margin:16px 0 0">Les statistiques détaillées seront disponibles prochainement dans votre espace client.</p>
             ${BTN('Voir mon espace client', DASHBOARD_URL)}
           </td></tr></table>
           <p style="color:#767A55;font-size:13px;margin:0">À bientôt pour le mois prochain !</p>
