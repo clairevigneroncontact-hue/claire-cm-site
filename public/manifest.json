@@ -1,0 +1,27 @@
+{
+  "name": "Claire Vigneron CM",
+  "short_name": "Claire CM",
+  "description": "Espace client & administration Community Manager",
+  "start_url": "/espace-client",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F5EDE4",
+  "theme_color": "#2C2416",
+  "orientation": "portrait-primary",
+  "lang": "fr",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/favicon.svg",  "sizes": "any",     "type": "image/svg+xml" }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Mon espace client",
+      "url": "/espace-client/dashboard",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
