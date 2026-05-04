@@ -1196,16 +1196,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <!-- Ajouter un créneau -->
               <div class="bg-[#F5EDE4] rounded-xl p-3 border border-[#D6CCC0]">
                 <p class="text-xs text-[#767A55] mb-2 font-medium">Ajouter un créneau</p>
-                <div class="flex gap-1 flex-wrap mb-2">
+                <p class="text-[10px] text-[#767A55] mb-1.5">Jours (plusieurs possibles)</p>
+                <div class="flex gap-1 flex-wrap mb-3">
                   ${['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map((label, idx) =>
-                    `<button type="button" onclick="selectPrefDay(${idx+1})" data-day="${idx+1}" class="pref-day-btn w-9 h-7 rounded-lg text-xs font-bold border border-[#D6CCC0] text-[#2C2416]/50 hover:border-[#8B3E22] transition-colors">${label.slice(0,3)}</button>`
+                    `<button type="button" onclick="togglePrefDayMulti(${idx+1})" data-day="${idx+1}" class="pref-day-btn px-2.5 h-7 rounded-lg text-xs font-bold border border-[#D6CCC0] text-[#2C2416]/50 hover:border-[#8B3E22] transition-colors">${label}</button>`
                   ).join('')}
                 </div>
-                <div class="flex gap-2">
-                  <input type="time" id="pref-time-input" class="flex-1 px-2 py-1.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+                <p class="text-[10px] text-[#767A55] mb-1.5">Heure de publication</p>
+                <div class="flex items-center gap-2 mb-2">
+                  <select id="pref-hour" class="flex-1 px-2 py-1.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white text-center">
+                    <option value="">hh</option>
+                    ${Array.from({length:24},(_,i)=>`<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`).join('')}
+                  </select>
+                  <span class="text-[#2C2416] font-bold">:</span>
+                  <select id="pref-min" class="flex-1 px-2 py-1.5 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white text-center">
+                    <option value="">mm</option>
+                    <option value="00">00</option><option value="15">15</option>
+                    <option value="30">30</option><option value="45">45</option>
+                  </select>
                   <button type="button" onclick="addPrefSlot()" class="px-3 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] shrink-0">+ Ajouter</button>
                 </div>
-                <p id="pref-add-hint" class="text-[10px] text-[#767A55] mt-1.5 italic">Sélectionne un jour puis une heure</p>
+                <p id="pref-add-hint" class="text-[10px] text-[#767A55] italic">Sélectionne un ou plusieurs jours + heure</p>
               </div>
               <div id="pref-save-msg" class="hidden text-xs rounded-xl px-3 py-1.5"></div>
               <button onclick="savePostingPrefs('${clientId}')" class="px-4 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer les créneaux</button>
@@ -1561,7 +1572,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (!_initSlots.length && _rawPrefs.days?.length && _rawPrefs.times?.length)
         _rawPrefs.days.forEach(d => _rawPrefs.times.forEach(t => _initSlots.push({ day: d, time: t })));
       _currentPostingPrefs = { slots: _initSlots };
-      _prefSelectedDay = null;
+      _prefSelectedDays = new Set();
       renderPrefChips();
     }
 
@@ -2652,49 +2663,60 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
   // ─── Créneaux de publication ──────────────────────────────────────────────
   let _currentPostingPrefs = { slots: [] };
-  let _prefSelectedDay = null;
+  let _prefSelectedDays = new Set(); // multi-jours
   const _DAYS = ['','Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
-  // Sélectionner un jour dans le formulaire d'ajout
-  window.selectPrefDay = (day) => {
-    _prefSelectedDay = day;
-    document.querySelectorAll('.pref-day-btn').forEach(b => {
-      const active = parseInt(b.dataset.day) === day;
-      b.classList.toggle('bg-[#8B3E22]',   active);
-      b.classList.toggle('border-[#8B3E22]',active);
-      b.classList.toggle('text-white',       active);
-      b.classList.toggle('border-[#D6CCC0]',!active);
-      b.classList.toggle('text-[#2C2416]/50',!active);
-    });
+  // Basculer un jour (plusieurs possibles simultanément)
+  window.togglePrefDayMulti = (day) => {
+    const btn = document.querySelector(`.pref-day-btn[data-day="${day}"]`);
+    if (_prefSelectedDays.has(day)) {
+      _prefSelectedDays.delete(day);
+      btn?.classList.remove('bg-[#8B3E22]','border-[#8B3E22]','text-white');
+      btn?.classList.add('border-[#D6CCC0]','text-[#2C2416]/50');
+    } else {
+      _prefSelectedDays.add(day);
+      btn?.classList.add('bg-[#8B3E22]','border-[#8B3E22]','text-white');
+      btn?.classList.remove('border-[#D6CCC0]','text-[#2C2416]/50');
+    }
     const hint = document.getElementById('pref-add-hint');
-    if (hint) hint.textContent = `${_DAYS[day]} sélectionné — choisis l'heure puis "Ajouter"`;
+    if (hint) hint.textContent = _prefSelectedDays.size
+      ? `${[..._prefSelectedDays].sort().map(d=>_DAYS[d]).join(', ')} sélectionné(s)`
+      : 'Sélectionne un ou plusieurs jours + heure';
   };
 
-  // Ajouter une paire jour+heure
+  // Ajouter une paire jour+heure pour chaque jour sélectionné
   window.addPrefSlot = () => {
-    if (!_prefSelectedDay) { const h = document.getElementById('pref-add-hint'); if(h) { h.textContent = '⚠️ Sélectionne d\'abord un jour'; h.classList.add('text-amber-600'); setTimeout(()=>h.classList.remove('text-amber-600'),2000); } return; }
-    const timeInput = document.getElementById('pref-time-input');
-    const time = timeInput?.value;
-    if (!time) { const h = document.getElementById('pref-add-hint'); if(h) { h.textContent = '⚠️ Choisis une heure'; h.classList.add('text-amber-600'); setTimeout(()=>h.classList.remove('text-amber-600'),2000); } return; }
-    const exists = (_currentPostingPrefs.slots||[]).some(s => s.day === _prefSelectedDay && s.time === time);
-    if (!exists) {
-      _currentPostingPrefs.slots.push({ day: _prefSelectedDay, time });
-      _currentPostingPrefs.slots.sort((a,b) => a.day - b.day || a.time.localeCompare(b.time));
-    }
-    if (timeInput) timeInput.value = '';
-    _prefSelectedDay = null;
+    const hint = document.getElementById('pref-add-hint');
+    const warn = (msg) => { if(hint) { hint.textContent = '⚠️ ' + msg; hint.classList.add('text-amber-600'); setTimeout(()=>{ hint.classList.remove('text-amber-600'); hint.textContent = _prefSelectedDays.size ? `${[..._prefSelectedDays].sort().map(d=>_DAYS[d]).join(', ')} sélectionné(s)` : 'Sélectionne un ou plusieurs jours + heure'; }, 2000); } };
+    if (!_prefSelectedDays.size) { warn('Sélectionne au moins un jour'); return; }
+    const h = document.getElementById('pref-hour')?.value;
+    const m = document.getElementById('pref-min')?.value;
+    if (!h || !m) { warn('Choisis une heure'); return; }
+    const time = `${h}:${m}`;
+    let added = 0;
+    _prefSelectedDays.forEach(day => {
+      if (!(_currentPostingPrefs.slots||[]).some(s => s.day === day && s.time === time)) {
+        _currentPostingPrefs.slots.push({ day, time });
+        added++;
+      }
+    });
+    _currentPostingPrefs.slots.sort((a,b) => a.day - b.day || a.time.localeCompare(b.time));
+    // Reset sélection jours
+    _prefSelectedDays = new Set();
     document.querySelectorAll('.pref-day-btn').forEach(b => {
       b.classList.remove('bg-[#8B3E22]','border-[#8B3E22]','text-white');
       b.classList.add('border-[#D6CCC0]','text-[#2C2416]/50');
     });
-    const hint = document.getElementById('pref-add-hint');
-    if (hint) hint.textContent = 'Sélectionne un jour puis une heure';
+    document.getElementById('pref-hour').value = '';
+    document.getElementById('pref-min').value = '';
+    if (hint) hint.textContent = added ? `${added} créneau(x) ajouté(s) ✓` : 'Ces créneaux existent déjà';
     renderPrefSlotsList();
   };
 
-  // Supprimer un créneau
+  // Supprimer un créneau et réinitialiser _prefSelectedDays pour éviter un état incohérent
   window.removePrefSlot = (idx) => {
     _currentPostingPrefs.slots.splice(idx, 1);
+    _prefSelectedDays = new Set();
     renderPrefSlotsList();
   };
 
@@ -2709,7 +2731,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     renderPrefChips();
   }
 
-  // Chips dans le formulaire d'envoi de contenu
+  // Chips dans le formulaire d'envoi de contenu (sans emoji pour rester compact)
   function renderPrefChips() {
     const slotsDiv = document.getElementById('ct-prefs-slots');
     const chipsDiv = document.getElementById('ct-prefs-chips');
@@ -2717,7 +2739,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const slots = _currentPostingPrefs.slots || [];
     if (!slots.length) { slotsDiv.classList.add('hidden'); return; }
     chipsDiv.innerHTML = slots.map(s =>
-      `<button type="button" onclick="applyPrefSlot(${s.day},'${s.time}')" class="flex items-center gap-1 bg-[#EDE6DB] hover:bg-[#8B3E22] hover:text-white text-[#2C2416] text-xs px-2.5 py-1.5 rounded-full transition-colors font-medium">⏰ ${_DAYS[s.day]} ${s.time}</button>`
+      `<button type="button" onclick="applyPrefSlot(${s.day},'${s.time}')" class="bg-[#EDE6DB] hover:bg-[#8B3E22] hover:text-white text-[#2C2416] text-xs px-2.5 py-1.5 rounded-full transition-colors font-medium">${_DAYS[s.day]} ${s.time}</button>`
     ).join('');
     slotsDiv.classList.remove('hidden');
   }
@@ -2744,12 +2766,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   window.savePostingPrefs = async (clientId) => {
     const sb  = await getSB();
     const msg = document.getElementById('pref-save-msg');
-    const { error } = await sb.from('profiles').update({ posting_prefs: { slots: _currentPostingPrefs.slots } }).eq('id', clientId);
+    const toSave = { slots: (_currentPostingPrefs.slots || []) };
+    const { error } = await sb.from('profiles').update({ posting_prefs: toSave }).eq('id', clientId);
+    if (error) console.error('savePostingPrefs:', error);
     if (msg) {
+      const isColMissing = error?.message?.includes('posting_prefs') || error?.code === '42703';
       msg.className = `text-xs rounded-xl px-3 py-1.5 ${error ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`;
-      msg.textContent = error ? 'Erreur lors de la sauvegarde' : `${(_currentPostingPrefs.slots||[]).length} créneau(x) enregistré(s) ✓`;
+      msg.textContent = isColMissing
+        ? '⚠️ Colonne manquante en DB — exécute le SQL dans Supabase'
+        : error ? `Erreur : ${error.message || 'inconnue'}`
+        : `${toSave.slots.length} créneau(x) enregistré(s) ✓`;
       msg.classList.remove('hidden');
-      setTimeout(() => msg.classList.add('hidden'), 3000);
+      setTimeout(() => msg.classList.add('hidden'), 5000);
     }
     if (!error) renderPrefChips();
   };
