@@ -20,7 +20,7 @@ export async function onRequestPost(context) {
     let client;
     try {
       const profileRes = await fetch(
-        `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(clientId)}&select=full_name,email,notif_email`,
+        `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(clientId)}&select=full_name,email,notif_prefs`,
         { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
       );
       const profiles = await profileRes.json();
@@ -30,7 +30,9 @@ export async function onRequestPost(context) {
     }
 
     if (!client || !client.email) return resp({ skipped: 'Client introuvable' }, 200);
-    if (client.notif_email === false) return resp({ skipped: 'Notifications désactivées' }, 200);
+    const prefs = client.notif_prefs || {};
+    if (prefs.email === false) return resp({ skipped: 'Email désactivé' }, 200);
+    if (prefs.motifs?.contenu === false) return resp({ skipped: 'Notif contenu désactivée' }, 200);
 
     const prenom    = String(client.full_name || client.email).split(' ')[0];
     const typeLabel = ({ post: 'Post', story: 'Story', reel: 'Reel', carrousel: 'Carrousel' })[String(contentType || '').toLowerCase()] || contentType || 'Contenu';
