@@ -1141,6 +1141,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     })();
     async function _openClientInner(clientId) {
 
+      window._currentAdminClientId = clientId;
       const sb = await getSB();
       const [{ data: c }, { data: docs }, { data: content }, { data: uploads }, { data: igCred }] = await Promise.all([
         sb.from('profiles').select('*').eq('id', clientId).single(),
@@ -1835,7 +1836,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
           </div>` : ''}`;
       } catch(err) {
-        container.innerHTML = `<div class="bg-red-50 rounded-2xl p-6 border border-red-200"><p class="text-sm text-red-700">Erreur lors du chargement des stats Instagram.</p></div>`;
+        container.innerHTML = `<div class="bg-white rounded-2xl p-8 border border-[#D6CCC0] text-center">
+          <iconify-icon icon="mdi:instagram" class="text-5xl text-[#8B3E22]/30 mb-4 block"></iconify-icon>
+          <h3 class="text-sm font-medium text-[#2C2416] mb-2">Compte Instagram non connecté</h3>
+          <p class="text-xs text-[#767A55] mb-6">Connecte le compte Instagram Pro pour accéder aux statistiques.</p>
+          <a href="/api/instagram-auth?clientId=${clientId}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
+            <iconify-icon icon="mdi:instagram" class="text-lg"></iconify-icon>
+            Connecter Instagram
+          </a>
+        </div>`;
       }
     };
 
