@@ -30,7 +30,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     </header>
 
     <!-- Panel notifications flottant (cloche, mobile/tablette) -->
-    <div id="admin-bell-float-panel" class="hidden fixed top-[76px] right-4 w-80 bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] z-50 overflow-hidden">
+    <div id="admin-bell-float-panel" class="hidden fixed top-[76px] right-4 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-[#D6CCC0] z-50 overflow-hidden">
       <div class="px-4 py-3 bg-[#2C2416] flex items-center justify-between">
         <span class="text-sm font-semibold text-[#F5EDE4]">Notifications</span>
         <button onclick="clearAllImpNotifs()" class="text-xs text-[#F5EDE4]/50 hover:text-[#F5EDE4] transition-colors">Tout effacer</button>
@@ -458,12 +458,37 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       function addSwipe(container) {
         if (!container) return;
         container.querySelectorAll('[data-imp-notif]').forEach(row => {
-          let startX = 0;
-          row.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+          let startX = 0, startY = 0, didSwipe = false;
+          row.addEventListener('touchstart', e => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            didSwipe = false;
+          }, { passive: true });
+          row.addEventListener('touchmove', e => {
+            const dx = e.touches[0].clientX - startX;
+            const dy = e.touches[0].clientY - startY;
+            // Swipe horizontal dominant
+            if (Math.abs(dx) > Math.abs(dy) && dx < -20) {
+              row.style.transform = `translateX(${Math.min(0, dx)}px)`;
+              row.style.opacity = String(Math.max(0, 1 + dx / 150));
+            }
+          }, { passive: true });
           row.addEventListener('touchend', e => {
             const dx = e.changedTouches[0].clientX - startX;
-            if (dx < -60) { row.style.transform = 'translateX(-100%)'; row.style.opacity = '0'; setTimeout(() => dismissImpNotif(row.dataset.impNotif), 280); }
+            const dy = e.changedTouches[0].clientY - startY;
+            if (Math.abs(dx) > Math.abs(dy) && dx < -60) {
+              didSwipe = true;
+              row.style.transform = 'translateX(-100%)';
+              row.style.opacity = '0';
+              setTimeout(() => dismissImpNotif(row.dataset.impNotif), 280);
+            } else {
+              row.style.transform = '';
+              row.style.opacity = '';
+            }
           }, { passive: true });
+          row.addEventListener('click', e => {
+            if (didSwipe) { e.stopPropagation(); didSwipe = false; }
+          }, true);
         });
       }
       addSwipe(list);
@@ -975,11 +1000,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const docsNonInv = (docs||[]).filter(d => d.type !== 'facture');
       const docsInv    = (docs||[]).filter(d => d.type === 'facture');
 
-      const statusBadge = s => s === 'approved'
-        ? '<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">Validé ✓</span>'
-        : s === 'rejected'
-        ? '<span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600">Refusé</span>'
-        : '<span class="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">En attente</span>';
+      const statusBadge = (s, id) => {
+        const click = id ? `onclick="toggleContentDetail('${id}')" ` : '';
+        if (s === 'approved') return `<span ${click}class="cursor-pointer text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700"><span class="hidden sm:inline">Validé </span>✓</span>`;
+        if (s === 'rejected') return `<span ${click}class="cursor-pointer text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600"><span class="hidden sm:inline">Refusé</span><span class="sm:hidden">✗</span></span>`;
+        return `<span ${click}class="cursor-pointer text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700"><span class="hidden sm:inline">En attente</span><span class="sm:hidden">⏳</span></span>`;
+      };
 
       // ── Rendu d'un item contenu (extrait pour le regroupement mensuel) ──────
       const _renderCtItem = (ct) => {
@@ -1007,7 +1033,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const fileBlock = file0?.url && !isImg ? `<a href="${file0.url}" target="_blank" class="flex items-center gap-3 p-3 bg-[#EDE6DB] rounded-xl hover:bg-[#D6CCC0] transition-colors mb-3"><iconify-icon icon="solar:file-download-linear" stroke-width="1.5" class="text-[#8B3E22] text-2xl shrink-0"></iconify-icon><span class="text-sm text-[#2C2416] truncate">${file0.name||'Ouvrir'}</span><iconify-icon icon="solar:arrow-right-up-linear" stroke-width="1.5" class="text-[#8B3E22] shrink-0 ml-auto"></iconify-icon></a>` : '';
         const replyPanel = ct.status === 'rejected' ? `<div id="reply-${ct.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#D6CCC0]"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Envoyer une nouvelle version</p><select id="reply-type-${ct.id}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 bg-white focus:outline-none focus:border-[#8B3E22]"><option value="post">Post</option><option value="story">Story</option><option value="reel">Reel</option><option value="carrousel">Carrousel</option></select><textarea spellcheck="true" id="reply-caption-${ct.id}" placeholder="Nouvelle légende…" rows="3" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none"></textarea><input id="reply-file-${ct.id}" type="file" accept="image/*,video/*" class="block text-xs text-[#767A55] mb-2 cursor-pointer w-full" /><button onclick="sendReply('${ct.id}','${clientId}')" class="w-full py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Envoyer →</button></div>` : '';
         const editPanel = `<div id="edit-${ct.id}" class="hidden mt-3 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">Modifier ce contenu</p><input id="edit-title-${ct.id}" type="text" value="${safeTitle.replace(/"/g,'&quot;')}" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] bg-white" /><textarea spellcheck="true" id="edit-caption-${ct.id}" rows="4" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm mb-2 focus:outline-none focus:border-[#8B3E22] resize-none bg-white">${ct.description||''}</textarea><div class="mb-3"><p class="text-xs text-[#767A55] mb-1">Remplacer le fichier (optionnel)</p><input id="edit-file-${ct.id}" type="file" accept="image/*,video/*" class="block text-xs text-[#767A55] cursor-pointer w-full" /></div><div class="flex gap-2"><button onclick="saveContentEdit('${ct.id}','${clientId}')" class="flex-1 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer les modifications</button><button onclick="document.getElementById('edit-${ct.id}').classList.add('hidden')" class="px-4 py-2 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-sm hover:bg-[#EDE6DB] transition-colors">Annuler</button></div></div>`;
-        return `<div class="border ${ct.status === 'rejected' ? 'border-red-200' : 'border-[#D6CCC0]'} rounded-xl mb-3 overflow-hidden" data-search="${safeTitle.toLowerCase()}"><div class="flex hover:bg-[#F5EDE4]/20 transition-colors"><div onclick="toggleContentDetail('${ct.id}')" class="w-16 sm:w-24 md:w-32 shrink-0 overflow-hidden rounded-l-xl flex items-center justify-center cursor-pointer" style="background:${tHex}18;height:90px">${file0?.url?`<img src="${file0.url}" alt="visuel" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`:`<iconify-icon icon="${tIcon}" stroke-width="1.5" style="color:${tHex};font-size:2rem"></iconify-icon>`}</div><div onclick="toggleContentDetail('${ct.id}')" class="flex-1 p-4 min-w-0 cursor-pointer"><div class="flex items-start justify-between gap-2 mb-1.5"><div class="flex flex-wrap items-center gap-2 min-w-0">${typeTag}<p class="font-semibold text-[#2C2416] text-sm truncate">${cleanT}</p></div><div class="flex items-center gap-1 shrink-0 ml-1" onclick="event.stopPropagation()"><a href="${file0?.url||'#'}" target="${file0?.url?'_blank':'_self'}" onclick="${file0?.url?'event.stopPropagation()':`event.preventDefault();event.stopPropagation();toggleContentDetail('${ct.id}')`}" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors"><iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon></a>${statusBadge(ct.status)}<iconify-icon id="chevron-${ct.id}" icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform"></iconify-icon></div></div>${shortDesc}<p class="text-xs text-[#767A55] mt-1.5">${schedDate}</p></div></div><div id="detail-${ct.id}" class="hidden border-t border-[#D6CCC0]/50 p-4">${fileBlock}${captionBlock}${feedbackBlock}<div class="flex gap-2 mt-3 flex-wrap"><button onclick="toggleEdit('${ct.id}')" class="px-4 py-2 border border-[#8B3E22] text-[#8B3E22] rounded-full text-xs font-medium hover:bg-[#8B3E22]/10 transition-colors">✏️ Modifier</button>${ct.status==='rejected'?`<button onclick="replyToRefused('${ct.id}','${clientId}')" class="px-4 py-2 border border-[#2C2416] text-[#2C2416] rounded-full text-xs font-medium hover:bg-[#EDE6DB] transition-colors">↩ Nouvelle version</button>`:''}<button onclick="deleteContent('${ct.id}','${file0?.url?file0.url.replace(/'/g,"\\'"):''}','${clientId}')" class="px-4 py-2 border border-red-300 text-red-500 rounded-full text-xs font-medium hover:bg-red-50 transition-colors">🗑 Supprimer</button></div>${editPanel}${replyPanel}</div></div>`;
+        return `<div class="border ${ct.status === 'rejected' ? 'border-red-200' : 'border-[#D6CCC0]'} rounded-xl mb-3 overflow-hidden" data-search="${safeTitle.toLowerCase()}"><div class="flex hover:bg-[#F5EDE4]/20 transition-colors"><div onclick="toggleContentDetail('${ct.id}')" class="w-16 sm:w-24 md:w-32 shrink-0 overflow-hidden rounded-l-xl flex items-center justify-center cursor-pointer" style="background:${tHex}18;height:90px">${file0?.url?`<img src="${file0.url}" alt="visuel" style="width:100%;height:90px;object-fit:cover;display:block" onerror="this.style.display='none'" />`:`<iconify-icon icon="${tIcon}" stroke-width="1.5" style="color:${tHex};font-size:2rem"></iconify-icon>`}</div><div onclick="toggleContentDetail('${ct.id}')" class="flex-1 p-2 sm:p-4 min-w-0 cursor-pointer"><div class="flex items-start justify-between gap-2 mb-1.5"><div class="flex flex-wrap items-center gap-2 min-w-0">${typeTag}<p class="font-semibold text-[#2C2416] text-sm truncate">${cleanT}</p></div><div class="flex items-center gap-1 shrink-0 ml-1" onclick="event.stopPropagation()"><a href="${file0?.url||'#'}" target="${file0?.url?'_blank':'_self'}" onclick="${file0?.url?'event.stopPropagation()':`event.preventDefault();event.stopPropagation();toggleContentDetail('${ct.id}')`}" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors"><iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon></a>${statusBadge(ct.status, ct.id)}<button onclick="toggleContentDetail('${ct.id}')" class="p-1 text-[#767A55] hover:text-[#2C2416] rounded-lg transition-colors"><iconify-icon id="chevron-${ct.id}" icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="transition-transform block"></iconify-icon></button></div></div>${shortDesc}<p class="text-xs text-[#767A55] mt-1.5">${schedDate}</p></div></div><div id="detail-${ct.id}" class="hidden border-t border-[#D6CCC0]/50 p-4">${fileBlock}${captionBlock}${feedbackBlock}<div class="flex gap-2 mt-3 flex-wrap"><button onclick="toggleEdit('${ct.id}')" class="px-4 py-2 border border-[#8B3E22] text-[#8B3E22] rounded-full text-xs font-medium hover:bg-[#8B3E22]/10 transition-colors">✏️ Modifier</button>${ct.status==='rejected'?`<button onclick="replyToRefused('${ct.id}','${clientId}')" class="px-4 py-2 border border-[#2C2416] text-[#2C2416] rounded-full text-xs font-medium hover:bg-[#EDE6DB] transition-colors">↩ Nouvelle version</button>`:''}<button onclick="deleteContent('${ct.id}','${file0?.url?file0.url.replace(/'/g,"\\'"):''}','${clientId}')" class="px-4 py-2 border border-red-300 text-red-500 rounded-full text-xs font-medium hover:bg-red-50 transition-colors">🗑 Supprimer</button></div>${editPanel}${replyPanel}</div></div>`;
       };
 
       // Pending + rejected directement visibles, historique en accordéon fermé
@@ -1523,8 +1549,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const file    = document.getElementById('reply-file-' + contentId).files?.[0];
       let fileUrl = '', fileName = '';
       if (file) {
-        const path = `${clientId}/${Date.now()}-${file.name}`;
-        const { data } = await sb.storage.from('content').upload(path, file);
+        const path = `${clientId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const { data, error: uploadErr } = await sb.storage.from('content').upload(path, file);
+        if (uploadErr) { alert('Erreur upload : ' + uploadErr.message); return; }
         if (data) { fileUrl = sb.storage.from('content').getPublicUrl(path).data.publicUrl; fileName = file.name; }
       }
       // Créer un nouvel item en réponse
@@ -1560,8 +1587,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const update = { title, description: desc, updated_at: new Date().toISOString() };
 
       if (file) {
-        const path = `${clientId}/${Date.now()}-${file.name}`;
-        const { data } = await sb.storage.from('content').upload(path, file);
+        const path = `${clientId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const { data, error: uploadErr } = await sb.storage.from('content').upload(path, file);
+        if (uploadErr) { alert('Erreur upload : ' + uploadErr.message); return; }
         if (data) {
           const url = sb.storage.from('content').getPublicUrl(path).data.publicUrl;
           update.files = [{ url, name: file.name }];
@@ -1822,8 +1850,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       let fileUrl = '';
       let fileName = '';
       if (file) {
-        const path = `${clientId}/${Date.now()}-${file.name}`;
-        const { data } = await sb.storage.from('content').upload(path, file);
+        const path = `${clientId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const { data, error: uploadErr } = await sb.storage.from('content').upload(path, file);
+        if (uploadErr) { alert('Erreur upload image : ' + uploadErr.message); return; }
         if (data) {
           fileUrl  = sb.storage.from('content').getPublicUrl(path).data.publicUrl;
           fileName = file.name;
