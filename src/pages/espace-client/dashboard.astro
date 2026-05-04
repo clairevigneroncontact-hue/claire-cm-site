@@ -164,58 +164,63 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
         </div>
 
-        <!-- Calendrier éditorial — pleine largeur en bas de l'onglet Accueil -->
-        <div id="card-calendar" class="bg-white rounded-2xl p-4 md:p-6 border border-[#D6CCC0] mt-5">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
-                <iconify-icon icon="solar:calendar-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
-              </div>
-              <div class="flex items-center gap-2">
-                <h2 class="text-base text-[#2C2416] font-medium">Calendrier éditorial</h2>
-                <iconify-icon icon="mdi:instagram" class="text-xl text-[#8B3E22]/60"></iconify-icon>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <button onclick="calNav(-1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon></button>
-              <div class="relative">
-                <button id="cal-month-label" onclick="calToggleMonthPicker(event)" class="text-sm font-semibold text-[#2C2416] min-w-[130px] text-center px-2 py-1 rounded-lg hover:bg-[#EDE6DB] cursor-pointer transition-colors"></button>
-                <div id="cal-month-picker" class="hidden absolute top-9 left-1/2 bg-white rounded-xl shadow-2xl border border-[#D6CCC0] p-3 z-50" style="min-width:216px;transform:translateX(-50%)">
-                  <div class="grid grid-cols-3 gap-1" id="cal-month-grid"></div>
+        <!-- Calendrier éditorial — split view : grille gauche, détail jour droite -->
+        <div id="card-calendar" class="bg-white rounded-2xl border border-[#D6CCC0] mt-5 overflow-hidden">
+          <div class="md:flex md:divide-x md:divide-[#D6CCC0]">
+            <!-- Grille calendrier (toujours visible sur desktop) -->
+            <div id="cal-grid-view" class="p-4 md:p-5 md:flex-1 md:min-w-0">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
+                    <iconify-icon icon="solar:calendar-linear" stroke-width="1.5" class="text-lg text-[#8B3E22]"></iconify-icon>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <h2 class="text-base text-[#2C2416] font-medium">Calendrier éditorial</h2>
+                    <iconify-icon icon="mdi:instagram" class="text-xl text-[#8B3E22]/60"></iconify-icon>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button onclick="calNav(-1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon></button>
+                  <div class="relative">
+                    <button id="cal-month-label" onclick="calToggleMonthPicker(event)" class="text-sm font-semibold text-[#2C2416] min-w-[130px] text-center px-2 py-1 rounded-lg hover:bg-[#EDE6DB] cursor-pointer transition-colors"></button>
+                    <div id="cal-month-picker" class="hidden absolute top-9 left-1/2 bg-white rounded-xl shadow-2xl border border-[#D6CCC0] p-3 z-50" style="min-width:216px;transform:translateX(-50%)">
+                      <div class="grid grid-cols-3 gap-1" id="cal-month-grid"></div>
+                    </div>
+                  </div>
+                  <button onclick="calNav(1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon></button>
+                  <button onclick="calOpenNoteForm()" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors ml-1" title="Ajouter une note"><iconify-icon icon="solar:pen-linear" stroke-width="1.5"></iconify-icon></button>
                 </div>
               </div>
-              <button onclick="calNav(1)" class="p-1.5 text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] rounded-lg transition-colors"><iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon></button>
-              <button onclick="calOpenNoteForm()" class="p-1.5 text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors ml-1" title="Ajouter une note"><iconify-icon icon="solar:pen-linear" stroke-width="1.5"></iconify-icon></button>
-            </div>
-          </div>
-          <!-- Vue grille + note -->
-          <div id="cal-grid-view">
-            <div id="cal-grid" class="overflow-x-auto"></div>
-            <div id="cal-note-modal" class="hidden mt-4 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30">
-              <p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Ajouter / modifier une note</p>
-              <input id="cal-note-date-picker" type="date" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white mb-2" />
-              <div class="relative mb-2">
-                <textarea spellcheck="true" id="cal-note-input" rows="2" placeholder="Votre note…" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none bg-white"></textarea>
-                <button data-emoji-btn type="button" onclick="toggleEmojiPicker(this,'cal-note-input')" class="absolute bottom-1.5 right-1.5 text-base p-1 rounded-lg hover:bg-[#EDE6DB] text-[#767A55] hover:text-[#2C2416] transition-colors" title="Emoji">😊</button>
-              </div>
-              <div class="flex gap-2">
-                <button onclick="saveCalNote()" class="px-4 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
-                <button onclick="document.getElementById('cal-note-modal').classList.add('hidden')" class="px-4 py-1.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs hover:bg-[#EDE6DB] transition-colors">Annuler</button>
+              <div id="cal-grid" class="overflow-x-auto"></div>
+              <div id="cal-note-modal" class="hidden mt-4 bg-[#F5EDE4] rounded-xl p-4 border border-[#8B3E22]/30">
+                <p class="text-xs text-[#767A55] uppercase tracking-widest mb-2">Ajouter / modifier une note</p>
+                <input id="cal-note-date-picker" type="date" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white mb-2" />
+                <div class="relative mb-2">
+                  <textarea spellcheck="true" id="cal-note-input" rows="2" placeholder="Votre note…" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none bg-white"></textarea>
+                  <button data-emoji-btn type="button" onclick="toggleEmojiPicker(this,'cal-note-input')" class="absolute bottom-1.5 right-1.5 text-base p-1 rounded-lg hover:bg-[#EDE6DB] text-[#767A55] hover:text-[#2C2416] transition-colors" title="Emoji">😊</button>
+                </div>
+                <div class="flex gap-2">
+                  <button onclick="saveCalNote()" class="px-4 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
+                  <button onclick="document.getElementById('cal-note-modal').classList.add('hidden')" class="px-4 py-1.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs hover:bg-[#EDE6DB] transition-colors">Annuler</button>
+                </div>
               </div>
             </div>
-          </div>
-          <!-- Vue jour plein format -->
-          <div id="cal-day-modal" class="hidden mt-2">
-            <div class="flex items-center justify-between mb-4">
-              <button onclick="closeDashCalFullDay()" class="inline-flex items-center gap-2 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors">
-                <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon> Retour
-              </button>
-              <button id="dash-next-day-btn" onclick="dashCalGoToNext()" class="hidden items-center gap-2 text-sm font-medium text-[#8B3E22] hover:text-[#6B2E1A] bg-[#8B3E22]/10 hover:bg-[#8B3E22]/20 px-3 py-1.5 rounded-lg transition-colors">
-                Suivant <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon>
-              </button>
+            <!-- Panneau détail du jour (latéral sur desktop) -->
+            <div id="cal-day-modal" class="hidden md:w-80 lg:w-96 overflow-y-auto" style="max-height:580px">
+              <div class="sticky top-0 bg-white z-10 px-4 py-3 border-b border-[#D6CCC0] flex items-center justify-between">
+                <button onclick="closeDashCalFullDay()" class="md:hidden inline-flex items-center gap-1.5 text-sm text-[#767A55] hover:text-[#8B3E22] transition-colors">
+                  <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5"></iconify-icon> Retour
+                </button>
+                <h4 id="cal-day-title" class="text-sm font-semibold text-[#2C2416]"></h4>
+                <div class="flex items-center gap-1">
+                  <button id="dash-next-day-btn" onclick="dashCalGoToNext()" class="hidden items-center gap-1 text-xs font-medium text-[#8B3E22] hover:bg-[#8B3E22]/10 px-2 py-1 rounded-lg transition-colors">
+                    Suivant <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon>
+                  </button>
+                  <button onclick="closeDashCalFullDay()" class="hidden md:flex w-7 h-7 items-center justify-center rounded-full text-[#767A55] hover:bg-[#EDE6DB] transition-colors text-base">×</button>
+                </div>
+              </div>
+              <div id="cal-day-content" class="p-4 space-y-4"></div>
             </div>
-            <h4 id="cal-day-title" class="text-xl font-medium text-[#2C2416] mb-5"></h4>
-            <div id="cal-day-content" class="space-y-4"></div>
           </div>
         </div>
       </div>
@@ -1597,26 +1602,43 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const tMatch = a.title.match(/^\[([A-Z\s\-]+)\]/i);
         const tType  = tMatch ? tMatch[1].toUpperCase() : '';
         const color  = FD_HEX[tType] || '#8B3E22';
-        const icon   = FD_ICON[tType] || 'solar:document-text-linear';
         const clean  = a.title.replace(/^\[[^\]]+\]\s*/,'');
         let files = []; try { files = Array.isArray(a.files) ? a.files : JSON.parse(a.files||'[]'); } catch(e){}
-        const isImgF = files[0]?.url && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(files[0].url);
         const heure  = a.scheduled_at ? new Date(a.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+        const safeFb = (a.feedback||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         html += `<div class="rounded-2xl border border-[#D6CCC0] overflow-hidden">
-          <!-- En-tête : type + heure -->
+          <!-- En-tête : type + heure + crayon -->
           <div class="flex items-center justify-between px-4 py-3 border-b border-[#D6CCC0]/50 bg-[#F5EDE4]/30">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <span style="background:${color}20;color:${color}" class="text-xs font-bold px-2.5 py-1 rounded-full">${tType||'—'}</span>
               ${_calNewItems.has(a.id) ? '<span class="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-semibold border border-amber-200">✦ Nouveau</span>' : ''}
             </div>
-            ${heure ? `<div class="flex items-center gap-1.5 text-sm font-semibold text-[#2C2416]"><iconify-icon icon="solar:clock-circle-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>${heure}</div>` : ''}
+            <div class="flex items-center gap-2 shrink-0">
+              ${heure ? `<div class="flex items-center gap-1 text-sm font-semibold text-[#2C2416]"><iconify-icon icon="solar:clock-circle-linear" stroke-width="1.5" class="text-[#8B3E22]"></iconify-icon>${heure}</div>` : ''}
+              <button onclick="toggleCalComment('${a.id}')" class="p-1.5 text-[#767A55] hover:text-[#8B3E22] hover:bg-[#8B3E22]/10 rounded-lg transition-colors" title="Commenter">
+                <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+              </button>
+            </div>
           </div>
           <!-- Corps -->
           <div class="flex">
-            ${files[0]?.url ? `<div class="w-28 sm:w-40 shrink-0 overflow-hidden" style="background:${color}10;min-height:130px"><img src="${files[0].url}" style="width:100%;height:100%;object-fit:cover;min-height:130px;display:block" onerror="this.style.display='none'" /></div>` : ''}
-            <div class="flex-1 p-4">
-              <p class="text-base font-semibold text-[#2C2416] mb-2">${clean}</p>
-              ${a.description ? `<div class="bg-[#F5EDE4] rounded-xl p-3 border border-[#D6CCC0] mt-2"><p class="text-xs text-[#767A55] uppercase tracking-widest mb-1">Légende</p><p class="text-sm text-[#2C2416]/80 leading-relaxed whitespace-pre-wrap">${a.description}</p></div>` : '<p class="text-xs text-[#2C2416]/30 italic mt-1">Aucune description</p>'}
+            ${files[0]?.url ? `<div class="w-24 sm:w-32 shrink-0 overflow-hidden" style="background:${color}10;min-height:120px"><img src="${files[0].url}" style="width:100%;height:100%;object-fit:cover;min-height:120px;display:block" onerror="this.style.display='none'" /></div>` : ''}
+            <div class="flex-1 p-3 min-w-0">
+              <p class="text-sm font-semibold text-[#2C2416] mb-1.5">${clean}</p>
+              ${a.description ? `<div class="bg-[#F5EDE4] rounded-xl p-2.5 border border-[#D6CCC0]"><p class="text-xs text-[#2C2416]/75 leading-relaxed whitespace-pre-wrap">${a.description}</p></div>` : ''}
+            </div>
+          </div>
+          <!-- Zone commentaire client -->
+          <div id="cal-comment-panel-${a.id}" class="hidden border-t border-[#D6CCC0]/50 px-4 py-3 bg-[#F5EDE4]/30">
+            ${safeFb ? `<p class="text-xs text-[#2C2416]/60 italic mb-2 leading-relaxed">"${safeFb}"</p>` : ''}
+            <div class="relative mb-2">
+              <textarea spellcheck="true" id="cal-comment-${a.id}" rows="2" placeholder="Votre commentaire…" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] resize-none bg-white">${safeFb}</textarea>
+              <button data-emoji-btn type="button" onclick="toggleEmojiPicker(this,'cal-comment-${a.id}')" class="absolute bottom-1.5 right-1.5 text-base p-1 rounded-lg hover:bg-[#EDE6DB] text-[#767A55]" title="Emoji">😊</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="saveCalComment('${a.id}')" class="px-3 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A]">Enregistrer</button>
+              <button onclick="document.getElementById('cal-comment-panel-${a.id}').classList.add('hidden')" class="px-3 py-1.5 border border-[#D6CCC0] text-[#2C2416]/60 rounded-xl text-xs hover:bg-[#EDE6DB]">Annuler</button>
+              <span id="cal-comment-saved-${a.id}" class="hidden text-xs text-green-600">✓ Enregistré</span>
             </div>
           </div>
         </div>`;
@@ -1633,14 +1655,31 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const nBtn = document.getElementById('dash-next-day-btn');
       if (nBtn) { nBtn.classList.toggle('hidden', !nextD); nBtn.classList.toggle('inline-flex', !!nextD); }
       document.getElementById('cal-note-modal').classList.add('hidden');
-      document.getElementById('cal-grid-view').classList.add('hidden');
+      // Split view : sur desktop garder la grille visible
+      const _isDesktop = window.matchMedia('(min-width:768px)').matches;
+      if (!_isDesktop) document.getElementById('cal-grid-view').classList.add('hidden');
       document.getElementById('cal-day-modal').classList.remove('hidden');
-      document.getElementById('cal-day-modal').scrollIntoView({ behavior:'smooth', block:'start' });
+      if (!_isDesktop) document.getElementById('cal-day-modal').scrollIntoView({ behavior:'smooth', block:'start' });
     };
 
     window.closeDashCalFullDay = () => {
       document.getElementById('cal-day-modal').classList.add('hidden');
       document.getElementById('cal-grid-view').classList.remove('hidden');
+    };
+
+    window.toggleCalComment = (id) => {
+      document.getElementById('cal-comment-panel-' + id)?.classList.toggle('hidden');
+    };
+
+    window.saveCalComment = async (id) => {
+      const text = (document.getElementById('cal-comment-' + id)?.value || '').trim();
+      const sb2  = await getSB();
+      await sb2.from('content_items').update({ feedback: text, updated_at: new Date().toISOString() }).eq('id', id);
+      // Mise à jour locale
+      const item = calApproved.find(a => a.id === id);
+      if (item) item.feedback = text;
+      const savedEl = document.getElementById('cal-comment-saved-' + id);
+      if (savedEl) { savedEl.classList.remove('hidden'); setTimeout(() => savedEl.classList.add('hidden'), 2500); }
     };
 
     window.calClickDay = (dateStr, day) => {
