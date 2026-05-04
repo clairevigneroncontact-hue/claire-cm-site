@@ -4,7 +4,7 @@ export async function onRequestGet({ request, env }) {
 
   const APP_ID      = env.META_APP_ID || '1651793712524049';
   const REDIRECT    = 'https://claire-cm-site.pages.dev/api/instagram-callback';
-  const SCOPE       = 'instagram_business_basic,instagram_business_content_publish';
+  const SCOPE       = 'instagram_business_basic';
   const from        = url.searchParams.get('from') || 'admin';
   const state       = btoa(JSON.stringify({ clientId, from }));
 
