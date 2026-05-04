@@ -62,8 +62,8 @@ export async function onRequestGet({ request, env }) {
 
 async function _save(env, clientId, token, igAccountId, username) {
   if (!clientId || !env.SUPABASE_URL || !env.SUPABASE_SERVICE_KEY) return;
-  const key = String(env.SUPABASE_SERVICE_KEY).trim();
-  const url = String(env.SUPABASE_URL).trim();
+  const key = String(env.SUPABASE_SERVICE_KEY).replace(/[^\x21-\x7E]/g, '');
+  const url = String(env.SUPABASE_URL).replace(/\s/g, '');
   const expiresAt = new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString();
   await fetch(`${url}/rest/v1/profiles?id=eq.${clientId}`, {
     method: 'PATCH',
