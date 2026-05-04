@@ -30,7 +30,7 @@ export async function onRequestGet({ request, env }) {
 
     const [igProfile, igMedia] = await Promise.all([
       fetch(`https://graph.instagram.com/${igId}?fields=id,username,followers_count,media_count,biography,website,profile_picture_url&access_token=${token}`).then(r => r.json()),
-      fetch(`https://graph.instagram.com/${igId}/media?fields=id,caption,like_count,comments_count,timestamp,media_type,permalink,thumbnail_url,media_url&limit=9&access_token=${token}`).then(r => r.json()),
+      fetch(`https://graph.instagram.com/${igId}/media?fields=id,caption,like_count,comments_count,shares_count,timestamp,media_type,permalink,thumbnail_url,media_url&limit=9&access_token=${token}`).then(r => r.json()),
     ]);
 
     if (igProfile.error) return resp({ error: 'token_invalid', detail: igProfile.error }, 401);

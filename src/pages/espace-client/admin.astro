@@ -1820,8 +1820,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 const img = m.media_type === 'VIDEO' ? (m.thumbnail_url || '') : (m.media_url || '');
                 return `<a href="${m.permalink || '#'}" target="_blank" class="relative aspect-square overflow-hidden bg-[#EDE6DB] group block">
                   ${img ? `<img src="${img}" class="w-full h-full object-cover" loading="lazy" onerror="this.style.display='none'" />` : ''}
-                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                    <div class="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold">♥ ${m.like_count || 0} &nbsp; 💬 ${m.comments_count || 0}</div>
+                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-colors flex items-center justify-center">
+                    <div class="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold text-center leading-relaxed">
+                      ❤️ ${m.like_count || 0} &nbsp; 💬 ${m.comments_count || 0}${m.shares_count ? ` &nbsp; 🔁 ${m.shares_count}` : ''}
+                    </div>
                   </div>
                 </a>`;
               }).join('')}
