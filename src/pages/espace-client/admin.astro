@@ -961,7 +961,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
 
       const now = Date.now();
-      el.innerHTML = list.map(c => {
+      // Trier : actifs en premier, puis nouveaux, puis par date
+      const sorted = [...list].sort((a, b) => {
+        const aAct = !!_recentActivity[a.id], bAct = !!_recentActivity[b.id];
+        if (aAct !== bAct) return aAct ? -1 : 1;
+        const aNew = (now - new Date(a.created_at).getTime()) < 24*3600*1000;
+        const bNew = (now - new Date(b.created_at).getTime()) < 24*3600*1000;
+        if (aNew !== bNew) return aNew ? -1 : 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+      el.innerHTML = sorted.map(c => {
         const createdAt = new Date(c.created_at);
         const isNew        = (now - createdAt.getTime()) < 24 * 3600 * 1000;
         const hasRecentAct = !!_recentActivity[c.id];
@@ -1184,20 +1193,30 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 <p class="text-xs text-[#767A55] mb-2">Créneaux enregistrés</p>
                 <div id="pref-times-list" class="flex flex-wrap gap-1.5">
                   ${(() => {
-                    const raw = c?.posting_prefs;
-                    let slots = raw?.slots || [];
-                    if (!slots.length && raw?.days?.length && raw?.times?.length)
-                      raw.days.forEach(d => raw.times.forEach(t => slots.push({day:d,time:t})));
-                    const DAYS = ['','Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
-                    return slots.length
-                      ? slots.map((s,i) => `<span class="flex items-center gap-1 bg-[#EDE6DB] text-[#2C2416] text-xs px-2.5 py-1 rounded-full font-medium"><iconify-icon icon="solar:clock-linear" stroke-width="1.5" class="text-sm shrink-0"></iconify-icon>${DAYS[s.day]} ${s.time}<button type="button" onclick="removePrefSlot(${i})" class="ml-1 text-[#767A55] hover:text-red-500 font-bold leading-none">×</button></span>`).join('')
-                      : '<p class="text-xs text-[#2C2416]/30 italic">Aucun créneau — ajoutes-en ci-dessous</p>';
+                    const raw = c?.posting_prefs || {};
+                    const TYPES = ['post','story','reel','carrousel'];
+                    const DAYS  = ['','Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+                    // Rétrocompatibilité : ancien format plat { slots }
+                    let typed = {};
+                    if (raw.slots?.length) { typed = { post: raw.slots }; }
+                    else { TYPES.forEach(t => { typed[t] = raw[t] || []; }); }
+                    const hasAny = TYPES.some(t => typed[t]?.length);
+                    if (!hasAny) return '<p class="text-xs text-[#2C2416]/30 italic">Aucun créneau — ajoutes-en ci-dessous</p>';
+                    return TYPES.filter(t => typed[t]?.length).map(t =>
+                      `<div class="mb-2"><p class="text-[10px] font-bold text-[#8B3E22] uppercase mb-1">${t}</p><div class="flex flex-wrap gap-1">${typed[t].map((s,i)=>`<span class="flex items-center gap-1 bg-[#EDE6DB] text-[#2C2416] text-xs px-2 py-0.5 rounded-full font-medium">${DAYS[s.day]} ${s.time}<button type="button" onclick="removePrefSlot('${t}',${i})" class="ml-1 text-[#767A55] hover:text-red-500 font-bold leading-none">×</button></span>`).join('')}</div></div>`
+                    ).join('');
                   })()}
                 </div>
               </div>
               <!-- Ajouter un créneau -->
               <div class="bg-[#F5EDE4] rounded-xl p-3 border border-[#D6CCC0]">
                 <p class="text-xs text-[#767A55] mb-2 font-medium">Ajouter un créneau</p>
+                <p class="text-[10px] text-[#767A55] mb-1.5">Type de contenu</p>
+                <div class="flex gap-1 flex-wrap mb-3">
+                  ${['post','story','reel','carrousel'].map(t =>
+                    `<button type="button" onclick="selectPrefType('${t}')" data-ptype="${t}" class="pref-type-btn px-2.5 h-7 rounded-lg text-xs font-bold border border-[#D6CCC0] text-[#2C2416]/50 hover:border-[#8B3E22] transition-colors capitalize">${t}</button>`
+                  ).join('')}
+                </div>
                 <p class="text-[10px] text-[#767A55] mb-1.5">Jours (plusieurs possibles)</p>
                 <div class="flex gap-1 flex-wrap mb-3">
                   ${['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].map((label, idx) =>
@@ -1218,7 +1237,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   </select>
                   <button type="button" onclick="addPrefSlot()" class="px-3 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] shrink-0">+ Ajouter</button>
                 </div>
-                <p id="pref-add-hint" class="text-[10px] text-[#767A55] italic">Sélectionne un ou plusieurs jours + heure</p>
+                <p id="pref-add-hint" class="text-[10px] text-[#767A55] italic">Sélectionne un type, des jours et une heure</p>
               </div>
               <div id="pref-save-msg" class="hidden text-xs rounded-xl px-3 py-1.5"></div>
               <button onclick="savePostingPrefs('${clientId}')" class="px-4 py-1.5 bg-[#8B3E22] text-white rounded-xl text-xs font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer les créneaux</button>
@@ -1573,13 +1592,24 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
       `;
 
-      // Initialiser les créneaux — rétrocompatibilité ancien format { days, times }
+      // Initialiser les créneaux par type — rétrocompatibilité anciens formats
       const _rawPrefs = c?.posting_prefs || {};
-      let _initSlots = _rawPrefs.slots ? [..._rawPrefs.slots] : [];
-      if (!_initSlots.length && _rawPrefs.days?.length && _rawPrefs.times?.length)
-        _rawPrefs.days.forEach(d => _rawPrefs.times.forEach(t => _initSlots.push({ day: d, time: t })));
-      _currentPostingPrefs = { slots: _initSlots };
+      if (_rawPrefs.post !== undefined || _rawPrefs.story !== undefined) {
+        // Nouveau format par type
+        _currentPostingPrefs = Object.fromEntries(_PREF_TYPES.map(t => [t, _rawPrefs[t]||[]]));
+      } else if (_rawPrefs.slots?.length) {
+        // Ancien format plat → tout en post
+        _currentPostingPrefs = Object.fromEntries(_PREF_TYPES.map(t => [t, t==='post'?[..._rawPrefs.slots]:[]]));
+      } else if (_rawPrefs.days?.length && _rawPrefs.times?.length) {
+        // Très ancien format → tout en post
+        const slots = [];
+        _rawPrefs.days.forEach(d => _rawPrefs.times.forEach(t => slots.push({day:d,time:t})));
+        _currentPostingPrefs = Object.fromEntries(_PREF_TYPES.map(t => [t, t==='post'?slots:[]]));
+      } else {
+        _currentPostingPrefs = Object.fromEntries(_PREF_TYPES.map(t => [t, []]));
+      }
       _prefSelectedDays = new Set();
+      _prefSelectedType = null;
       renderPrefChips();
     }
 
@@ -1768,6 +1798,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         btn.classList.toggle('border-[#D6CCC0]', !active);
         btn.classList.toggle('text-[#2C2416]/60',!active);
       });
+      // Mettre à jour les chips créneaux favoris selon le type choisi
+      renderPrefChips();
     };
 
     window.previewContentFile = (input) => {
@@ -2694,10 +2726,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
   });
 
-  // ─── Créneaux de publication ──────────────────────────────────────────────
-  let _currentPostingPrefs = { slots: [] };
-  let _prefSelectedDays = new Set(); // multi-jours
+  // ─── Créneaux de publication (par type de contenu) ───────────────────────
+  const _PREF_TYPES = ['post','story','reel','carrousel'];
+  let _currentPostingPrefs = { post:[], story:[], reel:[], carrousel:[] };
+  let _prefSelectedDays = new Set();
+  let _prefSelectedType = null;
   const _DAYS = ['','Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+
+  // Sélectionner le type de contenu
+  window.selectPrefType = (type) => {
+    _prefSelectedType = type;
+    document.querySelectorAll('.pref-type-btn').forEach(b => {
+      const active = b.dataset.ptype === type;
+      b.classList.toggle('bg-[#8B3E22]',    active);
+      b.classList.toggle('border-[#8B3E22]', active);
+      b.classList.toggle('text-white',        active);
+      b.classList.toggle('border-[#D6CCC0]', !active);
+      b.classList.toggle('text-[#2C2416]/50',!active);
+    });
+    const hint = document.getElementById('pref-add-hint');
+    if (hint) hint.textContent = `Type "${type}" sélectionné — choisis des jours et une heure`;
+  };
 
   // Basculer un jour (plusieurs possibles simultanément)
   window.togglePrefDayMulti = (day) => {
@@ -2717,26 +2766,29 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       : 'Sélectionne un ou plusieurs jours + heure';
   };
 
-  // Ajouter une paire jour+heure pour chaque jour sélectionné
+  // Ajouter une paire type+jour+heure
   window.addPrefSlot = () => {
     const hint = document.getElementById('pref-add-hint');
-    const warn = (msg) => { if(hint) { hint.textContent = '⚠️ ' + msg; hint.classList.add('text-amber-600'); setTimeout(()=>{ hint.classList.remove('text-amber-600'); hint.textContent = _prefSelectedDays.size ? `${[..._prefSelectedDays].sort().map(d=>_DAYS[d]).join(', ')} sélectionné(s)` : 'Sélectionne un ou plusieurs jours + heure'; }, 2000); } };
+    const warn = (msg) => { if(hint) { hint.textContent = '⚠️ ' + msg; hint.classList.add('text-amber-600'); setTimeout(()=>{ hint.classList.remove('text-amber-600'); hint.textContent = 'Sélectionne un type, des jours et une heure'; }, 2000); } };
+    if (!_prefSelectedType) { warn('Sélectionne d\'abord un type (Post, Story…)'); return; }
     if (!_prefSelectedDays.size) { warn('Sélectionne au moins un jour'); return; }
     const h = document.getElementById('pref-hour')?.value;
     const m = document.getElementById('pref-min')?.value;
     if (!h || !m) { warn('Choisis une heure'); return; }
     const time = `${h}:${m}`;
+    if (!_currentPostingPrefs[_prefSelectedType]) _currentPostingPrefs[_prefSelectedType] = [];
     let added = 0;
     _prefSelectedDays.forEach(day => {
-      if (!(_currentPostingPrefs.slots||[]).some(s => s.day === day && s.time === time)) {
-        _currentPostingPrefs.slots.push({ day, time });
+      if (!_currentPostingPrefs[_prefSelectedType].some(s => s.day === day && s.time === time)) {
+        _currentPostingPrefs[_prefSelectedType].push({ day, time });
         added++;
       }
     });
-    _currentPostingPrefs.slots.sort((a,b) => a.day - b.day || a.time.localeCompare(b.time));
-    // Reset sélection jours
+    _currentPostingPrefs[_prefSelectedType].sort((a,b) => a.day - b.day || a.time.localeCompare(b.time));
+    // Reset
     _prefSelectedDays = new Set();
-    document.querySelectorAll('.pref-day-btn').forEach(b => {
+    _prefSelectedType = null;
+    document.querySelectorAll('.pref-day-btn,.pref-type-btn').forEach(b => {
       b.classList.remove('bg-[#8B3E22]','border-[#8B3E22]','text-white');
       b.classList.add('border-[#D6CCC0]','text-[#2C2416]/50');
     });
@@ -2746,30 +2798,32 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     renderPrefSlotsList();
   };
 
-  // Supprimer un créneau et réinitialiser _prefSelectedDays pour éviter un état incohérent
-  window.removePrefSlot = (idx) => {
-    _currentPostingPrefs.slots.splice(idx, 1);
+  // Supprimer un créneau par type + index
+  window.removePrefSlot = (type, idx) => {
+    if (_currentPostingPrefs[type]) _currentPostingPrefs[type].splice(idx, 1);
     _prefSelectedDays = new Set();
     renderPrefSlotsList();
   };
 
-  // Mise à jour de la liste des créneaux enregistrés
+  // Mise à jour de la liste des créneaux enregistrés (par type)
   function renderPrefSlotsList() {
     const el = document.getElementById('pref-times-list');
     if (!el) return;
-    const slots = _currentPostingPrefs.slots || [];
-    el.innerHTML = slots.length
-      ? slots.map((s,i) => `<span class="flex items-center gap-1 bg-[#EDE6DB] text-[#2C2416] text-xs px-2.5 py-1 rounded-full font-medium"><iconify-icon icon="solar:clock-linear" stroke-width="1.5" class="text-sm shrink-0"></iconify-icon>${_DAYS[s.day]} ${s.time}<button type="button" onclick="removePrefSlot(${i})" class="ml-1 text-[#767A55] hover:text-red-500 font-bold leading-none">×</button></span>`).join('')
-      : '<p class="text-xs text-[#2C2416]/30 italic">Aucun créneau — ajoutes-en ci-dessous</p>';
+    const hasAny = _PREF_TYPES.some(t => (_currentPostingPrefs[t]||[]).length);
+    if (!hasAny) { el.innerHTML = '<p class="text-xs text-[#2C2416]/30 italic">Aucun créneau — ajoutes-en ci-dessous</p>'; renderPrefChips(); return; }
+    el.innerHTML = _PREF_TYPES.filter(t => (_currentPostingPrefs[t]||[]).length).map(t =>
+      `<div class="mb-2"><p class="text-[10px] font-bold text-[#8B3E22] uppercase mb-1">${t}</p><div class="flex flex-wrap gap-1">${_currentPostingPrefs[t].map((s,i)=>`<span class="flex items-center gap-1 bg-[#EDE6DB] text-[#2C2416] text-xs px-2 py-0.5 rounded-full font-medium">${_DAYS[s.day]} ${s.time}<button type="button" onclick="removePrefSlot('${t}',${i})" class="ml-1 text-[#767A55] hover:text-red-500 font-bold leading-none">×</button></span>`).join('')}</div></div>`
+    ).join('');
     renderPrefChips();
   }
 
-  // Chips dans le formulaire d'envoi de contenu (sans emoji pour rester compact)
+  // Chips dans le formulaire — filtrées par type de contenu actuellement sélectionné
   function renderPrefChips() {
     const slotsDiv = document.getElementById('ct-prefs-slots');
     const chipsDiv = document.getElementById('ct-prefs-chips');
     if (!slotsDiv || !chipsDiv) return;
-    const slots = _currentPostingPrefs.slots || [];
+    const currentType = document.getElementById('ct-type')?.value || 'post';
+    const slots = (_currentPostingPrefs[currentType] || []);
     if (!slots.length) { slotsDiv.classList.add('hidden'); return; }
     chipsDiv.innerHTML = slots.map(s =>
       `<button type="button" onclick="applyPrefSlot(${s.day},'${s.time}')" class="bg-[#EDE6DB] hover:bg-[#8B3E22] hover:text-white text-[#2C2416] text-xs px-2.5 py-1.5 rounded-full transition-colors font-medium">${_DAYS[s.day]} ${s.time}</button>`
@@ -2799,16 +2853,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   window.savePostingPrefs = async (clientId) => {
     const sb  = await getSB();
     const msg = document.getElementById('pref-save-msg');
-    const toSave = { slots: (_currentPostingPrefs.slots || []) };
+    const toSave = Object.fromEntries(_PREF_TYPES.map(t => [t, _currentPostingPrefs[t]||[]]));
     const { error } = await sb.from('profiles').update({ posting_prefs: toSave }).eq('id', clientId);
     if (error) console.error('savePostingPrefs:', error);
     if (msg) {
       const isColMissing = error?.message?.includes('posting_prefs') || error?.code === '42703';
       msg.className = `text-xs rounded-xl px-3 py-1.5 ${error ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`;
+      const total = _PREF_TYPES.reduce((s,t) => s + (toSave[t]||[]).length, 0);
       msg.textContent = isColMissing
         ? '⚠️ Colonne manquante en DB — exécute le SQL dans Supabase'
         : error ? `Erreur : ${error.message || 'inconnue'}`
-        : `${toSave.slots.length} créneau(x) enregistré(s) ✓`;
+        : `${total} créneau(x) enregistré(s) ✓`;
       msg.classList.remove('hidden');
       setTimeout(() => msg.classList.add('hidden'), 5000);
     }
