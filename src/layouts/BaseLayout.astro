@@ -83,8 +83,11 @@ const {
       });
     </script>
     <script>
+      // Désinstaller tout service worker existant (cleanup)
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          regs.forEach(r => r.unregister());
+        });
       }
     </script>
   </body>
