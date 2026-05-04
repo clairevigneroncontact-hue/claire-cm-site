@@ -1135,8 +1135,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         history.replaceState({}, '', window.location.pathname);
         if (_cid) { await window.openClient(_cid); setTimeout(() => window.switchClientTab('stats'), 400); }
       } else if (_igP.get('ig_error')) {
+        const _igErr = decodeURIComponent(_igP.get('ig_error'));
         history.replaceState({}, '', window.location.pathname);
-        showAdminToast('⚠️ Connexion Instagram échouée — réessaie depuis l\'onglet Stats.');
+        showAdminToast('⚠️ IG erreur : ' + _igErr);
       }
     })();
     async function _openClientInner(clientId) {
