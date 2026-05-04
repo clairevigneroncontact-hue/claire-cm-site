@@ -13,8 +13,8 @@ export async function onRequestGet({ request, env }) {
     let clientId = '', from = 'admin';
     try { const s = JSON.parse(atob(decodeURIComponent(state || ''))); clientId = s.clientId; from = s.from || 'admin'; } catch {}
 
-    const APP_ID     = env.META_APP_ID || '1651793712524049';
-    const APP_SECRET = env.META_APP_SECRET || '';
+    const APP_ID     = env.META_IG_APP_ID || '2342204119523490';
+    const APP_SECRET = env.META_IG_APP_SECRET || env.META_APP_SECRET || '';
     const REDIRECT   = 'https://claire-cm-site.pages.dev/api/instagram-callback';
 
     // Échange code → token court Instagram
