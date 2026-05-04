@@ -1278,13 +1278,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   <option value="mensuel" ${c?.offer==='mensuel'?'selected':''}>Accompagnement Mensuel</option>
                 </select></div>
             </div>
-            ${igCred?.password ? `<div class="mb-3"><label class="text-xs text-[#767A55] uppercase tracking-widest block mb-1">Mot de passe Instagram</label>
-              <div class="flex items-center gap-2">
-                <input id="ci-ig-pwd-display" type="password" value="${igCred.password.replace(/"/g,'&quot;')}" readonly class="flex-1 px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm bg-[#F5EDE4]/50" />
-                <button onclick="document.getElementById('ci-ig-pwd-display').type=document.getElementById('ci-ig-pwd-display').type==='password'?'text':'password'" class="p-2 border border-[#D6CCC0] rounded-xl text-[#767A55] hover:text-[#2C2416] hover:bg-[#EDE6DB] transition-colors">
-                  <iconify-icon icon="solar:eye-linear" stroke-width="1.5" class="text-base"></iconify-icon>
-                </button>
-              </div></div>` : ''}
             <div id="ci-msg" class="hidden text-sm rounded-xl px-4 py-3 mb-3"></div>
             <button onclick="saveClientInfo('${clientId}')" class="px-5 py-2 bg-[#8B3E22] text-white rounded-xl text-sm font-medium hover:bg-[#6B2E1A] transition-colors">Enregistrer</button>
           </div>
