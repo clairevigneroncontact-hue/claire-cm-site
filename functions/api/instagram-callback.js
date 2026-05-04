@@ -18,10 +18,12 @@ export async function onRequestGet({ request, env }) {
     const REDIRECT   = 'https://claire-cm-site.pages.dev/api/instagram-callback';
 
     // Échange code → token court Instagram
+    // Note: redirect_uri doit être non-encodé pour correspondre à l'URL d'autorisation
+    const t1Body = `client_id=${APP_ID}&client_secret=${APP_SECRET}&grant_type=authorization_code&redirect_uri=${REDIRECT}&code=${code}`;
     const t1Res  = await fetch('https://api.instagram.com/oauth/access_token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ client_id: APP_ID, client_secret: APP_SECRET, grant_type: 'authorization_code', redirect_uri: REDIRECT, code }),
+      body: t1Body,
     });
     const t1Data = await t1Res.json();
     if (!t1Data.access_token) return Response.redirect(`${ADMIN_URL}?ig_error=${encodeURIComponent('token_failed: ' + JSON.stringify(t1Data))}`, 302);
