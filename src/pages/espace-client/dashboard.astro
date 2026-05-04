@@ -123,6 +123,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <iconify-icon icon="solar:user-linear" stroke-width="1.5" class="text-base shrink-0"></iconify-icon>
           <span>Infos</span>
         </button>
+        <button id="tab-btn-stats" onclick="switchTab('stats')" class="text-[#2C2416]/50 rounded-lg py-2.5 px-3 text-sm font-medium hover:text-[#2C2416] whitespace-nowrap flex-1 flex items-center justify-center gap-1.5">
+          <iconify-icon icon="mdi:instagram" class="text-base shrink-0"></iconify-icon>
+          <span>Stats</span>
+        </button>
       </div>
 
       <!-- Onglet Accueil -->
@@ -315,6 +319,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       </div>
 
       <!-- Onglet Mes informations -->
+      <!-- Onglet Stats Instagram -->
+      <div id="tab-stats-panel" class="hidden">
+        <div id="client-ig-stats-container">
+          <div class="text-center py-8">
+            <div class="w-6 h-6 border-2 border-[#8B3E22] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <p class="text-sm text-[#767A55]">Chargement…</p>
+          </div>
+        </div>
+      </div>
+
       <div id="tab-infos-panel" class="hidden">
         <div id="card-infos" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] max-w-xl">
           <div class="flex items-center gap-3 mb-5">
@@ -442,7 +456,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
   // ─── Navigation par onglets ──────────────────────────────────────────────
   window.switchTab = (tab) => {
-    ['home','docs','content','infos'].forEach(t => {
+    ['home','docs','content','infos','stats'].forEach(t => {
       document.getElementById('tab-' + t + '-panel')?.classList.toggle('hidden', t !== tab);
       const btn = document.getElementById('tab-btn-' + t);
       if (btn) {
@@ -452,6 +466,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         btn.classList.toggle('text-[#2C2416]/50', t !== tab);
       }
     });
+    if (tab === 'stats') loadClientIgStats();
   };
 
   window.switchDocsTab = (sub) => {
@@ -611,6 +626,94 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     const uid = session.user.id;
     document.getElementById('logout-btn').onclick = async () => { await sb.auth.signOut(); window.location.href = '/espace-client'; };
+
+    // Retour OAuth Instagram
+    const _igQ = new URLSearchParams(window.location.search);
+    if (_igQ.get('ig_connected') === '1') {
+      history.replaceState({}, '', window.location.pathname);
+      setTimeout(() => window.switchTab('stats'), 300);
+    }
+
+    window.loadClientIgStats = async () => {
+      const container = document.getElementById('client-ig-stats-container');
+      if (!container) return;
+      container.innerHTML = '<div class="text-center py-8"><div class="w-6 h-6 border-2 border-[#8B3E22] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div><p class="text-sm text-[#767A55]">Chargement…</p></div>';
+      try {
+        const res  = await fetch(`/api/instagram-stats?clientId=${uid}`);
+        const data = await res.json();
+        if (data.error === 'no_token' || data.error === 'token_invalid' || data.error === 'clientId requis') {
+          container.innerHTML = `<div class="bg-white rounded-2xl p-8 border border-[#D6CCC0] text-center max-w-sm mx-auto">
+            <iconify-icon icon="mdi:instagram" class="text-5xl text-[#8B3E22]/30 mb-4 block"></iconify-icon>
+            <h3 class="text-sm font-medium text-[#2C2416] mb-2">Connectez votre compte Instagram</h3>
+            <p class="text-xs text-[#767A55] mb-6">Reliez votre compte Instagram Pro pour accéder à vos statistiques directement ici.</p>
+            <a href="/api/instagram-auth?clientId=${uid}&from=dashboard" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
+              <iconify-icon icon="mdi:instagram" class="text-lg"></iconify-icon>
+              Connecter Instagram
+            </a>
+          </div>`;
+          return;
+        }
+        const prof  = data.profile || {};
+        const media = data.media   || [];
+        const totalEng  = media.reduce((s, m) => s + (m.like_count || 0) + (m.comments_count || 0), 0);
+        const avgEngage = (media.length && prof.followers_count)
+          ? ((totalEng / media.length) / prof.followers_count * 100).toFixed(2)
+          : '—';
+        container.innerHTML = `
+          <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0] mb-4">
+            <div class="flex items-center gap-4 mb-4">
+              ${prof.profile_picture_url
+                ? `<img src="${prof.profile_picture_url}" class="w-14 h-14 rounded-full object-cover border-2 border-[#D6CCC0]" />`
+                : `<div class="w-14 h-14 rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] flex items-center justify-center"><iconify-icon icon="mdi:instagram" class="text-2xl text-white"></iconify-icon></div>`}
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-[#2C2416]">@${prof.username || '—'}</p>
+                ${prof.biography ? `<p class="text-xs text-[#767A55] mt-0.5 line-clamp-2">${prof.biography}</p>` : ''}
+              </div>
+              <a href="/api/instagram-auth?clientId=${uid}&from=dashboard" class="shrink-0 text-xs px-3 py-1.5 border border-[#D6CCC0] text-[#767A55] rounded-full hover:border-[#8B3E22] hover:text-[#8B3E22] transition-colors">↺ Reconnecter</a>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="text-center bg-[#F5EDE4] rounded-xl p-3">
+                <p class="text-xl font-bold text-[#2C2416]">${(prof.followers_count || 0).toLocaleString('fr-FR')}</p>
+                <p class="text-[10px] text-[#767A55] uppercase tracking-widest mt-0.5">Abonnés</p>
+              </div>
+              <div class="text-center bg-[#F5EDE4] rounded-xl p-3">
+                <p class="text-xl font-bold text-[#2C2416]">${(prof.media_count || 0).toLocaleString('fr-FR')}</p>
+                <p class="text-[10px] text-[#767A55] uppercase tracking-widest mt-0.5">Publications</p>
+              </div>
+              <div class="text-center bg-[#F5EDE4] rounded-xl p-3">
+                <p class="text-xl font-bold text-[#2C2416]">${avgEngage}%</p>
+                <p class="text-[10px] text-[#767A55] uppercase tracking-widest mt-0.5">Engagement</p>
+              </div>
+            </div>
+          </div>
+          ${media.length ? `<div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
+            <h3 class="text-sm font-medium text-[#2C2416] mb-3">9 dernières publications</h3>
+            <div class="grid grid-cols-3 gap-2">
+              ${media.map(m => {
+                const img     = m.media_type === 'VIDEO' ? (m.thumbnail_url || '') : (m.media_url || '');
+                const typeIco = m.media_type === 'VIDEO' ? '🎬' : m.media_type === 'CAROUSEL_ALBUM' ? '🖼️' : '📸';
+                return `<a href="${m.permalink || '#'}" target="_blank" class="relative aspect-square rounded-xl overflow-hidden bg-[#EDE6DB] group block">
+                  ${img ? `<img src="${img}" class="w-full h-full object-cover" loading="lazy" onerror="this.style.display='none'" />` : ''}
+                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-end p-1.5">
+                    <div class="opacity-0 group-hover:opacity-100 transition-opacity text-white text-[10px] font-medium">❤️ ${m.like_count || 0} &nbsp;💬 ${m.comments_count || 0}</div>
+                  </div>
+                  <span class="absolute top-1 right-1 text-xs drop-shadow">${typeIco}</span>
+                </a>`;
+              }).join('')}
+            </div>
+          </div>` : ''}`;
+      } catch {
+        container.innerHTML = `<div class="bg-white rounded-2xl p-8 border border-[#D6CCC0] text-center max-w-sm mx-auto">
+          <iconify-icon icon="mdi:instagram" class="text-5xl text-[#8B3E22]/30 mb-4 block"></iconify-icon>
+          <h3 class="text-sm font-medium text-[#2C2416] mb-2">Connectez votre compte Instagram</h3>
+          <p class="text-xs text-[#767A55] mb-6">Reliez votre compte Instagram Pro pour accéder à vos statistiques.</p>
+          <a href="/api/instagram-auth?clientId=${uid}&from=dashboard" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
+            <iconify-icon icon="mdi:instagram" class="text-lg"></iconify-icon>
+            Connecter Instagram
+          </a>
+        </div>`;
+      }
+    };
 
     // Profil
     const { data: p } = await sb.from('profiles').select('*').eq('id', uid).single();

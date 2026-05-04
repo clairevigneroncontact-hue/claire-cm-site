@@ -7,8 +7,8 @@ export async function onRequestGet({ request, env }) {
 
   if (error || !code) return Response.redirect(`${ADMIN_URL}?ig_error=access_denied`, 302);
 
-  let clientId = '';
-  try { clientId = JSON.parse(atob(decodeURIComponent(state || ''))).clientId; } catch {}
+  let clientId = '', from = 'admin';
+  try { const s = JSON.parse(atob(decodeURIComponent(state || ''))); clientId = s.clientId; from = s.from || 'admin'; } catch {}
 
   const APP_ID      = env.META_APP_ID || '1651793712524049';
   const APP_SECRET  = env.META_APP_SECRET;
@@ -47,5 +47,11 @@ export async function onRequestGet({ request, env }) {
     });
   }
 
-  return Response.redirect(`${ADMIN_URL}?ig_connected=1&open_client=${clientId}`, 302);
+  const redirectBase = from === 'dashboard'
+    ? 'https://claire-cm-site.pages.dev/espace-client/dashboard'
+    : ADMIN_URL;
+  const redirectSuffix = from === 'dashboard'
+    ? '?ig_connected=1'
+    : `?ig_connected=1&open_client=${clientId}`;
+  return Response.redirect(`${redirectBase}${redirectSuffix}`, 302);
 }

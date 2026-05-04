@@ -5,7 +5,8 @@ export async function onRequestGet({ request, env }) {
   const APP_ID      = env.META_APP_ID || '1651793712524049';
   const REDIRECT    = 'https://claire-cm-site.pages.dev/api/instagram-callback';
   const SCOPE       = 'instagram_business_basic,instagram_business_content_publish';
-  const state       = btoa(JSON.stringify({ clientId }));
+  const from        = url.searchParams.get('from') || 'admin';
+  const state       = btoa(JSON.stringify({ clientId, from }));
 
   const authUrl = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=${APP_ID}&redirect_uri=${encodeURIComponent(REDIRECT)}&response_type=code&scope=${SCOPE}&state=${encodeURIComponent(state)}`;
 
