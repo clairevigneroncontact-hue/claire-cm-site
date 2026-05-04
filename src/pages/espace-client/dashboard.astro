@@ -695,13 +695,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
           ${media.length ? `<div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
             <h3 class="text-sm font-medium text-[#2C2416] mb-3">9 dernières publications</h3>
-            <div class="grid grid-cols-4 gap-1.5">
+            <div class="grid grid-cols-3 gap-0.5">
               ${media.map(m => {
                 const img = m.media_type === 'VIDEO' ? (m.thumbnail_url || '') : (m.media_url || '');
-                return `<a href="${m.permalink || '#'}" target="_blank" class="relative aspect-square rounded-lg overflow-hidden bg-[#EDE6DB] group block">
+                return `<a href="${m.permalink || '#'}" target="_blank" class="relative aspect-square overflow-hidden bg-[#EDE6DB] group block">
                   ${img ? `<img src="${img}" class="w-full h-full object-cover" loading="lazy" onerror="this.style.display='none'" />` : ''}
-                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-end p-1">
-                    <div class="opacity-0 group-hover:opacity-100 transition-opacity text-white text-[9px] font-medium">♥ ${m.like_count || 0} · ${m.comments_count || 0}</div>
+                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                    <div class="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold">♥ ${m.like_count || 0} &nbsp; 💬 ${m.comments_count || 0}</div>
                   </div>
                 </a>`;
               }).join('')}
