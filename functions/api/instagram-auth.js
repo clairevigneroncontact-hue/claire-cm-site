@@ -5,10 +5,10 @@ export async function onRequestGet({ request, env }) {
 
   const APP_ID   = env.META_APP_ID || '1651793712524049';
   const REDIRECT = 'https://claire-cm-site.pages.dev/api/instagram-callback';
-  const SCOPE    = 'instagram_basic,pages_read_engagement,pages_show_list';
   const state    = btoa(JSON.stringify({ clientId, from }));
 
-  const authUrl = `https://www.facebook.com/dialog/oauth?client_id=${APP_ID}&redirect_uri=${encodeURIComponent(REDIRECT)}&response_type=code&scope=${encodeURIComponent(SCOPE)}&state=${encodeURIComponent(state)}`;
+  // Instagram Business Login — ne nécessite pas de Page Facebook
+  const authUrl = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=${APP_ID}&redirect_uri=${encodeURIComponent(REDIRECT)}&response_type=code&scope=instagram_business_basic&state=${encodeURIComponent(state)}`;
 
   return Response.redirect(authUrl, 302);
 }

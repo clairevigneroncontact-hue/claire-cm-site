@@ -15,9 +15,10 @@ export async function onRequestGet({ request, env }) {
     const supabaseKey = env.SUPABASE_SERVICE_KEY;
     if (!supabaseUrl || !supabaseKey) return resp({ error: 'config manquante' }, 500);
 
+    const key = String(supabaseKey).replace(/[^\x21-\x7E]/g, '');
     const profileRes = await fetch(
       `${supabaseUrl}/rest/v1/profiles?id=eq.${clientId}&select=ig_access_token,ig_account_id`,
-      { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } }
     );
     const profiles = await profileRes.json();
     const profile  = Array.isArray(profiles) ? profiles[0] : null;
@@ -28,8 +29,8 @@ export async function onRequestGet({ request, env }) {
     const igId  = profile.ig_account_id;
 
     const [igProfile, igMedia] = await Promise.all([
-      fetch(`https://graph.facebook.com/v21.0/${igId}?fields=id,username,followers_count,media_count,biography,website,profile_picture_url&access_token=${token}`).then(r => r.json()),
-      fetch(`https://graph.facebook.com/v21.0/${igId}/media?fields=id,caption,like_count,comments_count,timestamp,media_type,permalink,thumbnail_url,media_url&limit=9&access_token=${token}`).then(r => r.json()),
+      fetch(`https://graph.instagram.com/${igId}?fields=id,username,followers_count,media_count,biography,website,profile_picture_url&access_token=${token}`).then(r => r.json()),
+      fetch(`https://graph.instagram.com/${igId}/media?fields=id,caption,like_count,comments_count,timestamp,media_type,permalink,thumbnail_url,media_url&limit=9&access_token=${token}`).then(r => r.json()),
     ]);
 
     if (igProfile.error) return resp({ error: 'token_invalid', detail: igProfile.error }, 401);
