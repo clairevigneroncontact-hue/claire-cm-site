@@ -44,6 +44,39 @@ export async function onRequestPost(context) {
       const err = await sendRes.text().catch(() => '?');
       return resp({ error: 'Resend: ' + err }, 500);
     }
+
+    // Bilan → sauvegarder dans les documents du client
+    if (type === 'bilan') {
+      try {
+        const key  = String(supabaseKey).replace(/[^\x21-\x7E]/g, '');
+        const { month = '', year = new Date().getFullYear() } = data;
+        const monthLabel = month || new Date().toLocaleDateString('fr-FR', { month: 'long' });
+        const fileName   = `bilan-${monthLabel}-${year}-${Date.now()}.html`;
+        const filePath   = `${clientId}/${fileName}`;
+
+        // Upload le HTML du bilan dans le bucket documents
+        await fetch(`${supabaseUrl}/storage/v1/object/documents/${filePath}`, {
+          method:  'POST',
+          headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'text/html; charset=utf-8', 'x-upsert': 'true' },
+          body:    html,
+        });
+
+        const fileUrl = `${supabaseUrl}/storage/v1/object/public/documents/${filePath}`;
+
+        // Créer le document dans la table documents
+        await fetch(`${supabaseUrl}/rest/v1/documents`, {
+          method:  'POST',
+          headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body:    JSON.stringify({
+            client_id: clientId,
+            name:      `Bilan mensuel — ${monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)} ${year}`,
+            type:      'compte-rendu',
+            file_url:  fileUrl,
+          }),
+        });
+      } catch(_) {}
+    }
+
     return resp({ sent: true, type }, 200);
   } catch(err) {
     return resp({ error: String(err) }, 500);

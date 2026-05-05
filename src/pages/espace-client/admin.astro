@@ -1926,25 +1926,49 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <p class="text-[10px] text-[#767A55] mt-1">${points[0]?.date || ''} → ${points[points.length-1]?.date || ''}</p>`;
         };
 
-        if (insightsData.reach?.length || insightsData.followers?.length || insightsData.impressions?.length) {
-          container.innerHTML += `<div class="bg-white rounded-2xl p-5 border border-[#D6CCC0] mt-4">
-            <h3 class="text-sm font-medium text-[#2C2416] mb-4">📈 Évolution — 30 derniers jours</h3>
+        window._lastInsightsDays = window._lastInsightsDays || 30;
+
+        const renderSparklines = (ins, days) => {
+          if (!ins.reach?.length && !ins.followers?.length && !ins.impressions?.length) return;
+          const tipBtn = (tip) => `<div class="relative group/tip inline-block ml-1 align-middle">
+            <button class="w-3.5 h-3.5 rounded-full bg-[#D6CCC0] text-[#767A55] text-[8px] font-bold flex items-center justify-center hover:bg-[#8B3E22] hover:text-white transition-colors leading-none">i</button>
+            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-52 bg-[#2C2416] text-white text-[10px] rounded-xl p-2.5 leading-relaxed opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">${tip}</div>
+          </div>`;
+          const metrics = [
+            { key: 'reach',       label: 'Portée',             color: '#8B3E22', tip: 'Nombre de comptes uniques ayant vu au moins une de vos publications sur la période.' },
+            { key: 'followers',   label: 'Abonnés (variation)', color: '#767A55', tip: 'Variation nette d\'abonnés par jour — positif = vous en gagnez, négatif = vous en perdez.' },
+            { key: 'impressions', label: 'Impressions',         color: '#2C2416', tip: 'Nombre total d\'affichages de vos posts. Un même compte peut être compté plusieurs fois.' },
+          ];
+          const existing = document.getElementById(`ig-evolution-${clientId}`);
+          const html = `<div class="bg-white rounded-2xl p-5 border border-[#D6CCC0] mt-4" id="ig-evolution-${clientId}">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-medium text-[#2C2416]">📈 Évolution</h3>
+              <select onchange="refreshEvolution('${clientId}', parseInt(this.value))" class="text-xs border border-[#D6CCC0] rounded-lg px-2 py-1 focus:outline-none focus:border-[#8B3E22] bg-white">
+                ${[7,14,30,60,90].map(d => `<option value="${d}" ${d === days ? 'selected' : ''}>${d} jours</option>`).join('')}
+              </select>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div class="bg-[#F5EDE4] rounded-xl p-3">
-                <p class="text-[10px] text-[#767A55] uppercase tracking-widest mb-2">Portée</p>
-                ${sparkline(insightsData.reach, '#8B3E22')}
-              </div>
-              <div class="bg-[#F5EDE4] rounded-xl p-3">
-                <p class="text-[10px] text-[#767A55] uppercase tracking-widest mb-2">Abonnés (variation)</p>
-                ${sparkline(insightsData.followers, '#767A55')}
-              </div>
-              <div class="bg-[#F5EDE4] rounded-xl p-3">
-                <p class="text-[10px] text-[#767A55] uppercase tracking-widest mb-2">Impressions</p>
-                ${sparkline(insightsData.impressions, '#2C2416')}
-              </div>
+              ${metrics.map(m => `<div class="bg-[#F5EDE4] rounded-xl p-3">
+                <div class="flex items-center gap-1 mb-2">
+                  <p class="text-[10px] text-[#767A55] uppercase tracking-widest">${m.label}</p>
+                  ${tipBtn(m.tip)}
+                </div>
+                ${sparkline(ins[m.key] || [], m.color)}
+              </div>`).join('')}
             </div>
           </div>`;
-        }
+          if (existing) existing.outerHTML = html;
+          else container.innerHTML += html;
+        };
+
+        renderSparklines(insightsData, window._lastInsightsDays);
+
+        window.refreshEvolution = async (clientId, days) => {
+          window._lastInsightsDays = days;
+          const res  = await fetch(`/api/instagram-account-insights?clientId=${clientId}&days=${days}`);
+          const data = await res.json();
+          renderSparklines(data, days);
+        };
 
       } catch(err) {
         container.innerHTML = `<div class="bg-white rounded-2xl p-8 border border-[#D6CCC0] text-center">
