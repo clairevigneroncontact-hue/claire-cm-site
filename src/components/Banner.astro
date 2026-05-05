@@ -1,10 +1,20 @@
 ---
 interface Props {
   text?: string;
+  href?: string;
 }
-const { text = 'Places limitées — Appel découverte gratuit 30 min · Réserver maintenant' } = Astro.props;
+const {
+  text = 'Places limitées — Appel découverte gratuit 30 min · Réserver maintenant',
+  href,
+} = Astro.props;
 ---
 
-<div class="bg-[#2C2416] text-[#F5EDE4] text-xs font-medium py-3 text-center tracking-wide uppercase px-4">
-  <span>{text}</span>
-</div>
+{href ? (
+  <a href={href} class="block bg-[#8B3E22] text-[#F5EDE4] text-xs font-medium py-2.5 text-center tracking-wide px-4 hover:bg-[#6B2E1A] transition-colors">
+    {text}
+  </a>
+) : (
+  <div class="bg-[#8B3E22] text-[#F5EDE4] text-xs font-medium py-2.5 text-center tracking-wide px-4">
+    {text}
+  </div>
+)}
