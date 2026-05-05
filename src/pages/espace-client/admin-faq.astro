@@ -96,7 +96,40 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
         </details>
 
+        <details class="bg-white border border-[#D6CCC0] rounded-2xl overflow-hidden group">
+          <summary class="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[#F5EDE4] transition-colors select-none">
+            <span class="text-sm font-medium text-[#2C2416]">Comment connecter le compte Instagram d'un client ?</span>
+            <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#767A55] transition-transform group-open:rotate-180 shrink-0 ml-3"></iconify-icon>
+          </summary>
+          <div class="px-5 pb-4 text-sm text-[#2C2416]/70 font-light leading-relaxed border-t border-[#D6CCC0]/50 pt-3 space-y-3">
+            <p>La connexion Instagram se fait depuis l'espace du client (pas l'admin). Voici les étapes :</p>
+            <ol class="list-decimal list-inside space-y-2 pl-1">
+              <li>Le client se connecte à son <strong>espace client</strong></li>
+              <li>Il clique sur l'onglet <strong>Statistiques</strong></li>
+              <li>Il clique sur le bouton <strong>Connecter Instagram</strong></li>
+              <li>Il autorise l'accès via Instagram (il doit avoir un compte Business ou Créateur)</li>
+              <li>Une fois connecté, les statistiques s'affichent automatiquement</li>
+            </ol>
+            <p class="text-[#8B3E22]">⚠️ Le compte Instagram doit être de type <strong>Professionnel</strong> (Business ou Créateur). Un compte personnel ne peut pas être connecté.</p>
+            <div class="bg-[#F5EDE4] rounded-xl p-3 mt-2">
+              <p class="font-medium text-[#2C2416] mb-1">Liens utiles à transmettre au client :</p>
+              <ul class="space-y-1">
+                <li>→ <a href="https://clairevigneron.com/espace-client" target="_blank" class="text-[#8B3E22] underline">clairevigneron.com/espace-client</a> — connexion espace client</li>
+                <li>→ <a href="https://help.instagram.com/502981923235522" target="_blank" class="text-[#8B3E22] underline">Convertir en compte professionnel Instagram</a></li>
+              </ul>
+            </div>
+          </div>
+        </details>
+
       </div>
+
+      <div class="mt-8 text-center">
+        <a href="/espace-client/admin" class="inline-flex items-center gap-2 bg-[#2C2416] text-[#F5EDE4] px-5 py-2.5 rounded-full text-sm hover:bg-[#8B3E22] transition-colors">
+          <iconify-icon icon="solar:user-linear" stroke-width="1.5"></iconify-icon>
+          Mon compte admin
+        </a>
+      </div>
+
     </main>
   </div>
 

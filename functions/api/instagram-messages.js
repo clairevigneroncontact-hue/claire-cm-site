@@ -33,7 +33,7 @@ export async function onRequestGet({ request, env }) {
 
     if (json.error) return resp({ error: json.error.message, code: json.error.code }, 400);
 
-    return resp({ conversations: json.data || [] });
+    return resp({ conversations: json.data || [], igAccountId: igId });
   } catch(err) {
     return resp({ error: err.message }, 500);
   }

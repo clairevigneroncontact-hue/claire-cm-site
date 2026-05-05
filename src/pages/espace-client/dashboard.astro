@@ -836,11 +836,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             const data = await res.json();
             if (data.error) { inner.innerHTML = `<p class="text-xs text-[#767A55]">Non disponible : ${data.error}</p>`; return; }
             const convs = data.conversations || [];
+            const igAccountId = data.igAccountId || '';
             if (!convs.length) { inner.innerHTML = '<p class="text-xs text-[#767A55] italic">Aucun message récent.</p>'; return; }
 
             window._dashDmConvs = convs;
+            window._dashIgAccountId = igAccountId;
             const renderConv = (conv) => {
-              const participants = (conv.participants?.data||[]).filter(p => p.id !== uid);
+              const participants = (conv.participants?.data||[]).filter(p => p.id !== igAccountId);
               const other       = participants[0] || {};
               const name        = other.name || other.username || 'Inconnu';
               const username    = other.username ? '@' + other.username : '';
@@ -851,7 +853,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 <div class="w-44 shrink-0 border-r border-[#D6CCC0] overflow-y-auto">
                   <p class="text-[10px] text-[#767A55] uppercase tracking-widest px-3 py-2">Messages</p>
                   ${convs.map(c => {
-                    const p2   = (c.participants?.data||[]).filter(p => p.id !== uid)[0]||{};
+                    const p2   = (c.participants?.data||[]).filter(p => p.id !== igAccountId)[0]||{};
                     const n2   = p2.name || p2.username || 'Inconnu';
                     const last = c.messages?.data?.[0];
                     const isActive = c.id === conv.id;
@@ -879,12 +881,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   </div>
                   <div class="flex-1 overflow-y-auto px-4 py-3 space-y-2" id="dash-dm-msgs-${conv.id}">
                     ${[...msgs].reverse().map(m => {
-                      const isMine = m.from?.id === uid;
+                      const isMine = m.from?.id === igAccountId;
                       const time   = m.created_time ? new Date(m.created_time).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
                       return `<div class="flex items-end gap-2 ${isMine?'justify-end':'justify-start'}">
                         ${!isMine ? _dashAvatar(m.from||other, 7) : ''}
                         <div class="max-w-[70%]">
-                          <div style="padding:8px 12px;border-radius:18px;font-size:14px;${isMine?'background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:white;border-bottom-right-radius:4px;':'background:#F5EDE4;color:#2C2416;border-bottom-left-radius:4px;border:1px solid #D6CCC0;'}">${m.message||'📎'}</div>
+                          ${!isMine ? `<p class="text-[10px] text-[#767A55] mb-0.5 ml-1">${name}</p>` : ''}
+                          <div style="padding:8px 12px;border-radius:18px;font-size:14px;${isMine?'background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:white;border-bottom-right-radius:4px;':'background:#D6EAF8;color:#1a2e40;border-bottom-left-radius:4px;border:1px solid #A9CCE3;'}">${m.message||'📎'}</div>
                           <p class="text-[10px] text-[#767A55] mt-0.5 ${isMine?'text-right':'text-left'} px-1">${time}</p>
                         </div>
                       </div>`;
