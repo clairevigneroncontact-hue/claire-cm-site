@@ -1,0 +1,221 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Mon espace — CMspace" hideChatWidget={true}>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; }
+</style>
+
+<div id="loading" style="min-height:100vh;background:#F8F9FF;display:flex;align-items:center;justify-content:center;">
+  <p style="color:#9CA3AF;font-family:'Plus Jakarta Sans',sans-serif;">Chargement…</p>
+</div>
+
+<div id="page" style="display:none;min-height:100vh;background:#F8F9FF;font-family:'Plus Jakarta Sans',sans-serif;">
+
+  <!-- Header -->
+  <header style="background:#1A1A2E;padding:0 20px;display:flex;align-items:center;height:58px;gap:12px;position:sticky;top:0;z-index:40;">
+    <a href="/cm-platform" style="font-size:17px;font-weight:800;color:white;text-decoration:none;">
+      CM<span style="color:#6C63FF;">space</span>
+    </a>
+    <div style="flex:1;"></div>
+    <span id="dash-name" style="font-size:13px;color:rgba(255,255,255,.6);"></span>
+    <button onclick="logoutDash()" style="font-size:13px;color:rgba(255,255,255,.5);background:none;border:none;cursor:pointer;font-family:inherit;">Déconnexion</button>
+  </header>
+
+  <div style="max-width:900px;margin:0 auto;padding:28px 20px;">
+
+    <!-- Onglets -->
+    <div style="display:flex;gap:4px;background:#EDEDFF;border-radius:12px;padding:4px;margin-bottom:24px;overflow-x:auto;">
+      {['home','content','docs'].map((tab, i) => {
+        const labels = ['Accueil','Mes contenus','Documents'];
+        const icons  = ['solar:home-2-linear','solar:check-square-linear','solar:folder-linear'];
+        return `<button id="tab-btn-${tab}" onclick="switchDTab('${tab}')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;${tab==='home'?'background:white;color:#1A1A2E;box-shadow:0 1px 4px rgba(0,0,0,.08);':'background:transparent;color:#6B7280;'}">
+          <iconify-icon icon="${icons[i]}" stroke-width="1.5" style="font-size:16px;flex-shrink:0;"></iconify-icon>${labels[i]}</button>`;
+      }).join('')}
+    </div>
+
+    <!-- Accueil -->
+    <div id="dtab-home">
+      <div id="dash-content-home"></div>
+    </div>
+
+    <!-- Mes contenus -->
+    <div id="dtab-content" style="display:none;">
+      <div id="dash-content-items"></div>
+    </div>
+
+    <!-- Documents -->
+    <div id="dtab-docs" style="display:none;">
+      <div id="dash-docs-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script is:inline>
+  const SB_URL = 'https://etubpowlffhdvnfqkjij.supabase.co';
+  const SB_KEY = 'sb_publishable_AyehSGHv6TEwFvPQIuMivg_-_mJ7zUH';
+  let _sbInst = null, _uid = null, _profile = null;
+
+  async function getSB() {
+    if (!_sbInst) {
+      await new Promise(r => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'; s.onload = r; document.head.appendChild(s); });
+      _sbInst = window.supabase.createClient(SB_URL, SB_KEY);
+    }
+    return _sbInst;
+  }
+
+  window.switchDTab = (tab) => {
+    ['home','content','docs'].forEach(t => {
+      document.getElementById(`dtab-${t}`).style.display = t === tab ? 'block' : 'none';
+      const btn = document.getElementById(`tab-btn-${t}`);
+      btn.style.background = t === tab ? 'white' : 'transparent';
+      btn.style.color = t === tab ? '#1A1A2E' : '#6B7280';
+      btn.style.boxShadow = t === tab ? '0 1px 4px rgba(0,0,0,.08)' : 'none';
+    });
+  };
+
+  window.addEventListener('load', async () => {
+    const sb = await getSB();
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = '/cm-platform/login'; return; }
+
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+    if (profile?.role !== 'client') { window.location.href = '/cm-platform/login'; return; }
+
+    _uid = session.user.id;
+    _profile = profile;
+    const name = profile.full_name || session.user.email.split('@')[0];
+    document.getElementById('dash-name').textContent = name;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('page').style.display = 'block';
+    await renderHome();
+    await renderContent();
+    await renderDocs();
+  });
+
+  async function renderHome() {
+    const sb = await getSB();
+    const { data: content } = await sb.from('content_items').select('*').eq('client_id', _uid).eq('status','pending').order('created_at', { ascending: false });
+    const pending = content || [];
+    const name = _profile.full_name || 'là';
+
+    document.getElementById('dash-content-home').innerHTML = `
+      <div style="margin-bottom:24px;">
+        <h1 style="font-size:24px;font-weight:700;color:#1A1A2E;margin:0 0 4px;">Bonjour ${name} 👋</h1>
+        <p style="font-size:14px;color:#6B7280;margin:0;">${_profile.offer ? `Offre : ${_profile.offer}` : 'Bienvenue dans votre espace client.'}</p>
+      </div>
+
+      ${pending.length ? `<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:16px;padding:20px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <div style="width:36px;height:36px;background:#FEF3C7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;">⏳</div>
+          <h2 style="font-size:15px;font-weight:700;color:#1A1A2E;margin:0;">${pending.length} contenu${pending.length > 1 ? 's' : ''} en attente de validation</h2>
+        </div>
+        ${pending.slice(0,3).map(item => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:white;border-radius:10px;margin-bottom:8px;border:1px solid #FDE68A;">
+            <div>
+              <p style="font-size:14px;font-weight:600;color:#1A1A2E;margin:0;">${item.title||'Sans titre'}</p>
+              <p style="font-size:12px;color:#9CA3AF;margin:3px 0 0;">${item.type||''} · ${item.scheduled_at ? new Date(item.scheduled_at).toLocaleDateString('fr-FR') : ''}</p>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="validateItem('${item.id}','approved')" style="padding:7px 14px;background:#10B981;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">✓ Valider</button>
+              <button onclick="validateItem('${item.id}','rejected')" style="padding:7px 14px;background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">✗ Refuser</button>
+            </div>
+          </div>`).join('')}
+        ${pending.length > 3 ? `<button onclick="switchDTab('content')" style="width:100%;padding:10px;background:transparent;border:1px dashed #FDE68A;border-radius:10px;font-size:13px;color:#D97706;cursor:pointer;font-family:inherit;font-weight:600;">Voir tout →</button>` : ''}
+      </div>` : `<div style="background:white;border:1.5px solid #E8E8F0;border-radius:16px;padding:24px;text-align:center;margin-bottom:20px;">
+        <p style="font-size:32px;margin:0 0 8px;">✅</p>
+        <p style="font-size:15px;font-weight:600;color:#1A1A2E;margin:0 0 4px;">Tout est à jour</p>
+        <p style="font-size:13px;color:#9CA3AF;margin:0;">Aucun contenu en attente de validation.</p>
+      </div>`}
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="background:white;border:1.5px solid #E8E8F0;border-radius:16px;padding:20px;cursor:pointer;" onclick="switchDTab('content')">
+          <p style="font-size:12px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px;">Mes contenus</p>
+          <p style="font-size:28px;font-weight:700;color:#6C63FF;margin:0 0 4px;" id="count-content">—</p>
+          <p style="font-size:13px;color:#9CA3AF;margin:0;">publications au total</p>
+        </div>
+        <div style="background:white;border:1.5px solid #E8E8F0;border-radius:16px;padding:20px;cursor:pointer;" onclick="switchDTab('docs')">
+          <p style="font-size:12px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px;">Mes documents</p>
+          <p style="font-size:28px;font-weight:700;color:#6C63FF;margin:0 0 4px;" id="count-docs">—</p>
+          <p style="font-size:13px;color:#9CA3AF;margin:0;">fichiers disponibles</p>
+        </div>
+      </div>`;
+
+    // Compter les totaux
+    const sb = await getSB();
+    const [{ count: cCount }, { count: dCount }] = await Promise.all([
+      sb.from('content_items').select('*', { count: 'exact', head: true }).eq('client_id', _uid),
+      sb.from('documents').select('*', { count: 'exact', head: true }).eq('client_id', _uid),
+    ]);
+    const cc = document.getElementById('count-content'); if (cc) cc.textContent = cCount || 0;
+    const dc = document.getElementById('count-docs');    if (dc) dc.textContent = dCount || 0;
+  }
+
+  async function renderContent() {
+    const sb = await getSB();
+    const { data: items } = await sb.from('content_items').select('*').eq('client_id', _uid).order('created_at', { ascending: false });
+    const list = items || [];
+    const STATUS = { approved: { label: '✓ Validé', bg: '#F0FDF4', color: '#16A34A' }, rejected: { label: '✗ Refusé', bg: '#FEF2F2', color: '#DC2626' }, pending: { label: '⏳ En attente', bg: '#FFFBEB', color: '#D97706' } };
+
+    document.getElementById('dash-content-items').innerHTML = list.length ? list.map(item => {
+      const s = STATUS[item.status] || STATUS.pending;
+      return `<div style="background:white;border:1.5px solid #E8E8F0;border-radius:16px;padding:20px;margin-bottom:14px;">
+        <div style="display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:${item.caption?'12px':'0'};">
+          <div>
+            <p style="font-size:15px;font-weight:600;color:#1A1A2E;margin:0 0 4px;">${item.title||'Sans titre'}</p>
+            <p style="font-size:12px;color:#9CA3AF;margin:0;">${item.type||''} ${item.scheduled_at ? '· ' + new Date(item.scheduled_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) : ''}</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <span style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;background:${s.bg};color:${s.color};">${s.label}</span>
+            ${item.status === 'pending' ? `<button onclick="validateItem('${item.id}','approved')" style="padding:6px 12px;background:#6C63FF;color:white;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Valider</button>
+            <button onclick="validateItem('${item.id}','rejected')" style="padding:6px 12px;background:white;color:#EF4444;border:1.5px solid #FECACA;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Refuser</button>` : ''}
+          </div>
+        </div>
+        ${item.caption ? `<p style="font-size:14px;color:#374151;margin:0;line-height:1.6;background:#F8F9FF;padding:12px;border-radius:10px;">${item.caption}</p>` : ''}
+        ${item.file_url ? `<a href="${item.file_url}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:13px;color:#6C63FF;text-decoration:none;font-weight:500;">
+          <iconify-icon icon="solar:eye-linear" stroke-width="1.5"></iconify-icon> Voir le visuel</a>` : ''}
+      </div>`;
+    }).join('') : '<div style="text-align:center;padding:48px;color:#9CA3AF;"><p style="font-size:40px;margin:0 0 12px;">📭</p><p style="font-size:15px;">Aucun contenu pour l\'instant.</p></div>';
+  }
+
+  async function renderDocs() {
+    const sb = await getSB();
+    const { data: docs } = await sb.from('documents').select('*').eq('client_id', _uid).order('created_at', { ascending: false });
+    const list = docs || [];
+    const icons = { facture: 'solar:bill-linear', contrat: 'solar:document-text-linear', audit: 'solar:chart-square-linear', autre: 'solar:file-download-linear' };
+
+    document.getElementById('dash-docs-list').innerHTML = list.length ? `
+      <div style="background:white;border:1.5px solid #E8E8F0;border-radius:16px;overflow:hidden;">
+        ${list.map((d, i) => `
+          <a href="${d.file_url||'#'}" target="_blank" style="display:flex;align-items:center;gap:14px;padding:16px 20px;${i > 0 ? 'border-top:1px solid #F0F0F0;' : ''}text-decoration:none;color:inherit;transition:background .15s;" onmouseover="this.style.background='#F8F9FF'" onmouseout="this.style.background='transparent'">
+            <div style="width:40px;height:40px;background:#EEF2FF;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <iconify-icon icon="${icons[d.type]||icons.autre}" stroke-width="1.5" style="font-size:20px;color:#6C63FF;"></iconify-icon>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <p style="font-size:14px;font-weight:600;color:#1A1A2E;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.name||'Document'}</p>
+              <p style="font-size:12px;color:#9CA3AF;margin:3px 0 0;">${d.type||'Document'} · ${new Date(d.created_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'long'})}</p>
+            </div>
+            <iconify-icon icon="solar:download-minimalistic-linear" stroke-width="1.5" style="font-size:18px;color:#9CA3AF;flex-shrink:0;"></iconify-icon>
+          </a>`).join('')}
+      </div>` : '<div style="text-align:center;padding:48px;color:#9CA3AF;"><p style="font-size:40px;margin:0 0 12px;">📁</p><p style="font-size:15px;">Aucun document partagé pour l\'instant.</p></div>';
+  }
+
+  window.validateItem = async (itemId, status) => {
+    const sb = await getSB();
+    await sb.from('content_items').update({ status }).eq('id', itemId);
+    await renderHome();
+    await renderContent();
+  };
+
+  window.logoutDash = async () => {
+    const sb = await getSB();
+    await sb.auth.signOut();
+    window.location.href = '/cm-platform/login';
+  };
+</script>
+
+</BaseLayout>

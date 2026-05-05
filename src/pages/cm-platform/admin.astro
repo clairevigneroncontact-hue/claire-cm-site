@@ -1,0 +1,281 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Admin — CMspace" hideChatWidget={true}>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  * { box-sizing: border-box; }
+  body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+</style>
+
+<div id="loading" style="min-height:100vh;background:#F8F9FF;display:flex;align-items:center;justify-content:center;">
+  <p style="color:#9CA3AF;font-family:'Plus Jakarta Sans',sans-serif;">Vérification…</p>
+</div>
+
+<div id="page" style="display:none;min-height:100vh;background:#F8F9FF;font-family:'Plus Jakarta Sans',sans-serif;">
+
+  <!-- Header -->
+  <header style="background:#1A1A2E;padding:0 24px;display:flex;align-items:center;height:60px;gap:16px;position:sticky;top:0;z-index:40;">
+    <a href="/cm-platform/admin" style="font-size:18px;font-weight:800;color:white;text-decoration:none;">
+      CM<span style="color:#6C63FF;">space</span>
+    </a>
+    <span style="background:#6C63FF;color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">ADMIN</span>
+    <div style="flex:1;"></div>
+    <span id="cm-name" style="font-size:13px;color:rgba(255,255,255,.6);"></span>
+    <a href="/cm-platform" style="font-size:13px;color:rgba(255,255,255,.5);text-decoration:none;">Site →</a>
+    <button onclick="logoutCM()" style="font-size:13px;color:rgba(255,255,255,.5);background:none;border:none;cursor:pointer;">Déconnexion</button>
+  </header>
+
+  <div style="max-width:1200px;margin:0 auto;padding:32px 24px;">
+
+    <!-- Vue liste clients -->
+    <div id="view-list">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;gap:16px;flex-wrap:wrap;">
+        <div>
+          <h1 style="font-size:26px;font-weight:700;color:#1A1A2E;margin:0 0 4px;">Mes clients</h1>
+          <p id="cm-clients-count" style="font-size:14px;color:#6B7280;margin:0;"></p>
+        </div>
+        <button onclick="showNewClientForm()" style="display:flex;align-items:center;gap:8px;padding:12px 20px;background:linear-gradient(135deg,#6C63FF,#8B5CF6);color:white;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">
+          <iconify-icon icon="solar:user-plus-linear" stroke-width="1.5"></iconify-icon>
+          Nouveau client
+        </button>
+      </div>
+
+      <!-- Formulaire nouveau client -->
+      <div id="new-client-form" style="display:none;background:white;border-radius:16px;border:1px solid #E8E8F0;padding:24px;margin-bottom:24px;">
+        <h2 style="font-size:16px;font-weight:700;color:#1A1A2E;margin:0 0 4px;">Créer un espace client</h2>
+        <p style="font-size:13px;color:#6B7280;margin:0 0 20px;">Le client recevra un email pour définir son mot de passe.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <input id="nc-email" type="email" placeholder="Email *" style="padding:12px 14px;border:1.5px solid #E8E8F0;border-radius:10px;font-size:14px;font-family:inherit;outline:none;" />
+          <input id="nc-name" type="text" placeholder="Nom complet" style="padding:12px 14px;border:1.5px solid #E8E8F0;border-radius:10px;font-size:14px;font-family:inherit;outline:none;" />
+          <input id="nc-instagram" type="text" placeholder="@instagram" style="padding:12px 14px;border:1.5px solid #E8E8F0;border-radius:10px;font-size:14px;font-family:inherit;outline:none;" />
+          <input id="nc-phone" type="tel" placeholder="Téléphone" style="padding:12px 14px;border:1.5px solid #E8E8F0;border-radius:10px;font-size:14px;font-family:inherit;outline:none;" />
+          <select id="nc-offer" style="padding:12px 14px;border:1.5px solid #E8E8F0;border-radius:10px;font-size:14px;font-family:inherit;outline:none;background:white;grid-column:1/-1;">
+            <option value="">Offre proposée…</option>
+            <option value="audit">Audit Instagram</option>
+            <option value="pack">Pack Contenu</option>
+            <option value="mensuel">Accompagnement Mensuel</option>
+          </select>
+        </div>
+        <div id="nc-msg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;"></div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="createCMClient()" style="padding:11px 20px;background:#6C63FF;color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Créer l'espace</button>
+          <button onclick="hideNewClientForm()" style="padding:11px 20px;border:1.5px solid #E8E8F0;color:#6B7280;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit;background:white;">Annuler</button>
+        </div>
+      </div>
+
+      <!-- Liste clients -->
+      <div id="cm-clients-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+        <p style="color:#9CA3AF;font-size:14px;font-style:italic;">Chargement…</p>
+      </div>
+    </div>
+
+    <!-- Vue détail client -->
+    <div id="view-client" style="display:none;">
+      <button onclick="backToList()" style="display:flex;align-items:center;gap:6px;font-size:14px;color:#6B7280;background:none;border:none;cursor:pointer;font-family:inherit;margin-bottom:24px;padding:0;">
+        ‹ Retour à la liste
+      </button>
+      <div id="client-detail-cmp"></div>
+    </div>
+
+  </div>
+</div>
+
+<script is:inline>
+  const SUPABASE_URL = 'https://etubpowlffhdvnfqkjij.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_AyehSGHv6TEwFvPQIuMivg_-_mJ7zUH';
+  const OFFER_MAP = { audit: 'Audit', pack: 'Pack Contenu', mensuel: 'Accompagnement' };
+  let _cmUid = null;
+  let _sbInst = null;
+
+  async function getSB() {
+    if (!_sbInst) {
+      await new Promise(r => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'; s.onload = r; document.head.appendChild(s); });
+      _sbInst = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    return _sbInst;
+  }
+
+  window.addEventListener('load', async () => {
+    const sb = await getSB();
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = '/cm-platform/login'; return; }
+
+    const { data: profile } = await sb.from('profiles').select('role,full_name').eq('id', session.user.id).single();
+    if (profile?.role !== 'cm') { window.location.href = '/cm-platform/login'; return; }
+
+    _cmUid = session.user.id;
+    document.getElementById('cm-name').textContent = profile.full_name || session.user.email;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('page').style.display = 'block';
+    await loadCMClients();
+  });
+
+  async function loadCMClients() {
+    const sb = await getSB();
+    const { data: clients } = await sb.from('profiles')
+      .select('*').eq('role','client').eq('cm_id', _cmUid)
+      .order('created_at', { ascending: false });
+
+    const list = clients || [];
+    const count = document.getElementById('cm-clients-count');
+    if (count) count.textContent = `${list.length} client${list.length !== 1 ? 's' : ''}`;
+
+    const el = document.getElementById('cm-clients-list');
+    if (!list.length) {
+      el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px;color:#9CA3AF;"><p style="font-size:15px;">Aucun client pour l\'instant.</p><p style="font-size:13px;margin-top:8px;">Crée ton premier espace client ↑</p></div>';
+      return;
+    }
+
+    el.innerHTML = list.map(c => {
+      const name   = c.full_name || c.email;
+      const initiale = (name || '?')[0].toUpperCase();
+      const offer  = c.offer ? `<span style="font-size:11px;background:#EEF2FF;color:#6C63FF;padding:3px 10px;border-radius:20px;font-weight:600;">${OFFER_MAP[c.offer]||c.offer}</span>` : '';
+      const ig     = c.instagram_handle ? `<span style="font-size:12px;color:#9CA3AF;">@${c.instagram_handle}</span>` : '';
+      return `<div onclick="openCMClient('${c.id}')" style="background:white;border:1.5px solid #E8E8F0;border-radius:16px;padding:20px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='#6C63FF';this.style.boxShadow='0 4px 20px rgba(108,99,255,.12)'" onmouseout="this.style.borderColor='#E8E8F0';this.style.boxShadow='none'">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#8B5CF6);color:white;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;">${initiale}</div>
+          <div style="flex:1;min-width:0;">
+            <p style="font-size:15px;font-weight:600;color:#1A1A2E;margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</p>
+            <p style="font-size:12px;color:#9CA3AF;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.email}</p>
+          </div>
+          <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5" style="color:#D1D5DB;font-size:18px;flex-shrink:0;"></iconify-icon>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          ${offer}${ig}
+          <span style="margin-left:auto;font-size:11px;color:#D1D5DB;">${new Date(c.created_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window.openCMClient = async (clientId) => {
+    document.getElementById('view-list').style.display = 'none';
+    document.getElementById('view-client').style.display = 'block';
+    const sb = await getSB();
+    const { data: c } = await sb.from('profiles').select('*').eq('id', clientId).single();
+    const { data: content } = await sb.from('content_items').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
+    const { data: docs } = await sb.from('documents').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
+
+    const pending  = (content||[]).filter(i => i.status === 'pending');
+    const approved = (content||[]).filter(i => i.status === 'approved');
+    const name = c.full_name || c.email;
+
+    document.getElementById('client-detail-cmp').innerHTML = `
+      <div style="display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start;">
+        <!-- Sidebar -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="background:white;border:1.5px solid #E8E8F0;border-radius:16px;padding:24px;text-align:center;">
+            <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#8B5CF6);color:white;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;margin:0 auto 12px;">${(name||'?')[0].toUpperCase()}</div>
+            <p style="font-size:17px;font-weight:700;color:#1A1A2E;margin:0 0 4px;">${name}</p>
+            <p style="font-size:13px;color:#9CA3AF;margin:0 0 12px;">${c.email}</p>
+            ${c.offer ? `<span style="font-size:12px;background:#EEF2FF;color:#6C63FF;padding:4px 12px;border-radius:20px;font-weight:600;">${OFFER_MAP[c.offer]||c.offer}</span>` : ''}
+            ${c.instagram_handle ? `<p style="font-size:13px;color:#6B7280;margin:12px 0 0;">@${c.instagram_handle}</p>` : ''}
+            ${c.phone ? `<p style="font-size:13px;color:#6B7280;margin:4px 0 0;">${c.phone}</p>` : ''}
+          </div>
+          <div style="background:white;border:1.5px solid #E8E8F0;border-radius:16px;padding:20px;">
+            <p style="font-size:12px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:.06em;margin:0 0 14px;">Activité</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="text-align:center;padding:12px;background:#F8F9FF;border-radius:10px;">
+                <p style="font-size:22px;font-weight:700;color:#6C63FF;margin:0;">${pending.length}</p>
+                <p style="font-size:11px;color:#9CA3AF;margin:4px 0 0;">À valider</p>
+              </div>
+              <div style="text-align:center;padding:12px;background:#F8F9FF;border-radius:10px;">
+                <p style="font-size:22px;font-weight:700;color:#10B981;margin:0;">${approved.length}</p>
+                <p style="font-size:11px;color:#9CA3AF;margin:4px 0 0;">Validés</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenu principal -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <!-- Contenus en attente -->
+          <div style="background:white;border:1.5px solid #E8E8F0;border-radius:16px;padding:24px;">
+            <h2 style="font-size:16px;font-weight:700;color:#1A1A2E;margin:0 0 16px;">Contenus en attente de validation (${pending.length})</h2>
+            ${pending.length ? pending.map(item => `
+              <div style="padding:14px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;margin-bottom:10px;">
+                <div style="display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:8px;">
+                  <div>
+                    <p style="font-size:14px;font-weight:600;color:#1A1A2E;margin:0;">${item.title||'Sans titre'}</p>
+                    <p style="font-size:12px;color:#9CA3AF;margin:4px 0 0;">${item.type||''} · ${new Date(item.created_at).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                  <span style="font-size:11px;background:#FEF3C7;color:#D97706;padding:3px 10px;border-radius:20px;font-weight:600;flex-shrink:0;">⏳ En attente</span>
+                </div>
+                ${item.caption ? `<p style="font-size:13px;color:#6B7280;margin:0;line-height:1.5;">${item.caption.substring(0,100)}${item.caption.length > 100 ? '…' : ''}</p>` : ''}
+              </div>`).join('') : '<p style="font-size:14px;color:#9CA3AF;font-style:italic;">Aucun contenu en attente. ✓</p>'}
+          </div>
+
+          <!-- Tous les contenus -->
+          <div style="background:white;border:1.5px solid #E8E8F0;border-radius:16px;padding:24px;">
+            <h2 style="font-size:16px;font-weight:700;color:#1A1A2E;margin:0 0 16px;">Tous les contenus (${(content||[]).length})</h2>
+            ${(content||[]).length ? `<div style="display:flex;flex-direction:column;gap:8px;">
+              ${(content||[]).map(item => {
+                const statusColor = item.status === 'approved' ? '#10B981' : item.status === 'rejected' ? '#EF4444' : '#F59E0B';
+                const statusLabel = item.status === 'approved' ? '✓ Validé' : item.status === 'rejected' ? '✗ Refusé' : '⏳ En attente';
+                return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid #F0F0F0;border-radius:10px;">
+                  <div>
+                    <p style="font-size:14px;font-weight:500;color:#1A1A2E;margin:0;">${item.title||'Sans titre'}</p>
+                    <p style="font-size:12px;color:#9CA3AF;margin:2px 0 0;">${item.type||''} · ${new Date(item.created_at).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                  <span style="font-size:11px;font-weight:600;color:${statusColor};">${statusLabel}</span>
+                </div>`;
+              }).join('')}
+            </div>` : '<p style="font-size:14px;color:#9CA3AF;font-style:italic;">Aucun contenu envoyé.</p>'}
+          </div>
+
+          <!-- Documents -->
+          <div style="background:white;border:1.5px solid #E8E8F0;border-radius:16px;padding:24px;">
+            <h2 style="font-size:16px;font-weight:700;color:#1A1A2E;margin:0 0 16px;">Documents (${(docs||[]).length})</h2>
+            ${(docs||[]).length ? (docs||[]).map(d => `
+              <a href="${d.file_url||'#'}" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F0F0F0;text-decoration:none;color:inherit;">
+                <iconify-icon icon="solar:file-download-linear" stroke-width="1.5" style="color:#6C63FF;font-size:20px;flex-shrink:0;"></iconify-icon>
+                <div><p style="font-size:14px;color:#1A1A2E;margin:0;">${d.name||'Document'}</p><p style="font-size:12px;color:#9CA3AF;margin:2px 0 0;">${d.type||''} · ${new Date(d.created_at).toLocaleDateString('fr-FR')}</p></div>
+              </a>`).join('') : '<p style="font-size:14px;color:#9CA3AF;font-style:italic;">Aucun document.</p>'}
+          </div>
+        </div>
+      </div>`;
+  };
+
+  window.backToList = () => {
+    document.getElementById('view-list').style.display = 'block';
+    document.getElementById('view-client').style.display = 'none';
+  };
+
+  window.showNewClientForm  = () => { document.getElementById('new-client-form').style.display = 'block'; };
+  window.hideNewClientForm  = () => { document.getElementById('new-client-form').style.display = 'none'; };
+
+  window.createCMClient = async () => {
+    const email = document.getElementById('nc-email').value.trim();
+    const name  = document.getElementById('nc-name').value.trim();
+    const ig    = document.getElementById('nc-instagram').value.trim().replace('@','');
+    const phone = document.getElementById('nc-phone').value.trim();
+    const offer = document.getElementById('nc-offer').value;
+    const msg   = document.getElementById('nc-msg');
+    if (!email) { msg.textContent = 'L\'email est requis.'; msg.style.display='block'; msg.style.background='#FEF2F2'; msg.style.color='#DC2626'; return; }
+    const sb = await getSB();
+    // Inviter via Supabase Admin (utilise la clé publishable — invite uniquement)
+    const { data, error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true, data: { full_name: name } } });
+    if (error) { msg.textContent = error.message; msg.style.display='block'; msg.style.background='#FEF2F2'; msg.style.color='#DC2626'; return; }
+    // Créer le profil via l'API Supabase (service key needed — utiliser un endpoint CF)
+    const res = await fetch('/api/cm-create-client', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, full_name: name, instagram_handle: ig, phone, offer, cm_id: _cmUid }),
+    });
+    const result = await res.json();
+    if (result.error) { msg.textContent = result.error; msg.style.display='block'; msg.style.background='#FEF2F2'; msg.style.color='#DC2626'; return; }
+    msg.textContent = '✓ Espace créé ! Le client a reçu un email.';
+    msg.style.display='block'; msg.style.background='#F0FDF4'; msg.style.color='#16A34A';
+    setTimeout(() => { hideNewClientForm(); loadCMClients(); }, 1500);
+  };
+
+  window.logoutCM = async () => {
+    const sb = await getSB();
+    await sb.auth.signOut();
+    window.location.href = '/cm-platform/login';
+  };
+</script>
+
+</BaseLayout>

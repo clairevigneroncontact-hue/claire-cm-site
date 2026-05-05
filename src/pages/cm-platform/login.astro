@@ -1,0 +1,129 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Connexion — CMspace" hideChatWidget={true}>
+
+<div style="min-height:100vh;background:#F8F9FF;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:'Plus Jakarta Sans',system-ui,sans-serif;">
+
+  <a href="/cm-platform" style="font-size:22px;font-weight:800;color:#1A1A2E;text-decoration:none;margin-bottom:36px;">
+    CM<span style="color:#6C63FF;">space</span>
+  </a>
+
+  <div style="background:white;border-radius:20px;border:1px solid #E8E8F0;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 8px 32px rgba(108,99,255,0.08);">
+
+    <div id="view-login">
+      <h1 style="font-size:22px;font-weight:700;color:#1A1A2E;margin:0 0 4px;">Connexion</h1>
+      <p style="font-size:14px;color:#6B7280;margin:0 0 28px;">Accède à ton espace CM ou client.</p>
+
+      <div id="login-msg" style="display:none;padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;"></div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <input id="login-email" type="email" placeholder="ton@email.com"
+          style="padding:13px 16px;border:1.5px solid #E8E8F0;border-radius:10px;font-size:14px;outline:none;font-family:inherit;transition:border-color .2s;"
+          onfocus="this.style.borderColor='#6C63FF'" onblur="this.style.borderColor='#E8E8F0'" />
+        <input id="login-password" type="password" placeholder="Mot de passe"
+          style="padding:13px 16px;border:1.5px solid #E8E8F0;border-radius:10px;font-size:14px;outline:none;font-family:inherit;transition:border-color .2s;"
+          onfocus="this.style.borderColor='#6C63FF'" onblur="this.style.borderColor='#E8E8F0'"
+          onkeydown="if(event.key==='Enter') loginUser()" />
+        <button onclick="loginUser()"
+          style="padding:14px;background:linear-gradient(135deg,#6C63FF,#8B5CF6);color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .2s;"
+          onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">
+          Se connecter
+        </button>
+      </div>
+
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid #F0F0F0;display:flex;flex-direction:column;gap:10px;text-align:center;">
+        <button onclick="showForgot()" style="font-size:13px;color:#6C63FF;background:none;border:none;cursor:pointer;text-decoration:underline;">
+          Mot de passe oublié ?
+        </button>
+        <p style="font-size:13px;color:#6B7280;">
+          Pas encore de compte ?
+          <a href="/cm-platform/#beta" style="color:#6C63FF;font-weight:600;text-decoration:none;">Rejoindre la bêta →</a>
+        </p>
+      </div>
+    </div>
+
+    <div id="view-forgot" style="display:none;">
+      <button onclick="showLogin()" style="font-size:13px;color:#6B7280;background:none;border:none;cursor:pointer;margin-bottom:20px;padding:0;display:flex;align-items:center;gap:4px;">
+        ‹ Retour
+      </button>
+      <h2 style="font-size:20px;font-weight:700;color:#1A1A2E;margin:0 0 8px;">Mot de passe oublié</h2>
+      <p style="font-size:14px;color:#6B7280;margin:0 0 20px;">Reçois un lien de réinitialisation par email.</p>
+      <div id="forgot-msg" style="display:none;padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;"></div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <input id="forgot-email" type="email" placeholder="ton@email.com"
+          style="padding:13px 16px;border:1.5px solid #E8E8F0;border-radius:10px;font-size:14px;outline:none;font-family:inherit;" />
+        <button onclick="sendReset()"
+          style="padding:14px;background:#6C63FF;color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;">
+          Envoyer le lien
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <p style="margin-top:24px;font-size:12px;color:#9CA3AF;text-align:center;">
+    CMspace · par <a href="https://clairevigneron.com" style="color:#6C63FF;text-decoration:none;">Claire Vigneron</a>
+  </p>
+
+</div>
+
+<script is:inline>
+  const SUPABASE_URL = 'https://etubpowlffhdvnfqkjij.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_AyehSGHv6TEwFvPQIuMivg_-_mJ7zUH';
+
+  async function getSB() {
+    if (!window._sb) {
+      await new Promise(r => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'; s.onload = r; document.head.appendChild(s); });
+      window._sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    return window._sb;
+  }
+
+  function showMsg(id, text, isError) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.style.display = 'block';
+    el.style.background = isError ? '#FEF2F2' : '#F0FDF4';
+    el.style.color = isError ? '#DC2626' : '#16A34A';
+  }
+
+  function showForgot() {
+    document.getElementById('view-login').style.display = 'none';
+    document.getElementById('view-forgot').style.display = 'block';
+  }
+  function showLogin() {
+    document.getElementById('view-login').style.display = 'block';
+    document.getElementById('view-forgot').style.display = 'none';
+  }
+
+  window.loginUser = async () => {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-password').value;
+    if (!email || !pass) return showMsg('login-msg', 'Remplis tous les champs.', true);
+    const sb = await getSB();
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) return showMsg('login-msg', 'Email ou mot de passe incorrect.', true);
+    // Récupérer le rôle
+    const { data: profile } = await sb.from('profiles').select('role').eq('id', data.user.id).single();
+    if (profile?.role === 'cm') {
+      window.location.href = '/cm-platform/admin';
+    } else if (profile?.role === 'client') {
+      window.location.href = '/cm-platform/dashboard';
+    } else {
+      await sb.auth.signOut();
+      showMsg('login-msg', 'Accès non autorisé.', true);
+    }
+  };
+
+  window.sendReset = async () => {
+    const email = document.getElementById('forgot-email').value.trim();
+    if (!email) return;
+    const sb = await getSB();
+    await sb.auth.resetPasswordForEmail(email, { redirectTo: 'https://clairevigneron.com/cm-platform/login' });
+    showMsg('forgot-msg', 'Email envoyé ! Vérifie ta boîte mail.', false);
+  };
+</script>
+
+</BaseLayout>
