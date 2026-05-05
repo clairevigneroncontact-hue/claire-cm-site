@@ -286,6 +286,9 @@
       messages.removeChild(typing);
       addMessage(text, false);
       setSuggestions(suggs);
+      // Scroll sur le début du nouveau message (pas la fin)
+      const lastMsg = messages.lastElementChild as HTMLElement;
+      if (lastMsg) lastMsg.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 500);
   }
 
