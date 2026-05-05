@@ -5,6 +5,7 @@ create table if not exists profiles (
   role text default 'client',
   offer text,
   instagram_handle text,
+  instagram_password text,
   phone text,
   notes text,
   created_at timestamptz default now()

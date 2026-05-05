@@ -35,7 +35,29 @@ export async function onRequestGet({ request, env }) {
 
     if (igProfile.error) return resp({ error: 'token_invalid', detail: igProfile.error }, 401);
 
-    return resp({ profile: igProfile, media: igMedia?.data || [] });
+    const rawMedia = igMedia?.data || [];
+
+    // Insights par post : saved + shares (API Insights, compte business uniquement)
+    const mediaWithInsights = await Promise.all(
+      rawMedia.map(async (post) => {
+        try {
+          const res  = await fetch(`https://graph.instagram.com/${post.id}/insights?metric=saved,shares&access_token=${token}`);
+          const json = await res.json();
+          if (json.data && !json.error) {
+            const saved  = json.data.find(m => m.name === 'saved')?.values?.[0]?.value ?? null;
+            const shares = json.data.find(m => m.name === 'shares')?.values?.[0]?.value ?? null;
+            return {
+              ...post,
+              saved_count:  saved,
+              shares_count: shares ?? post.shares_count ?? null,
+            };
+          }
+        } catch(_) {}
+        return post;
+      })
+    );
+
+    return resp({ profile: igProfile, media: mediaWithInsights });
   } catch(err) {
     return resp({ error: 'server_error', detail: err.message }, 500);
   }
