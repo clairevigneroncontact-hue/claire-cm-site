@@ -841,9 +841,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
             window._dashDmConvs = convs;
             window._dashIgAccountId = igAccountId;
+            const _findDashMyId = (conv) => {
+              const igAID = String(igAccountId || '');
+              const allP  = conv.participants?.data || [];
+              const msgs  = conv.messages?.data || [];
+              const pIds  = new Set(allP.map(p => String(p.id)));
+              const sIds  = [...new Set(msgs.map(m => m.from?.id).filter(Boolean).map(String))];
+              if (igAID && sIds.includes(igAID)) return igAID;
+              return sIds.find(id => !pIds.has(id)) || igAID;
+            };
             const renderConv = (conv) => {
-              const participants = (conv.participants?.data||[]).filter(p => p.id !== igAccountId);
-              const other       = participants[0] || {};
+              const myId        = _findDashMyId(conv);
+              const allP        = conv.participants?.data || [];
+              const other       = allP.find(p => String(p.id) !== myId) || allP[0] || {};
               const name        = other.name || other.username || 'Inconnu';
               const username    = other.username ? '@' + other.username : '';
               const msgs        = conv.messages?.data || [];
@@ -853,7 +863,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 <div class="w-44 shrink-0 border-r border-[#D6CCC0] overflow-y-auto">
                   <p class="text-[10px] text-[#767A55] uppercase tracking-widest px-3 py-2">Messages</p>
                   ${convs.map(c => {
-                    const p2   = (c.participants?.data||[]).filter(p => p.id !== igAccountId)[0]||{};
+                    const myId2 = _findDashMyId(c);
+                    const p2    = (c.participants?.data||[]).find(p => String(p.id) !== myId2) || (c.participants?.data||[])[0] || {};
                     const n2   = p2.name || p2.username || 'Inconnu';
                     const last = c.messages?.data?.[0];
                     const isActive = c.id === conv.id;
@@ -881,7 +892,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   </div>
                   <div class="flex-1 overflow-y-auto px-4 py-3 space-y-2" id="dash-dm-msgs-${conv.id}">
                     ${[...msgs].reverse().map(m => {
-                      const isMine = m.from?.id === igAccountId;
+                      const isMine = myId ? String(m.from?.id) === myId : false;
                       const time   = m.created_time ? new Date(m.created_time).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
                       return `<div class="flex items-end gap-2 ${isMine?'justify-end':'justify-start'}">
                         ${!isMine ? _dashAvatar(m.from||other, 7) : ''}
