@@ -2473,38 +2473,55 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     window.generateInvoice = (clientId) => {
       const numero     = document.getElementById('inv-numero')?.value || 'XXXX-XXX';
-      const date       = document.getElementById('inv-date')?.value ? new Date(document.getElementById('inv-date').value).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR');
+      const dateVal    = document.getElementById('inv-date')?.value;
+      const date       = dateVal ? new Date(dateVal).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR');
       const prestation = document.getElementById('inv-prestation')?.value || 'Prestation CM';
       const montant    = parseFloat(document.getElementById('inv-montant')?.value || 0);
       const clientName = document.getElementById('inv-client-name')?.value || 'Client';
-      const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Facture ${numero}</title>
-      <style>body{font-family:Georgia,serif;color:#2C2416;max-width:680px;margin:40px auto;padding:0 20px}
-      h1{font-size:28px;margin:0 0 4px}p{margin:4px 0;font-size:14px}.label{color:#767A55;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
-      .divider{border:none;border-top:1px solid #D6CCC0;margin:24px 0}
-      table{width:100%;border-collapse:collapse;margin-top:16px}th{text-align:left;font-size:12px;color:#767A55;text-transform:uppercase;letter-spacing:.06em;padding:8px 0;border-bottom:1px solid #D6CCC0}
-      td{padding:12px 0;font-size:14px;border-bottom:1px solid #F5EDE4}.total{font-size:20px;font-weight:bold;text-align:right;margin-top:20px}
-      .badge{display:inline-block;background:#F5EDE4;padding:4px 12px;border-radius:20px;font-size:12px;color:#8B3E22}
-      footer{margin-top:40px;font-size:11px;color:#767A55;text-align:center}
-      @media print{body{margin:20px}}</style></head><body>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div><h1>Claire Vigneron</h1><p class="label">Community Manager</p></div>
-        <div style="text-align:right"><span class="badge">FACTURE</span><br><strong style="font-size:18px">${numero}</strong></div>
-      </div>
-      <hr class="divider">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:20px 0">
-        <div><p class="label">Émetteur</p><p><strong>Claire Vigneron</strong></p><p>Rue Paul Féval, 35320 Crevin</p><p>clairevigneron.contact@gmail.com</p><p>SIREN : 939 956 421</p><p>TVA non applicable (art. 293B CGI)</p></div>
-        <div><p class="label">Client</p><p><strong>${clientName}</strong></p><p class="label" style="margin-top:16px">Date d'émission</p><p>${date}</p></div>
-      </div>
-      <table><thead><tr><th>Prestation</th><th style="text-align:right">Montant</th></tr></thead><tbody>
-        <tr><td>${prestation}</td><td style="text-align:right">${montant.toFixed(2)} €</td></tr>
-      </tbody></table>
-      <p class="total">Total : ${montant.toFixed(2)} €</p>
-      <p style="font-size:12px;color:#767A55;margin-top:8px">TVA non applicable — Article 293B du CGI</p>
-      <hr class="divider">
-      <footer>Claire Vigneron · Community Manager · SIREN 939 956 421 · clairevigneron.contact@gmail.com · 06 78 30 13 58</footer>
-      </body></html>`;
+
       const w = window.open('', '_blank');
-      if (w) { w.document.write(html); w.document.close(); setTimeout(() => w.print(), 500); }
+      if (!w) return;
+      const d = w.document;
+      d.title = 'Facture ' + numero;
+
+      // Style via DOM pour éviter tout tag HTML dans les template strings Astro
+      const style = d.createElement('style');
+      style.textContent = [
+        'body{font-family:Georgia,serif;color:#2C2416;max-width:680px;margin:40px auto;padding:0 20px}',
+        'h1{font-size:28px;margin:0 0 4px}',
+        'p{margin:4px 0;font-size:14px}',
+        '.label{color:#767A55;font-size:12px;text-transform:uppercase;letter-spacing:.06em}',
+        'hr{border:none;border-top:1px solid #D6CCC0;margin:24px 0}',
+        'table{width:100%;border-collapse:collapse;margin-top:16px}',
+        'th{text-align:left;font-size:12px;color:#767A55;text-transform:uppercase;letter-spacing:.06em;padding:8px 0;border-bottom:1px solid #D6CCC0}',
+        'td{padding:12px 0;font-size:14px;border-bottom:1px solid #F5EDE4}',
+        '.total{font-size:20px;font-weight:bold;text-align:right;margin-top:20px}',
+        '.badge{background:#F5EDE4;padding:4px 12px;border-radius:20px;font-size:12px;color:#8B3E22}',
+        'footer{margin-top:40px;font-size:11px;color:#767A55;text-align:center}',
+        '@media print{body{margin:20px}}',
+      ].join('');
+      d.head.appendChild(style);
+
+      d.body.innerHTML = [
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;">',
+        '<div><h1>Claire Vigneron</h1><p class="label">Community Manager</p></div>',
+        '<div style="text-align:right"><span class="badge">FACTURE</span><br><strong style="font-size:18px">' + numero + '</strong></div>',
+        '</div><hr>',
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:20px 0">',
+        '<div><p class="label">Émetteur</p><p><strong>Claire Vigneron</strong></p><p>Rue Paul Féval, 35320 Crevin</p>',
+        '<p>clairevigneron.contact@gmail.com</p><p>SIREN : 939 956 421</p><p>TVA non applicable (art. 293B CGI)</p></div>',
+        '<div><p class="label">Client</p><p><strong>' + clientName + '</strong></p>',
+        '<p class="label" style="margin-top:16px">Date d\'émission</p><p>' + date + '</p></div>',
+        '</div>',
+        '<table><thead><tr><th>Prestation</th><th style="text-align:right">Montant</th></tr></thead>',
+        '<tbody><tr><td>' + prestation + '</td><td style="text-align:right">' + montant.toFixed(2) + ' €</td></tr></tbody></table>',
+        '<p class="total">Total : ' + montant.toFixed(2) + ' €</p>',
+        '<p style="font-size:12px;color:#767A55;margin-top:8px">TVA non applicable — Article 293B du CGI</p>',
+        '<hr>',
+        '<footer>Claire Vigneron · Community Manager · SIREN 939 956 421 · clairevigneron.contact@gmail.com · 06 78 30 13 58</footer>',
+      ].join('');
+
+      setTimeout(() => w.print(), 400);
     };
 
     window.uploadDoc = async (clientId) => {
