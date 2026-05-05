@@ -892,7 +892,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   </div>
                   <div class="flex-1 overflow-y-auto px-4 py-3 space-y-2" id="dash-dm-msgs-${conv.id}">
                     ${[...msgs].reverse().map(m => {
-                      const isMine = myId ? String(m.from?.id) === myId : false;
+                      const isMine = m.isMine === true;
                       const time   = m.created_time ? new Date(m.created_time).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
                       return `<div class="flex items-end gap-2 ${isMine?'justify-end':'justify-start'}">
                         ${!isMine ? _dashAvatar(m.from||other, 7) : ''}

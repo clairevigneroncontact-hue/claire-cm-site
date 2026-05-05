@@ -24,16 +24,28 @@ export async function onRequestGet({ request, env }) {
     if (!profile?.ig_access_token || !profile?.ig_account_id) return resp({ error: 'no_token' }, 404);
 
     const token = profile.ig_access_token;
-    const igId  = profile.ig_account_id;
+    const igId  = String(profile.ig_account_id).trim();
 
     const res  = await fetch(
-      `https://graph.instagram.com/${igId}/conversations?platform=instagram&fields=id,participants{name,username,profile_pic},messages{id,message,from{name,username,profile_pic},created_time}&limit=20&access_token=${token}`
+      `https://graph.instagram.com/${igId}/conversations?platform=instagram&fields=id,participants{id,name,username,profile_pic},messages{id,message,from{id,name,username,profile_pic},created_time}&limit=20&access_token=${token}`
     );
     const json = await res.json();
 
     if (json.error) return resp({ error: json.error.message, code: json.error.code }, 400);
 
-    return resp({ conversations: json.data || [], igAccountId: igId });
+    // Tag each message with isMine server-side — igId is known with certainty here
+    const conversations = (json.data || []).map(conv => ({
+      ...conv,
+      messages: conv.messages ? {
+        ...conv.messages,
+        data: (conv.messages.data || []).map(m => ({
+          ...m,
+          isMine: String(m.from?.id).trim() === igId,
+        })),
+      } : conv.messages,
+    }));
+
+    return resp({ conversations, igAccountId: igId });
   } catch(err) {
     return resp({ error: err.message }, 500);
   }
