@@ -30,27 +30,27 @@ export async function onRequestGet({ request, env }) {
 
     const [igProfile, igMedia] = await Promise.all([
       fetch(`https://graph.instagram.com/${igId}?fields=id,username,followers_count,media_count,biography,website,profile_picture_url&access_token=${token}`).then(r => r.json()),
-      fetch(`https://graph.instagram.com/${igId}/media?fields=id,caption,like_count,comments_count,shares_count,timestamp,media_type,permalink,thumbnail_url,media_url&limit=9&access_token=${token}`).then(r => r.json()),
+      fetch(`https://graph.instagram.com/${igId}/media?fields=id,caption,like_count,comments_count,timestamp,media_type,permalink,thumbnail_url,media_url&limit=9&access_token=${token}`).then(r => r.json()),
     ]);
 
     if (igProfile.error) return resp({ error: 'token_invalid', detail: igProfile.error }, 401);
 
     const rawMedia = igMedia?.data || [];
 
-    // Insights par post : saved + shares (API Insights, compte business uniquement)
+    // Insights par post en parallèle :
+    // - shares        = partages (icône ▷ papier avion Instagram)
+    // - clips_replays_count = republications (icône ↻, reels uniquement)
     const mediaWithInsights = await Promise.all(
       rawMedia.map(async (post) => {
         try {
-          const res  = await fetch(`https://graph.instagram.com/${post.id}/insights?metric=saved,shares&access_token=${token}`);
-          const json = await res.json();
+          const isReel  = post.media_type === 'VIDEO';
+          const metrics = isReel ? 'shares,clips_replays_count' : 'shares';
+          const res     = await fetch(`https://graph.instagram.com/${post.id}/insights?metric=${metrics}&access_token=${token}`);
+          const json    = await res.json();
           if (json.data && !json.error) {
-            const saved  = json.data.find(m => m.name === 'saved')?.values?.[0]?.value ?? null;
-            const shares = json.data.find(m => m.name === 'shares')?.values?.[0]?.value ?? null;
-            return {
-              ...post,
-              saved_count:  saved,
-              shares_count: shares ?? post.shares_count ?? null,
-            };
+            const shares   = json.data.find(m => m.name === 'shares')?.values?.[0]?.value ?? null;
+            const reposts  = json.data.find(m => m.name === 'clips_replays_count')?.values?.[0]?.value ?? null;
+            return { ...post, shares_count: shares, reposts_count: reposts };
           }
         } catch(_) {}
         return post;
