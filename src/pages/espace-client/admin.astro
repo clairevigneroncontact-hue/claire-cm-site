@@ -1718,23 +1718,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <p class="text-sm text-[#767A55]">Chargement…</p>
             </div>
           </div>
-          <!-- Commentaires Instagram -->
-          <div id="ig-comments-container" class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
-            <div class="flex items-center gap-2 mb-4">
-              <iconify-icon icon="solar:chat-round-dots-linear" stroke-width="1.5" class="text-[#8B3E22] text-lg"></iconify-icon>
-              <h3 class="text-sm font-medium text-[#2C2416]">Commentaires récents</h3>
-              <button onclick="loadIgComments(window._currentAdminClientId)" class="ml-auto text-xs text-[#8B3E22] hover:underline">↺ Rafraîchir</button>
-            </div>
-            <p class="text-xs text-[#767A55] italic">Chargement des commentaires…</p>
-          </div>
-          <!-- Messages privés Instagram -->
-          <div id="ig-dms-container" class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
-            <div class="flex items-center gap-2 mb-4">
+          <!-- Messages privés Instagram — grand panel -->
+          <div id="ig-dms-container" class="bg-white rounded-2xl border border-[#D6CCC0] overflow-hidden">
+            <div class="flex items-center gap-2 px-5 py-4 border-b border-[#D6CCC0] bg-[#F5EDE4]">
               <iconify-icon icon="mdi:instagram" class="text-[#8B3E22] text-lg"></iconify-icon>
-              <h3 class="text-sm font-medium text-[#2C2416]">Messages privés Instagram</h3>
+              <h3 class="text-sm font-semibold text-[#2C2416]">Messages privés Instagram</h3>
               <button onclick="loadIgDMs(window._currentAdminClientId)" class="ml-auto text-xs text-[#8B3E22] hover:underline">↺ Rafraîchir</button>
             </div>
-            <p class="text-xs text-[#767A55] italic">Chargement des messages…</p>
+            <div class="p-5 min-h-[300px]">
+              <p class="text-xs text-[#767A55] italic">Chargement des messages…</p>
+            </div>
           </div>
         </div>
 
@@ -1800,8 +1793,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (tab === 'notes')   loadAdminClientNotes(window._currentAdminClientId);
       if (tab === 'stats') {
         loadIgStats(window._currentAdminClientId);
-        loadIgComments(window._currentAdminClientId);
         loadIgDMs(window._currentAdminClientId);
+        window._igCommentsCache = {};
       }
     };
 
@@ -1858,21 +1851,25 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
           </div>
           ${media.length ? `<div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
-            <h3 class="text-sm font-medium text-[#2C2416] mb-3">9 dernières publications</h3>
-            <div class="grid grid-cols-3 gap-0.5">
-              ${media.map(m => {
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-medium text-[#2C2416]">9 dernières publications</h3>
+              <p class="text-xs text-[#767A55]">Cliquez sur une photo pour voir les commentaires</p>
+            </div>
+            <div class="grid grid-cols-5 gap-1 mb-3" id="ig-photo-grid-${clientId}">
+              ${media.map((m, idx) => {
                 const img = m.media_type === 'VIDEO' ? (m.thumbnail_url || '') : (m.media_url || '');
-                return `<a href="${m.permalink || '#'}" target="_blank" class="relative aspect-square overflow-hidden bg-[#EDE6DB] group block">
+                return `<button onclick="togglePostComments('${clientId}','${m.id}',${idx})" data-post-idx="${idx}" class="relative aspect-square overflow-hidden bg-[#EDE6DB] group rounded-lg border-2 border-transparent transition-all" id="ig-photo-btn-${clientId}-${idx}">
                   ${img ? `<img src="${img}" class="w-full h-full object-cover" loading="lazy" onerror="this.style.display='none'" />` : ''}
-                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-colors flex items-center justify-center">
-                    <div class="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold text-center leading-loose px-1">
-                      <div>❤️ ${m.like_count || 0} &nbsp; 💬 ${m.comments_count || 0}</div>
-                      <div>${m.reposts_count != null ? `<iconify-icon icon="ph:arrows-clockwise" class="align-middle"></iconify-icon> ${m.reposts_count}` : ''}${m.reposts_count != null && m.saved_count != null ? ' &nbsp; ' : ''}${m.saved_count != null ? `🔖 ${m.saved_count}` : ''}</div>
+                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center">
+                    <div class="opacity-0 group-hover:opacity-100 transition-opacity text-white text-[10px] font-semibold text-center px-0.5">
+                      <div>❤️${m.like_count||0} 💬${m.comments_count||0}</div>
                     </div>
                   </div>
-                </a>`;
+                </button>`;
               }).join('')}
             </div>
+            <!-- Panel commentaires au clic -->
+            <div id="ig-post-comments-panel-${clientId}" class="hidden border-t border-[#D6CCC0] pt-3"></div>
           </div>` : ''}`;
 
         // Post le plus performant du mois
@@ -3177,6 +3174,71 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       }
     };
 
+    // Cache commentaires par clientId
+    window._igCommentsCache = window._igCommentsCache || {};
+
+    window.togglePostComments = async (clientId, postId, idx) => {
+      const panel = document.getElementById(`ig-post-comments-panel-${clientId}`);
+      const btn   = document.getElementById(`ig-photo-btn-${clientId}-${idx}`);
+      if (!panel) return;
+
+      // Désélectionner tous les boutons
+      document.querySelectorAll(`#ig-photo-grid-${clientId} button`).forEach(b => {
+        b.style.borderColor = 'transparent';
+      });
+
+      // Toggle : cacher si déjà ouvert pour ce post
+      if (panel.dataset.postId === postId && !panel.classList.contains('hidden')) {
+        panel.classList.add('hidden');
+        panel.dataset.postId = '';
+        return;
+      }
+
+      panel.dataset.postId = postId;
+      panel.classList.remove('hidden');
+      if (btn) btn.style.borderColor = '#8B3E22';
+      panel.innerHTML = '<p class="text-xs text-[#767A55] py-2">Chargement des commentaires…</p>';
+
+      try {
+        // Utiliser le cache si disponible
+        if (!window._igCommentsCache[clientId]) {
+          const res  = await fetch(`/api/instagram-comments?clientId=${clientId}`);
+          const data = await res.json();
+          window._igCommentsCache[clientId] = data.posts || [];
+        }
+        const post = window._igCommentsCache[clientId].find(p => p.id === postId);
+        const comments = post?.comments || [];
+
+        if (!comments.length) {
+          panel.innerHTML = '<p class="text-xs text-[#767A55]/50 italic py-2">Aucun commentaire sur ce post.</p>';
+          return;
+        }
+
+        panel.innerHTML = `
+          <p class="text-xs text-[#767A55] uppercase tracking-widest mb-3">${comments.length} commentaire${comments.length > 1 ? 's' : ''}</p>
+          <div class="space-y-3 max-h-64 overflow-y-auto pr-1">
+            ${comments.map(c => `
+              <div class="bg-[#F5EDE4] rounded-xl p-3">
+                <div class="flex items-center justify-between mb-1">
+                  <p class="text-xs font-semibold text-[#2C2416]">@${c.username || '—'}</p>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-[#767A55]">❤️ ${c.like_count || 0}</span>
+                    <span class="text-[10px] text-[#767A55]">${new Date(c.timestamp).toLocaleDateString('fr-FR', {day:'2-digit',month:'short'})}</span>
+                  </div>
+                </div>
+                <p class="text-xs text-[#2C2416] mb-2">${c.text || ''}</p>
+                ${(c.replies?.data || []).map(r => `<div class="ml-3 bg-white rounded-lg p-2 border-l-2 border-[#8B3E22] mb-1"><p class="text-[10px] font-semibold text-[#8B3E22]">@${r.username}</p><p class="text-xs text-[#2C2416]">${r.text}</p></div>`).join('')}
+                <div class="flex gap-2 mt-2">
+                  <input type="text" id="reply-c-${c.id}" placeholder="Répondre à @${c.username}…" class="flex-1 px-2.5 py-1.5 text-xs rounded-lg border border-[#D6CCC0] focus:outline-none focus:border-[#8B3E22]" />
+                  <button onclick="sendCommentReply('${clientId}','${c.id}','reply-c-${c.id}')" class="px-3 py-1.5 bg-[#8B3E22] text-white rounded-lg text-xs hover:bg-[#6B2E1A] transition-colors shrink-0">↩</button>
+                </div>
+              </div>`).join('')}
+          </div>`;
+      } catch(err) {
+        panel.innerHTML = `<p class="text-xs text-red-500">Erreur : ${err.message}</p>`;
+      }
+    };
+
     window.sendCommentReply = async (clientId, commentId, inputId) => {
       const input = document.getElementById(inputId);
       const text  = input?.value.trim();
@@ -3195,44 +3257,81 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     window.loadIgDMs = async (clientId) => {
       const cont = document.getElementById('ig-dms-container');
       if (!cont || !clientId) return;
+      const inner = cont.querySelector('.p-5') || cont;
       try {
         const res  = await fetch(`/api/instagram-messages?clientId=${clientId}`);
         const data = await res.json();
-        if (data.error) { cont.querySelector('p').textContent = `Non disponible : ${data.error}`; return; }
+        if (data.error) { inner.innerHTML = `<p class="text-xs text-[#767A55]">Non disponible : ${data.error}</p>`; return; }
         const convs = data.conversations || [];
-        if (!convs.length) { cont.querySelector('p').textContent = 'Aucun message récent.'; return; }
-        cont.innerHTML = `
-          <div class="flex items-center gap-2 mb-4">
-            <iconify-icon icon="mdi:instagram" class="text-[#8B3E22] text-lg"></iconify-icon>
-            <h3 class="text-sm font-medium text-[#2C2416]">Messages privés Instagram</h3>
-            <button onclick="loadIgDMs('${clientId}')" class="ml-auto text-xs text-[#8B3E22] hover:underline">↺ Rafraîchir</button>
-          </div>
-          ${convs.map(conv => {
-            const participants = (conv.participants?.data||[]).filter(p => p.id !== clientId);
-            const name    = participants[0]?.name || participants[0]?.username || 'Inconnu';
-            const msgs    = conv.messages?.data || [];
-            const last    = msgs[0];
-            const recipientId = participants[0]?.id || '';
-            return `<details class="border border-[#D6CCC0] rounded-xl mb-3 overflow-hidden">
-              <summary class="flex items-center gap-3 p-3 cursor-pointer hover:bg-[#F5EDE4] transition-colors">
-                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] flex items-center justify-center shrink-0 text-white text-xs font-bold">${name[0]?.toUpperCase()||'?'}</div>
-                <div class="flex-1 min-w-0"><p class="text-xs font-semibold text-[#2C2416]">${name}</p>${last?`<p class="text-xs text-[#767A55] truncate">${last.message||'📎 Pièce jointe'}</p>`:''}</div>
-                <span class="text-[10px] text-[#767A55] shrink-0">${last?new Date(last.created_time).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}):''}</span>
-              </summary>
-              <div class="px-3 pb-3">
-                <div class="space-y-2 mb-3 max-h-48 overflow-y-auto">
-                  ${[...msgs].reverse().map(m => `<div class="text-xs p-2 rounded-xl ${m.from?.id === clientId ? 'bg-[#8B3E22] text-white ml-6' : 'bg-[#F5EDE4] text-[#2C2416] mr-6'}">${m.message||'📎'}</div>`).join('')}
-                </div>
-                <div class="flex gap-2">
-                  <input type="text" id="dm-input-${conv.id}" placeholder="Écrire un message…" class="flex-1 px-2.5 py-1.5 text-xs rounded-lg border border-[#D6CCC0] focus:outline-none focus:border-[#8B3E22]" />
-                  <button onclick="sendIgDM('${clientId}','${recipientId}','dm-input-${conv.id}')" class="px-3 py-1.5 bg-[#8B3E22] text-white rounded-lg text-xs hover:bg-[#6B2E1A] transition-colors">↩ Envoyer</button>
-                </div>
+        if (!convs.length) { inner.innerHTML = '<p class="text-xs text-[#767A55] italic">Aucun message récent.</p>'; return; }
+
+        // Afficher la première conversation par défaut
+        const renderConv = (conv, allConvs) => {
+          const participants = (conv.participants?.data||[]).filter(p => p.id !== clientId);
+          const name        = participants[0]?.name || participants[0]?.username || 'Inconnu';
+          const msgs        = conv.messages?.data || [];
+          const recipientId = participants[0]?.id || '';
+          return `<div class="flex gap-3 h-[360px]">
+            <!-- Liste conversations -->
+            <div class="w-40 shrink-0 border-r border-[#D6CCC0] overflow-y-auto pr-3 space-y-1">
+              ${allConvs.map((c, i) => {
+                const p2 = (c.participants?.data||[]).filter(p => p.id !== clientId);
+                const n2 = p2[0]?.name || p2[0]?.username || 'Inconnu';
+                const last2 = c.messages?.data?.[0];
+                const isActive = c.id === conv.id;
+                return `<button onclick="selectDmConv('${clientId}','${c.id}')" class="w-full flex items-center gap-2 p-2 rounded-xl text-left transition-colors ${isActive ? 'bg-[#8B3E22]/10 border border-[#8B3E22]/20' : 'hover:bg-[#F5EDE4]'}">
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] flex items-center justify-center shrink-0 text-white text-xs font-bold">${n2[0]?.toUpperCase()||'?'}</div>
+                  <div class="min-w-0"><p class="text-xs font-semibold text-[#2C2416] truncate">${n2}</p><p class="text-[10px] text-[#767A55] truncate">${last2?.message||'📎'}</p></div>
+                </button>`;
+              }).join('')}
+            </div>
+            <!-- Messages de la conversation active -->
+            <div class="flex-1 flex flex-col min-w-0">
+              <div class="flex items-center gap-2 mb-3 pb-2 border-b border-[#D6CCC0]">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] flex items-center justify-center shrink-0 text-white text-xs font-bold">${name[0]?.toUpperCase()||'?'}</div>
+                <p class="text-sm font-semibold text-[#2C2416]">${name}</p>
+                <a href="https://instagram.com/direct" target="_blank" class="ml-auto text-[10px] text-[#767A55] hover:text-[#8B3E22]">Ouvrir IG →</a>
               </div>
-            </details>`;
-          }).join('')}`;
+              <div class="flex-1 overflow-y-auto space-y-2 mb-3" id="dm-msgs-${conv.id}">
+                ${[...msgs].reverse().map(m => `<div class="flex ${m.from?.id === clientId ? 'justify-end' : 'justify-start'}">
+                  <div class="max-w-[80%] text-xs px-3 py-2 rounded-2xl ${m.from?.id === clientId ? 'bg-[#8B3E22] text-white rounded-br-sm' : 'bg-[#F5EDE4] text-[#2C2416] rounded-bl-sm'}">${m.message||'📎'}</div>
+                </div>`).join('')}
+              </div>
+              <div class="flex gap-2">
+                <input type="text" id="dm-input-${conv.id}" placeholder="Écrire un message…" onkeydown="if(event.key==='Enter') sendIgDM('${clientId}','${recipientId}','dm-input-${conv.id}')"
+                  class="flex-1 px-3 py-2 text-sm rounded-xl border border-[#D6CCC0] focus:outline-none focus:border-[#8B3E22]" />
+                <button onclick="sendIgDM('${clientId}','${recipientId}','dm-input-${conv.id}')" class="px-4 py-2 bg-[#8B3E22] text-white rounded-xl text-sm hover:bg-[#6B2E1A] transition-colors shrink-0">
+                  <iconify-icon icon="ph:paper-plane-tilt" class="text-base"></iconify-icon>
+                </button>
+              </div>
+            </div>
+          </div>`;
+        };
+
+        window._dmConvs = convs;
+        window._dmClientId = clientId;
+        inner.innerHTML = renderConv(convs[0], convs);
       } catch(err) {
-        if (cont) cont.innerHTML += `<p class="text-xs text-red-500">Erreur : ${err.message}</p>`;
+        inner.innerHTML = `<p class="text-xs text-red-500">Erreur : ${err.message}</p>`;
       }
+    };
+
+    window.selectDmConv = (clientId, convId) => {
+      const convs = window._dmConvs || [];
+      const conv  = convs.find(c => c.id === convId);
+      if (!conv) return;
+      const cont  = document.getElementById('ig-dms-container');
+      const inner = cont?.querySelector('.p-5') || cont;
+      if (inner) inner.innerHTML = ''; // will be re-rendered by loadIgDMs logic
+      // Re-use render logic
+      const participants = (conv.participants?.data||[]).filter(p => p.id !== clientId);
+      const recipientId  = participants[0]?.id || '';
+      const name         = participants[0]?.name || participants[0]?.username || 'Inconnu';
+      const msgs         = conv.messages?.data || [];
+      if (!inner) return;
+      inner.innerHTML = window._renderDmConv ? window._renderDmConv(conv, convs) : '';
+      // Fallback: just reload
+      loadIgDMs(clientId);
     };
 
     window.sendIgDM = async (clientId, recipientId, inputId) => {
