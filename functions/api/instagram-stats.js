@@ -37,15 +37,16 @@ export async function onRequestGet({ request, env }) {
 
     const rawMedia = igMedia?.data || [];
 
-    // Insights par post : shares = republications (↻), disponible sur tous les types de posts
+    // Insights par post : shares (↻ republications+partages) + saved (🔖 sauvegardes)
     const mediaWithInsights = await Promise.all(
       rawMedia.map(async (post) => {
         try {
-          const res  = await fetch(`https://graph.instagram.com/${post.id}/insights?metric=shares&access_token=${token}`);
+          const res  = await fetch(`https://graph.instagram.com/${post.id}/insights?metric=shares,saved&access_token=${token}`);
           const json = await res.json();
           if (json.data && !json.error) {
             const shares = json.data.find(m => m.name === 'shares')?.values?.[0]?.value ?? null;
-            return { ...post, reposts_count: shares };
+            const saved  = json.data.find(m => m.name === 'saved')?.values?.[0]?.value ?? null;
+            return { ...post, reposts_count: shares, saved_count: saved };
           }
         } catch(_) {}
         return post;
