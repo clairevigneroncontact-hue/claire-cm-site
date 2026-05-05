@@ -37,35 +37,18 @@ export async function onRequestGet({ request, env }) {
 
     const rawMedia = igMedia?.data || [];
 
-    // Insights par post en parallèle :
-    // - shares              = partages (✈️, tous médias)
-    // - clips_replays_count = republications (↻, reels uniquement, appel séparé)
+    // Insights par post : shares = republications (↻), disponible sur tous les types de posts
     const mediaWithInsights = await Promise.all(
       rawMedia.map(async (post) => {
-        let shares_count  = null;
-        let reposts_count = null;
-
-        // Appel 1 : partages (tous médias)
         try {
           const res  = await fetch(`https://graph.instagram.com/${post.id}/insights?metric=shares&access_token=${token}`);
           const json = await res.json();
           if (json.data && !json.error) {
-            shares_count = json.data.find(m => m.name === 'shares')?.values?.[0]?.value ?? null;
+            const shares = json.data.find(m => m.name === 'shares')?.values?.[0]?.value ?? null;
+            return { ...post, reposts_count: shares };
           }
         } catch(_) {}
-
-        // Appel 2 : republications (reels uniquement)
-        if (post.media_type === 'VIDEO') {
-          try {
-            const res  = await fetch(`https://graph.instagram.com/${post.id}/insights?metric=clips_replays_count&access_token=${token}`);
-            const json = await res.json();
-            if (json.data && !json.error) {
-              reposts_count = json.data.find(m => m.name === 'clips_replays_count')?.values?.[0]?.value ?? null;
-            }
-          } catch(_) {}
-        }
-
-        return { ...post, shares_count, reposts_count };
+        return post;
       })
     );
 
