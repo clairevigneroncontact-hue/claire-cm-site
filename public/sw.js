@@ -1,4 +1,4 @@
-const CACHE = 'claire-cm-v3';
+const CACHE = 'claire-cm-v5';
 const STATIC = [
   '/favicon.svg',
   '/favicon.ico',
