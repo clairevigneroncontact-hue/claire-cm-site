@@ -288,7 +288,10 @@
       setSuggestions(suggs);
       // Scroll au début du nouveau message dans le container
       const lastMsg = messages.lastElementChild as HTMLElement;
-      if (lastMsg) messages.scrollTop = lastMsg.offsetTop;
+      if (lastMsg) {
+        const top = lastMsg.getBoundingClientRect().top - messages.getBoundingClientRect().top + messages.scrollTop;
+        messages.scrollTop = top;
+      }
     }, 500);
   }
 
