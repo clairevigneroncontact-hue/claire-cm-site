@@ -1879,7 +1879,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         });
         const json = await res.json();
         if (json.error) {
-          alert(`Erreur : ${json.error}`);
+          const detail = json.detail ? `\nCode: ${json.detail.code} · Type: ${json.detail.type}\n${json.detail.error_user_msg || ''}` : '';
+          alert(`Erreur Meta : ${json.error}${detail}`);
           if (btn) { btn.disabled = false; btn.innerHTML = '<iconify-icon icon="mdi:instagram" class="text-base"></iconify-icon> Programmer'; }
         } else {
           const msg = json.scheduled ? 'Post programmé sur Instagram ✓' : 'Post publié sur Instagram ✓';
