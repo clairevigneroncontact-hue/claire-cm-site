@@ -154,7 +154,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
 
           <!-- Aperçu contenus en attente -->
-          <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
+          <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0] lg:col-span-2">
             <div class="flex items-center justify-between gap-3 mb-5">
               <div class="flex items-center gap-3">
                 <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
@@ -167,19 +167,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <div id="content-list-home"><p class="text-xs text-[#2C2416]/30 italic">Chargement…</p></div>
           </div>
 
-          <!-- Objectifs du mois -->
-          <div id="card-objectives" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] hidden">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-9 h-9 bg-[#767A55]/10 rounded-xl flex items-center justify-center">
-                <iconify-icon icon="solar:target-linear" stroke-width="1.5" class="text-lg text-[#767A55]"></iconify-icon>
-              </div>
-              <h2 class="text-base text-[#2C2416] font-medium">Objectifs du mois</h2>
-            </div>
-            <div id="objectives-list" class="space-y-2">
-              <p class="text-xs text-[#2C2416]/30 italic">Aucun objectif défini ce mois.</p>
-            </div>
-          </div>
+        </div>
 
+        <!-- Objectifs du mois (section indépendante sous la grille) -->
+        <div id="card-objectives" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] mt-5 hidden">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-9 h-9 bg-[#767A55]/10 rounded-xl flex items-center justify-center">
+              <iconify-icon icon="solar:target-linear" stroke-width="1.5" class="text-lg text-[#767A55]"></iconify-icon>
+            </div>
+            <h2 class="text-base text-[#2C2416] font-medium">Objectifs du mois</h2>
+          </div>
+          <div id="objectives-list" class="space-y-2">
+            <p class="text-xs text-[#2C2416]/30 italic">Aucun objectif défini ce mois.</p>
+          </div>
         </div>
 
         <!-- Calendrier éditorial — split view : grille gauche, détail jour droite -->

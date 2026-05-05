@@ -29,12 +29,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     <!-- Onglets -->
     <div style="display:flex;gap:4px;background:#EDEDFF;border-radius:12px;padding:4px;margin-bottom:24px;overflow-x:auto;">
-      {['home','content','docs'].map((tab, i) => {
-        const labels = ['Accueil','Mes contenus','Documents'];
-        const icons  = ['solar:home-2-linear','solar:check-square-linear','solar:folder-linear'];
-        return `<button id="tab-btn-${tab}" onclick="switchDTab('${tab}')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;${tab==='home'?'background:white;color:#1A1A2E;box-shadow:0 1px 4px rgba(0,0,0,.08);':'background:transparent;color:#6B7280;'}">
-          <iconify-icon icon="${icons[i]}" stroke-width="1.5" style="font-size:16px;flex-shrink:0;"></iconify-icon>${labels[i]}</button>`;
-      }).join('')}
+      <button id="tab-btn-home" onclick="switchDTab('home')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;background:white;color:#1A1A2E;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+        <iconify-icon icon="solar:home-2-linear" stroke-width="1.5" style="font-size:16px;flex-shrink:0;"></iconify-icon>Accueil
+      </button>
+      <button id="tab-btn-content" onclick="switchDTab('content')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;background:transparent;color:#6B7280;">
+        <iconify-icon icon="solar:check-square-linear" stroke-width="1.5" style="font-size:16px;flex-shrink:0;"></iconify-icon>Mes contenus
+      </button>
+      <button id="tab-btn-docs" onclick="switchDTab('docs')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;background:transparent;color:#6B7280;">
+        <iconify-icon icon="solar:folder-linear" stroke-width="1.5" style="font-size:16px;flex-shrink:0;"></iconify-icon>Documents
+      </button>
     </div>
 
     <!-- Accueil -->
