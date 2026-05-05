@@ -73,7 +73,7 @@ export async function onRequestPost({ request, env }) {
       body: params,
     });
     const container = await containerRes.json();
-    if (container.error) return resp({ error: container.error.message }, 400);
+    if (container.error) return resp({ error: container.error.message, detail: container.error }, 400);
 
     // 6. Pour les vidéos : attendre que le container soit prêt (max 20s)
     if (isVideo) {

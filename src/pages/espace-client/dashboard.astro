@@ -1142,6 +1142,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (status === 'approved') {
         _calNewItems.add(id);
         sessionStorage.setItem(_calNewKey, JSON.stringify([..._calNewItems]));
+        // Auto-programmer sur Instagram dès la validation
+        try {
+          await fetch('/api/instagram-publish-post', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ contentItemId: id }),
+          });
+        } catch(_) {}
       }
       window.location.reload();
     };
