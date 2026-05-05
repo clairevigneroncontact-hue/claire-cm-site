@@ -1926,14 +1926,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <p class="text-[10px] text-[#767A55] mt-1">${points[0]?.date || ''} → ${points[points.length-1]?.date || ''}</p>`;
         };
 
-        window._lastInsightsDays = window._lastInsightsDays || 30;
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const defaultFrom = new Date(Date.now() - 30*24*60*60*1000).toISOString().slice(0, 10);
+        if (!window._evoFrom) window._evoFrom = defaultFrom;
+        if (!window._evoUntil) window._evoUntil = todayStr;
 
-        const renderSparklines = (ins, days) => {
+        const tipBtn = (tip) => `<div class="relative group/tip inline-block ml-1 align-middle">
+          <button class="w-3.5 h-3.5 rounded-full bg-[#D6CCC0] text-[#767A55] text-[8px] font-bold flex items-center justify-center hover:bg-[#8B3E22] hover:text-white transition-colors leading-none">i</button>
+          <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-52 bg-[#2C2416] text-white text-[10px] rounded-xl p-2.5 leading-relaxed opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">${tip}</div>
+        </div>`;
+
+        const renderSparklines = (ins, from, until) => {
           if (!ins.reach?.length && !ins.followers?.length && !ins.impressions?.length) return;
-          const tipBtn = (tip) => `<div class="relative group/tip inline-block ml-1 align-middle">
-            <button class="w-3.5 h-3.5 rounded-full bg-[#D6CCC0] text-[#767A55] text-[8px] font-bold flex items-center justify-center hover:bg-[#8B3E22] hover:text-white transition-colors leading-none">i</button>
-            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-52 bg-[#2C2416] text-white text-[10px] rounded-xl p-2.5 leading-relaxed opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">${tip}</div>
-          </div>`;
           const metrics = [
             { key: 'reach',       label: 'Portée',             color: '#8B3E22', tip: 'Nombre de comptes uniques ayant vu au moins une de vos publications sur la période.' },
             { key: 'followers',   label: 'Abonnés (variation)', color: '#767A55', tip: 'Variation nette d\'abonnés par jour — positif = vous en gagnez, négatif = vous en perdez.' },
@@ -1941,11 +1945,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           ];
           const existing = document.getElementById(`ig-evolution-${clientId}`);
           const html = `<div class="bg-white rounded-2xl p-5 border border-[#D6CCC0] mt-4" id="ig-evolution-${clientId}">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-medium text-[#2C2416]">📈 Évolution</h3>
-              <select onchange="refreshEvolution('${clientId}', parseInt(this.value))" class="text-xs border border-[#D6CCC0] rounded-lg px-2 py-1 focus:outline-none focus:border-[#8B3E22] bg-white">
-                ${[7,14,30,60,90].map(d => `<option value="${d}" ${d === days ? 'selected' : ''}>${d} jours</option>`).join('')}
-              </select>
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+              <h3 class="text-sm font-medium text-[#2C2416] mr-auto">📈 Évolution</h3>
+              <div class="flex items-center gap-2">
+                <label class="text-[10px] text-[#767A55] uppercase tracking-widest">Du</label>
+                <input type="date" id="evo-from-${clientId}" value="${from}" max="${until}" class="text-xs border border-[#D6CCC0] rounded-lg px-2 py-1 focus:outline-none focus:border-[#8B3E22] bg-white" />
+                <label class="text-[10px] text-[#767A55] uppercase tracking-widest">Au</label>
+                <input type="date" id="evo-until-${clientId}" value="${until}" min="${from}" max="${todayStr}" class="text-xs border border-[#D6CCC0] rounded-lg px-2 py-1 focus:outline-none focus:border-[#8B3E22] bg-white" />
+                <button onclick="refreshEvolution('${clientId}')" class="px-3 py-1 bg-[#8B3E22] text-white rounded-lg text-xs hover:bg-[#6B2E1A] transition-colors">Mettre à jour</button>
+              </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               ${metrics.map(m => `<div class="bg-[#F5EDE4] rounded-xl p-3">
@@ -1961,13 +1969,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           else container.innerHTML += html;
         };
 
-        renderSparklines(insightsData, window._lastInsightsDays);
+        renderSparklines(insightsData, window._evoFrom, window._evoUntil);
 
-        window.refreshEvolution = async (clientId, days) => {
-          window._lastInsightsDays = days;
-          const res  = await fetch(`/api/instagram-account-insights?clientId=${clientId}&days=${days}`);
+        window.refreshEvolution = async (clientId) => {
+          const from  = document.getElementById(`evo-from-${clientId}`)?.value || window._evoFrom;
+          const until = document.getElementById(`evo-until-${clientId}`)?.value || window._evoUntil;
+          window._evoFrom  = from;
+          window._evoUntil = until;
+          const btn = document.querySelector(`#ig-evolution-${clientId} button[onclick]`);
+          if (btn) { btn.disabled = true; btn.textContent = '…'; }
+          const res  = await fetch(`/api/instagram-account-insights?clientId=${clientId}&since=${from}&until=${until}`);
           const data = await res.json();
-          renderSparklines(data, days);
+          renderSparklines(data, from, until);
         };
 
       } catch(err) {

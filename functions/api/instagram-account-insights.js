@@ -27,9 +27,11 @@ export async function onRequestGet({ request, env }) {
     const token = profile.ig_access_token;
     const igId  = profile.ig_account_id;
 
-    const days  = parseInt(url.searchParams.get('days') || '30', 10);
-    const since = Math.floor((Date.now() - days * 24 * 60 * 60 * 1000) / 1000);
-    const until = Math.floor(Date.now() / 1000);
+    const sinceParam = url.searchParams.get('since');
+    const untilParam = url.searchParams.get('until');
+    const days       = parseInt(url.searchParams.get('days') || '30', 10);
+    const since = sinceParam ? Math.floor(new Date(sinceParam).getTime() / 1000) : Math.floor((Date.now() - days * 24 * 60 * 60 * 1000) / 1000);
+    const until = untilParam ? Math.floor(new Date(untilParam + 'T23:59:59').getTime() / 1000) : Math.floor(Date.now() / 1000);
 
     const [reachRes, followersRes, impressionsRes] = await Promise.all([
       fetch(`https://graph.instagram.com/${igId}/insights?metric=reach&period=day&since=${since}&until=${until}&access_token=${token}`).then(r => r.json()),
