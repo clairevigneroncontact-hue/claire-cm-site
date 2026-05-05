@@ -1862,18 +1862,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <a href="/api/instagram-auth?clientId=${clientId}" class="shrink-0 text-xs px-3 py-1.5 border border-[#D6CCC0] text-[#767A55] rounded-full hover:border-[#8B3E22] hover:text-[#8B3E22] transition-colors">↺ Reconnecter</a>
             </div>
             <div class="grid grid-cols-3 gap-3">
-              <div class="text-center bg-[#F5EDE4] rounded-xl p-3">
-                <p class="text-xl font-bold text-[#2C2416]">${(p.followers_count || 0).toLocaleString('fr-FR')}</p>
-                <p class="text-[10px] text-[#767A55] uppercase tracking-widest mt-0.5">Abonnés</p>
-              </div>
-              <div class="text-center bg-[#F5EDE4] rounded-xl p-3">
-                <p class="text-xl font-bold text-[#2C2416]">${(p.media_count || 0).toLocaleString('fr-FR')}</p>
-                <p class="text-[10px] text-[#767A55] uppercase tracking-widest mt-0.5">Publications</p>
-              </div>
-              <div class="text-center bg-[#F5EDE4] rounded-xl p-3">
-                <p class="text-xl font-bold text-[#2C2416]">${avgEngage}%</p>
-                <p class="text-[10px] text-[#767A55] uppercase tracking-widest mt-0.5">Engagement</p>
-              </div>
+              ${[
+                { val: (p.followers_count||0).toLocaleString('fr-FR'), label: 'Abonnés', tip: 'Nombre total de comptes qui suivent votre Instagram.' },
+                { val: (p.media_count||0).toLocaleString('fr-FR'), label: 'Publications', tip: 'Nombre total de posts, reels et carrousels publiés sur votre compte.' },
+                { val: avgEngage+'%', label: 'Engagement', tip: 'Part de vos abonnés qui interagissent avec vos posts (likes + commentaires). Un bon taux est > 3%.' },
+              ].map(s => `<div class="text-center bg-[#F5EDE4] rounded-xl p-3 relative">
+                <p class="text-xl font-bold text-[#2C2416]">${s.val}</p>
+                <div class="flex items-center justify-center gap-1 mt-0.5">
+                  <p class="text-[10px] text-[#767A55] uppercase tracking-widest">${s.label}</p>
+                  <div class="relative group/tip">
+                    <button class="w-3.5 h-3.5 rounded-full bg-[#D6CCC0] text-[#767A55] text-[8px] font-bold flex items-center justify-center hover:bg-[#8B3E22] hover:text-white transition-colors leading-none">i</button>
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-44 bg-[#2C2416] text-white text-[10px] rounded-xl p-2.5 leading-relaxed opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">${s.tip}</div>
+                  </div>
+                </div>
+              </div>`).join('')}
             </div>
             ${bestBlock}
           </div>

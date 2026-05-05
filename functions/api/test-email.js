@@ -11,7 +11,7 @@ export async function onRequestGet(context) {
   const resendKey = env.RESEND_API_KEY;
   if (!resendKey) return json({ error: 'RESEND_API_KEY non configurée dans Cloudflare' }, 500);
 
-  const DASHBOARD = 'https://claire-cm-site.pages.dev/espace-client/dashboard';
+  const DASHBOARD = 'https://clairevigneron.com/espace-client/dashboard';
   const BTN = (label, href) =>
     `<a href="${href}" style="display:inline-block;background:#8B3E22;color:#F5EDE4;padding:12px 24px;border-radius:50px;font-size:14px;text-decoration:none">${label} &rarr;</a>`;
 

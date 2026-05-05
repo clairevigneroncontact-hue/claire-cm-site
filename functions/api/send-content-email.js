@@ -60,7 +60,7 @@ export async function onRequestPost(context) {
       `<p style="color:#2C2416;font-size:17px;font-weight:600;margin:0 0 12px">${String(title)}</p>`,
       captionLine,
       dateLine,
-      '<a href="https://claire-cm-site.pages.dev/espace-client/dashboard"',
+      '<a href="https://clairevigneron.com/espace-client/dashboard"',
       ' style="display:inline-block;background:#8B3E22;color:#F5EDE4;padding:12px 24px;border-radius:50px;font-size:14px;text-decoration:none">',
       'Valider ou refuser &rarr;</a>',
       '</td></tr></table>',

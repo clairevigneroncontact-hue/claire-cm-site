@@ -27,7 +27,8 @@ export async function onRequestGet({ request, env }) {
     const token = profile.ig_access_token;
     const igId  = profile.ig_account_id;
 
-    const since = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000);
+    const days  = parseInt(url.searchParams.get('days') || '30', 10);
+    const since = Math.floor((Date.now() - days * 24 * 60 * 60 * 1000) / 1000);
     const until = Math.floor(Date.now() / 1000);
 
     const [reachRes, followersRes, impressionsRes] = await Promise.all([
