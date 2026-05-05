@@ -1,8 +1,12 @@
-// Prévisualisation des templates email — accès réservé admin
-// GET /api/email-preview?type=contenu|document|message|rappel|bilan
+// Prévisualisation des templates email — accès réservé admin (secret requis)
+// GET /api/email-preview?type=contenu|document|message|rappel|bilan&secret=CRON_SECRET
 export async function onRequestGet(context) {
   const { request, env } = context;
-  const url  = new URL(request.url);
+  const url    = new URL(request.url);
+  const secret = url.searchParams.get('secret');
+  if (!env.CRON_SECRET || secret !== env.CRON_SECRET) {
+    return new Response('Accès refusé', { status: 403 });
+  }
   const type = url.searchParams.get('type') || 'contenu';
 
   const DASHBOARD = 'https://clairevigneron.com/espace-client/dashboard';

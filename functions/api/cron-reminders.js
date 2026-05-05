@@ -4,8 +4,8 @@
 export async function onRequestPost(context) {
   const { request, env } = context;
   const secret = env.CRON_SECRET;
-  if (secret && request.headers.get('X-Cron-Secret') !== secret)
-    return new Response('Unauthorized', { status: 401 });
+  if (!secret || request.headers.get('X-Cron-Secret') !== secret)
+    return new Response("Unauthorized", { status: 401 });
 
   const supabaseUrl = env.SUPABASE_URL;
   const supabaseKey = env.SUPABASE_SERVICE_KEY;
