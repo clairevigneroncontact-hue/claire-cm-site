@@ -1852,7 +1852,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 <p class="font-semibold text-[#2C2416]">@${p.username || '—'}</p>
                 ${p.biography ? `<p class="text-xs text-[#767A55] mt-0.5 line-clamp-2">${p.biography}</p>` : ''}
               </div>
-              <a href="/api/instagram-auth?clientId=${clientId}" class="shrink-0 text-xs px-3 py-1.5 border border-[#D6CCC0] text-[#767A55] rounded-full hover:border-[#8B3E22] hover:text-[#8B3E22] transition-colors">↺ Reconnecter</a>
+              <div class="flex gap-2 shrink-0">
+                <a href="/api/instagram-auth?clientId=${clientId}" class="text-xs px-3 py-1.5 border border-[#D6CCC0] text-[#767A55] rounded-full hover:border-[#8B3E22] hover:text-[#8B3E22] transition-colors">↺ Reconnecter</a>
+                <button onclick="disconnectInstagram('${clientId}')" class="text-xs px-3 py-1.5 border border-red-200 text-red-400 rounded-full hover:bg-red-50 hover:border-red-400 transition-colors">Déconnecter</button>
+              </div>
             </div>
             <div class="grid grid-cols-3 gap-3">
               ${[
@@ -2004,6 +2007,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       msg.textContent = error ? `Erreur : ${error.message}` : 'Informations mises à jour ✓';
       msg.classList.remove('hidden');
       setTimeout(() => msg.classList.add('hidden'), 3000);
+    };
+
+    // Déconnecter Instagram d'un client
+    window.disconnectInstagram = async (clientId) => {
+      if (!confirm('Déconnecter le compte Instagram de ce client ?')) return;
+      const sb = await getSB();
+      const { error } = await sb.from('profiles').update({
+        ig_access_token: null, ig_account_id: null, ig_token_expires_at: null,
+      }).eq('id', clientId);
+      if (error) { alert('Erreur : ' + error.message); return; }
+      await window.openClient(clientId);
+      window.switchClientTab('stats');
     };
 
     // Programmer / publier un post sur Instagram

@@ -713,7 +713,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 <p class="font-semibold text-[#2C2416]">@${prof.username || '—'}</p>
                 ${prof.biography ? `<p class="text-xs text-[#767A55] mt-0.5 line-clamp-2">${prof.biography}</p>` : ''}
               </div>
-              <a href="/api/instagram-auth?clientId=${uid}&from=dashboard" class="shrink-0 text-xs px-3 py-1.5 border border-[#D6CCC0] text-[#767A55] rounded-full hover:border-[#8B3E22] hover:text-[#8B3E22] transition-colors">↺ Reconnecter</a>
+              <div class="flex gap-2 shrink-0">
+                <a href="/api/instagram-auth?clientId=${uid}&from=dashboard" class="text-xs px-3 py-1.5 border border-[#D6CCC0] text-[#767A55] rounded-full hover:border-[#8B3E22] hover:text-[#8B3E22] transition-colors">↺ Reconnecter</a>
+                <button onclick="disconnectDashInstagram()" class="text-xs px-3 py-1.5 border border-red-200 text-red-400 rounded-full hover:bg-red-50 hover:border-red-400 transition-colors">Déconnecter</button>
+              </div>
             </div>
             <div class="grid grid-cols-3 gap-3">
               ${[
@@ -755,6 +758,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>` : ''}`;
 
         // Cache commentaires dashboard
+        window.disconnectDashInstagram = async () => {
+          if (!confirm('Déconnecter votre compte Instagram ?')) return;
+          const sb2 = await getSB();
+          const { error } = await sb2.from('profiles').update({
+            ig_access_token: null, ig_account_id: null, ig_token_expires_at: null,
+          }).eq('id', uid);
+          if (error) { alert('Erreur : ' + error.message); return; }
+          window.location.reload();
+        };
+
         window._dashCommentsCache = null;
         window.toggleDashComments = async (postId, idx) => {
           const panel = document.getElementById('dash-post-comments-panel');
