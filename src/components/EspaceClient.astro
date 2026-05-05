@@ -1,26 +1,25 @@
 ---
 ---
 
-<section class="bg-[#2C2416] py-20 md:py-32 px-6 md:px-12 overflow-hidden relative">
+<section class="bg-[#EDE6DB] py-20 md:py-32 px-6 md:px-12 overflow-hidden relative">
 
   <!-- Cercles décoratifs fond -->
-  <div class="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-[#8B3E22]/8 -translate-y-1/3 translate-x-1/3 pointer-events-none"></div>
-  <div class="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-[#767A55]/8 translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
+  <div class="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-[#D6CCC0]/40 -translate-y-1/3 translate-x-1/3 pointer-events-none"></div>
+  <div class="absolute bottom-0 left-0 w-[350px] h-[350px] rounded-full bg-[#D6CCC0]/30 translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
 
   <div class="max-w-7xl mx-auto relative z-10">
 
     <!-- Badge + accroche -->
     <div class="text-center mb-16">
-      <span class="inline-flex items-center gap-2 bg-[#8B3E22]/20 border border-[#8B3E22]/30 text-[#D6CCC0] text-xs font-semibold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
+      <span class="inline-flex items-center gap-2 bg-[#8B3E22]/10 border border-[#8B3E22]/20 text-[#8B3E22] text-xs font-semibold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
         <iconify-icon icon="solar:star-bold" class="text-[#8B3E22]"></iconify-icon>
         Inclus dans chaque collaboration
       </span>
-      <h2 class="text-4xl md:text-6xl font-serif text-[#F5EDE4] leading-tight mb-6">
+      <h2 class="text-4xl md:text-6xl font-serif text-[#2C2416] leading-tight mb-6">
         Votre Instagram,<br />
-        <span class="italic text-[#D6CCC0]">sous vos yeux en permanence.</span>
+        <span class="italic text-[#8B3E22]">sous vos yeux en permanence.</span>
       </h2>
-      <p class="text-xl text-[#F5EDE4]/50 font-light max-w-2xl mx-auto leading-relaxed">
-        Aucun autre Community Manager ne vous propose ça.<br class="hidden md:block" />
+      <p class="text-xl text-[#2C2416]/50 font-light max-w-2xl mx-auto leading-relaxed">
         Un espace privé, pensé pour vous, mis à jour en temps réel.
       </p>
     </div>
@@ -142,7 +141,7 @@
             icon: 'solar:chart-2-bold',
             title: 'Statistiques Instagram en direct',
             desc: "Abonnés, portée, taux d'engagement, courbes d'évolution et meilleur post du mois — vos vraies données, pas des estimations.",
-            badge: 'Nouveau',
+            badge: null,
           },
           {
             icon: 'solar:calendar-bold',
@@ -152,9 +151,9 @@
           },
           {
             icon: 'solar:chat-round-dots-bold',
-            title: 'Messagerie + DMs Instagram',
-            desc: "Échangez avec moi directement et consultez vos messages privés Instagram depuis le même endroit.",
-            badge: 'Nouveau',
+            title: 'Messagerie directe',
+            desc: "Échangez avec moi directement — sans vous perdre dans vos emails.",
+            badge: null,
           },
           {
             icon: 'solar:folder-bold',
@@ -174,11 +173,8 @@
               <iconify-icon icon={f.icon} style="color:#8B3E22;font-size:1.2rem"></iconify-icon>
             </div>
             <div>
-              <div class="flex items-center gap-2 mb-1">
-                <p class="text-[#F5EDE4] font-medium text-sm">{f.title}</p>
-                {f.badge && <span class="text-[10px] bg-[#8B3E22] text-white px-2 py-0.5 rounded-full font-semibold">{f.badge}</span>}
-              </div>
-              <p class="text-[#F5EDE4]/40 text-sm font-light leading-relaxed">{f.desc}</p>
+              <p class="text-[#2C2416] font-medium text-sm mb-1">{f.title}</p>
+              <p class="text-[#767A55] text-sm font-light leading-relaxed">{f.desc}</p>
             </div>
           </div>
         ))}
@@ -186,17 +182,17 @@
     </div>
 
     <!-- Citation forte -->
-    <div class="border-t border-[#F5EDE4]/10 pt-14 text-center">
-      <blockquote class="text-2xl md:text-3xl font-serif italic text-[#F5EDE4]/70 max-w-3xl mx-auto leading-relaxed mb-8">
+    <div class="border-t border-[#D6CCC0] pt-14 text-center">
+      <blockquote class="text-2xl md:text-3xl font-serif italic text-[#2C2416]/70 max-w-3xl mx-auto leading-relaxed mb-8">
         "Vous déléguez votre Instagram — mais vous restez aux commandes."
       </blockquote>
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
         <a href="https://cal.com/claire-vigneron-k5okcq/30min?user=claire-vigneron-k5okcq&overlayCalendar=true"
           target="_blank" rel="noopener"
-          class="inline-flex items-center gap-2 bg-[#8B3E22] text-[#F5EDE4] px-8 py-4 rounded-full font-medium hover:bg-[#6B2E1A] transition-colors">
-          Voir mon espace en live →
+          class="inline-flex items-center gap-2 bg-[#2C2416] text-[#F5EDE4] px-8 py-4 rounded-full font-medium hover:bg-[#8B3E22] transition-colors">
+          Découvrir les offres →
         </a>
-        <a href="/espace-client" class="text-[#F5EDE4]/40 text-sm hover:text-[#F5EDE4]/70 transition-colors underline underline-offset-4">
+        <a href="/espace-client" class="text-[#2C2416]/40 text-sm hover:text-[#2C2416]/70 transition-colors underline underline-offset-4">
           Déjà client ? Accéder à mon espace
         </a>
       </div>
