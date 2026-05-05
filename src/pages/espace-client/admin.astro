@@ -99,6 +99,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </button>
         </div>
 
+        <!-- Stats globales -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0]">
+            <p class="text-xs text-[#767A55] mb-1 uppercase tracking-wide">Clients actifs</p>
+            <p id="gstat-clients" class="text-3xl font-semibold text-[#2C2416]">—</p>
+          </div>
+          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0]">
+            <p class="text-xs text-[#767A55] mb-1 uppercase tracking-wide">À valider</p>
+            <p id="gstat-pending" class="text-3xl font-semibold text-[#8B3E22]">—</p>
+          </div>
+          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0]">
+            <p class="text-xs text-[#767A55] mb-1 uppercase tracking-wide">CA mensuel estimé</p>
+            <p id="gstat-revenue" class="text-3xl font-semibold text-[#2C2416]">—</p>
+          </div>
+          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0]">
+            <p class="text-xs text-[#767A55] mb-1 uppercase tracking-wide">Clients inactifs</p>
+            <p id="gstat-inactive" class="text-3xl font-semibold text-[#767A55]">—</p>
+            <p class="text-[10px] text-[#767A55]/60">+14 jours sans activité</p>
+          </div>
+        </div>
+
 
         <!-- Formulaire nouveau client -->
         <div id="new-client-form" class="hidden bg-white rounded-2xl p-6 border border-[#D6CCC0] mb-6">
@@ -1044,10 +1065,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       loadAdminNotifs();
     }
 
+    const OFFER_REVENUE = { audit: 97, pack: 320, mensuel: 550 };
+
     function renderClients(list) {
       const el    = document.getElementById('clients-list');
       const count = document.getElementById('clients-count');
       if (count) count.textContent = `${list.length} client${list.length > 1 ? 's' : ''}`;
+
+      // Stats globales
+      const totalPending  = list.reduce((s, c) => s + (c.pendingCount||0), 0);
+      const totalRevenue  = list.reduce((s, c) => s + (OFFER_REVENUE[c.offer] || 0), 0);
+      const now14         = Date.now() - 14*24*3600*1000;
+      const inactiveCount = list.filter(c => {
+        const last = c.lastContent?.updated_at || c.lastUpload?.created_at || c.created_at;
+        return new Date(last).getTime() < now14;
+      }).length;
+      const g = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      g('gstat-clients',  list.length);
+      g('gstat-pending',  totalPending || '0');
+      g('gstat-revenue',  totalRevenue ? totalRevenue + ' €' : '—');
+      g('gstat-inactive', inactiveCount || '0');
 
       if (!list.length) {
         el.innerHTML = '<p class="text-sm text-[#2C2416]/40 italic">Aucun client trouvé.</p>';
@@ -1091,6 +1128,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           : `<span class="text-sm font-bold">${(c.full_name || c.email || '?')[0].toUpperCase()}</span>`;
         const avatarBg = hasRecentAct ? 'bg-[#5A1E0E] text-white border-[#5A1E0E]' : 'bg-[#8B3E22]/10 text-[#8B3E22] border-[#D6CCC0]';
 
+        // Indicateur de santé
+        const lastActivityDate = new Date(c.lastContent?.updated_at || c.lastUpload?.created_at || c.created_at).getTime();
+        const daysSince = Math.floor((now - lastActivityDate) / (24*3600*1000));
+        const health = pendingCount > 0 ? { dot: '🟡', label: 'À valider', color: 'text-amber-600' }
+          : daysSince <= 7  ? { dot: '🟢', label: 'Actif', color: 'text-green-600' }
+          : daysSince <= 14 ? { dot: '🟡', label: `${daysSince}j sans activité`, color: 'text-amber-600' }
+          : { dot: '🔴', label: `${daysSince}j sans activité`, color: 'text-red-500' };
+
         return `
         <div class="relative overflow-hidden ${cardBg} rounded-2xl border ${borderClass} cursor-pointer hover:border-[#8B3E22] hover:shadow-md transition-all group" onclick="openClient('${c.id}')">
           ${hasRecentAct ? '<div class="absolute inset-y-0 left-0 w-1 bg-[#5A1E0E] rounded-l-2xl"></div>' : ''}
@@ -1106,7 +1151,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   ${hasRecentAct ? '<span class="text-[10px] px-2 py-0.5 bg-[#5A1E0E] text-white rounded-full shrink-0 animate-pulse">● activité</span>' : isNew ? '<span class="text-[10px] px-2 py-0.5 bg-green-100 text-green-700 rounded-full shrink-0">Nouveau</span>' : ''}
                   ${pendingCount ? `<span class="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full shrink-0 font-bold">⏳ ${pendingCount}</span>` : ''}
                 </div>
-                <p class="text-sm text-[#767A55] truncate">${c.email}${c.instagram_handle ? ' · @' + c.instagram_handle : ''}</p>
+                <div class="flex items-center gap-2">
+                  <p class="text-sm text-[#767A55] truncate">${c.email}${c.instagram_handle ? ' · @' + c.instagram_handle : ''}</p>
+                  <span class="text-xs ${health.color} shrink-0">${health.dot} ${health.label}</span>
+                </div>
               </div>
               <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5" class="text-[#D6CCC0] group-hover:text-[#8B3E22] shrink-0 transition-colors text-lg"></iconify-icon>
             </div>
@@ -1595,6 +1643,25 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
           <!-- Sous-onglet : Factures -->
           <div id="adocs-subtab-factures" class="hidden">
+            <!-- Générateur de facture -->
+            <div class="bg-[#F5EDE4] rounded-2xl p-5 border border-[#D6CCC0] mb-4">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-medium text-[#2C2416]">Générer une facture</h3>
+                <button onclick="this.closest('.bg-\\[#F5EDE4\\]').querySelector('.invoice-gen-form').classList.toggle('hidden')" class="text-xs text-[#8B3E22] hover:underline">+ Nouvelle facture</button>
+              </div>
+              <div class="invoice-gen-form hidden space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                  <input id="inv-numero" type="text" placeholder="N° facture (ex: 2026-001)" class="px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+                  <input id="inv-date" type="date" class="px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+                </div>
+                <input id="inv-prestation" type="text" placeholder="Prestation (ex: Accompagnement mensuel — mai 2026)" class="w-full px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+                <div class="grid grid-cols-2 gap-3">
+                  <input id="inv-montant" type="number" placeholder="Montant HT (€)" class="px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" />
+                  <input id="inv-client-name" type="text" placeholder="Nom du client" class="px-3 py-2 rounded-xl border border-[#D6CCC0] text-sm focus:outline-none focus:border-[#8B3E22] bg-white" value="${c.full_name||''}" />
+                </div>
+                <button onclick="generateInvoice('${clientId}')" class="w-full py-2.5 bg-[#2C2416] text-white rounded-xl text-sm font-medium hover:bg-[#8B3E22] transition-colors">Générer et imprimer</button>
+              </div>
+            </div>
             <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
               <h3 class="text-sm font-medium text-[#2C2416] mb-3">Factures (${docsInv.length})</h3>
               <div id="invoice-items-box" class="divide-y divide-[#D6CCC0]/30">
@@ -2423,6 +2490,42 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     const CONTENT_TYPES = ['post', 'story', 'reel', 'carrousel', 'planning', 'audit'];
+
+    window.generateInvoice = (clientId) => {
+      const numero     = document.getElementById('inv-numero')?.value || 'XXXX-XXX';
+      const date       = document.getElementById('inv-date')?.value ? new Date(document.getElementById('inv-date').value).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR');
+      const prestation = document.getElementById('inv-prestation')?.value || 'Prestation CM';
+      const montant    = parseFloat(document.getElementById('inv-montant')?.value || 0);
+      const clientName = document.getElementById('inv-client-name')?.value || 'Client';
+      const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Facture ${numero}</title>
+      <style>body{font-family:Georgia,serif;color:#2C2416;max-width:680px;margin:40px auto;padding:0 20px}
+      h1{font-size:28px;margin:0 0 4px}p{margin:4px 0;font-size:14px}.label{color:#767A55;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+      .divider{border:none;border-top:1px solid #D6CCC0;margin:24px 0}
+      table{width:100%;border-collapse:collapse;margin-top:16px}th{text-align:left;font-size:12px;color:#767A55;text-transform:uppercase;letter-spacing:.06em;padding:8px 0;border-bottom:1px solid #D6CCC0}
+      td{padding:12px 0;font-size:14px;border-bottom:1px solid #F5EDE4}.total{font-size:20px;font-weight:bold;text-align:right;margin-top:20px}
+      .badge{display:inline-block;background:#F5EDE4;padding:4px 12px;border-radius:20px;font-size:12px;color:#8B3E22}
+      footer{margin-top:40px;font-size:11px;color:#767A55;text-align:center}
+      @media print{body{margin:20px}}</style></head><body>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div><h1>Claire Vigneron</h1><p class="label">Community Manager</p></div>
+        <div style="text-align:right"><span class="badge">FACTURE</span><br><strong style="font-size:18px">${numero}</strong></div>
+      </div>
+      <hr class="divider">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:20px 0">
+        <div><p class="label">Émetteur</p><p><strong>Claire Vigneron</strong></p><p>Rue Paul Féval, 35320 Crevin</p><p>clairevigneron.contact@gmail.com</p><p>SIREN : 939 956 421</p><p>TVA non applicable (art. 293B CGI)</p></div>
+        <div><p class="label">Client</p><p><strong>${clientName}</strong></p><p class="label" style="margin-top:16px">Date d'émission</p><p>${date}</p></div>
+      </div>
+      <table><thead><tr><th>Prestation</th><th style="text-align:right">Montant</th></tr></thead><tbody>
+        <tr><td>${prestation}</td><td style="text-align:right">${montant.toFixed(2)} €</td></tr>
+      </tbody></table>
+      <p class="total">Total : ${montant.toFixed(2)} €</p>
+      <p style="font-size:12px;color:#767A55;margin-top:8px">TVA non applicable — Article 293B du CGI</p>
+      <hr class="divider">
+      <footer>Claire Vigneron · Community Manager · SIREN 939 956 421 · clairevigneron.contact@gmail.com · 06 78 30 13 58</footer>
+      <script>window.print();<\/script></body></html>`;
+      const w = window.open('', '_blank');
+      if (w) { w.document.write(html); w.document.close(); }
+    };
 
     window.uploadDoc = async (clientId) => {
       const sb   = await getSB();

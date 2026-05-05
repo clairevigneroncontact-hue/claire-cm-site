@@ -131,6 +131,23 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
       <!-- Onglet Accueil -->
       <div id="tab-home-panel">
+
+        <!-- Mini stats rapides -->
+        <div id="quick-stats-bar" class="grid grid-cols-3 gap-3 mb-5 hidden">
+          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0] text-center">
+            <p class="text-xs text-[#767A55] mb-1">Abonnés</p>
+            <p id="qs-followers" class="text-2xl font-semibold text-[#2C2416]">—</p>
+          </div>
+          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0] text-center">
+            <p class="text-xs text-[#767A55] mb-1">Portée (30j)</p>
+            <p id="qs-reach" class="text-2xl font-semibold text-[#8B3E22]">—</p>
+          </div>
+          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0] text-center">
+            <p class="text-xs text-[#767A55] mb-1">Objectifs ce mois</p>
+            <p id="qs-objectives" class="text-2xl font-semibold text-[#2C2416]">—</p>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
           <!-- Tâches -->
@@ -153,7 +170,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
 
           <!-- Aperçu contenus en attente -->
-          <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0] lg:col-span-2">
+          <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0]">
             <div class="flex items-center justify-between gap-3 mb-5">
               <div class="flex items-center gap-3">
                 <div class="w-9 h-9 bg-[#8B3E22]/10 rounded-xl flex items-center justify-center">
@@ -164,6 +181,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <button onclick="switchTab('content')" class="text-xs text-[#8B3E22] hover:underline shrink-0">Voir tout →</button>
             </div>
             <div id="content-list-home"><p class="text-xs text-[#2C2416]/30 italic">Chargement…</p></div>
+          </div>
+
+          <!-- Objectifs du mois -->
+          <div id="card-objectives" class="bg-white rounded-2xl p-6 border border-[#D6CCC0] hidden">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-9 h-9 bg-[#767A55]/10 rounded-xl flex items-center justify-center">
+                <iconify-icon icon="solar:target-linear" stroke-width="1.5" class="text-lg text-[#767A55]"></iconify-icon>
+              </div>
+              <h2 class="text-base text-[#2C2416] font-medium">Objectifs du mois</h2>
+            </div>
+            <div id="objectives-list" class="space-y-2">
+              <p class="text-xs text-[#2C2416]/30 italic">Aucun objectif défini ce mois.</p>
+            </div>
           </div>
 
         </div>
@@ -1165,6 +1195,41 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     if (p) {
       if (p.offer) document.getElementById('offer-badge').textContent = `Offre : ${OFFER_MAP[p.offer] || p.offer}`;
+
+      // Objectifs du mois
+      const objectives = p.ig_objectives?.current || [];
+      if (objectives.length) {
+        const card = document.getElementById('card-objectives');
+        const list = document.getElementById('objectives-list');
+        if (card) card.classList.remove('hidden');
+        if (list) list.innerHTML = objectives.map((obj, i) => `
+          <div class="flex items-center gap-3 py-2 border-b border-[#D6CCC0]/30 last:border-0">
+            <div class="w-5 h-5 rounded-full border-2 ${obj.done ? 'bg-[#8B3E22] border-[#8B3E22]' : 'border-[#D6CCC0]'} flex items-center justify-center shrink-0">
+              ${obj.done ? '<iconify-icon icon="solar:check-linear" class="text-white text-xs"></iconify-icon>' : ''}
+            </div>
+            <p class="text-sm ${obj.done ? 'text-[#767A55] line-through' : 'text-[#2C2416]'}">${obj.text || obj}</p>
+          </div>`).join('');
+        const done  = objectives.filter(o => o.done).length;
+        const qsObj = document.getElementById('qs-objectives');
+        if (qsObj) qsObj.textContent = `${done}/${objectives.length}`;
+      }
+
+      // Quick stats bar (si Instagram connecté)
+      if (p.ig_account_id) {
+        const qsBar = document.getElementById('quick-stats-bar');
+        if (qsBar) qsBar.classList.remove('hidden');
+        fetch(`/api/instagram-account-insights?clientId=${uid}&days=30`).then(r => r.json()).then(d => {
+          if (d.followersCount != null) {
+            const el = document.getElementById('qs-followers');
+            if (el) el.textContent = d.followersCount.toLocaleString('fr-FR');
+          }
+          if (d.reach?.length) {
+            const total = d.reach.reduce((s, v) => s + (v.value || 0), 0);
+            const el = document.getElementById('qs-reach');
+            if (el) el.textContent = total.toLocaleString('fr-FR');
+          }
+        }).catch(() => {});
+      }
       document.getElementById('infos-content').innerHTML = [
         fullName              ? `<p><span class="font-medium text-[#2C2416]">Nom :</span> ${fullName}</p>` : '',
         (p.email || session.user.email) ? `<p><span class="font-medium text-[#2C2416]">Email :</span> ${p.email || session.user.email}</p>` : '',

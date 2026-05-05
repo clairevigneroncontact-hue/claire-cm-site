@@ -1,0 +1,26 @@
+---
+const stats = [
+  { value: '×3', label: 'Portée moyenne', sub: 'en 30 jours' },
+  { value: '+80%', label: 'Abonnés gagnés', sub: 'premier mois' },
+  { value: '4×', label: 'Taux d\'engagement', sub: 'vs avant délégation' },
+  { value: '100%', label: 'Contenus validés', sub: 'avant publication' },
+];
+---
+
+<section class="py-16 px-6 bg-[#2C2416]">
+  <div class="max-w-5xl mx-auto">
+
+    <p class="text-center text-[#F5EDE4]/50 text-xs uppercase tracking-widest mb-10">Résultats clients — moyennes constatées</p>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      {stats.map(s => (
+        <div class="text-center">
+          <p class="text-4xl md:text-5xl font-serif text-[#8B3E22] mb-2">{s.value}</p>
+          <p class="text-sm font-medium text-[#F5EDE4] mb-1">{s.label}</p>
+          <p class="text-xs text-[#F5EDE4]/40">{s.sub}</p>
+        </div>
+      ))}
+    </div>
+
+  </div>
+</section>

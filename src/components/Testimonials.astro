@@ -1,0 +1,72 @@
+---
+const testimonials = [
+  {
+    name: 'Sophie M.',
+    activite: 'Fleuriste — Rennes',
+    text: 'Avant Claire, je publiais une photo de temps en temps sans savoir quoi dire. Maintenant mon compte est cohérent, j\'ai des clients qui me contactent directement via Instagram. Je valide tout depuis mon espace client, c\'est simple et pro.',
+    result: '+120 abonnés en 2 mois',
+    initiale: 'S',
+  },
+  {
+    name: 'Thomas R.',
+    activite: 'Menuisier — Fougères',
+    text: 'J\'étais sceptique au départ. Je pensais qu\'Instagram c\'était pas pour les artisans. Aujourd\'hui j\'ai eu 3 clients qui m\'ont trouvé via Instagram en moins de 3 mois. Claire sait vraiment valoriser un métier manuel.',
+    result: '3 nouveaux clients via Instagram',
+    initiale: 'T',
+  },
+  {
+    name: 'Léa D.',
+    activite: 'Coiffeuse à domicile — Vannes',
+    text: 'Ce qui m\'a convaincue c\'est l\'espace client. Je vois tout ce qui va être publié avant que ça parte, je reçois mes statistiques chaque mois. J\'ai enfin l\'impression d\'avoir une vraie communication professionnelle.',
+    result: 'Taux d\'engagement × 4',
+    initiale: 'L',
+  },
+];
+---
+
+<section class="py-20 px-6 bg-[#EDE6DB]">
+  <div class="max-w-5xl mx-auto">
+
+    <div class="text-center mb-14">
+      <span class="text-xs font-medium uppercase tracking-widest text-[#767A55] mb-3 block">Ils me font confiance</span>
+      <h2 class="text-3xl md:text-4xl text-[#2C2416] tracking-tight mb-3">Ce qu'ils en disent</h2>
+      <p class="text-[#2C2416]/60 font-light max-w-md mx-auto">Des artisans et indépendants qui ont délégué leur Instagram et observé de vrais résultats.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {testimonials.map(t => (
+        <div class="bg-white rounded-2xl p-7 border border-[#D6CCC0] flex flex-col gap-5">
+          <div class="flex items-start gap-1">
+            {[1,2,3,4,5].map(() => (
+              <iconify-icon icon="solar:star-bold" class="text-[#8B3E22] text-sm"></iconify-icon>
+            ))}
+          </div>
+          <p class="text-[#2C2416]/80 font-light leading-relaxed text-sm flex-1">
+            « {t.text} »
+          </p>
+          <div class="flex items-center gap-3 pt-3 border-t border-[#D6CCC0]">
+            <div class="w-10 h-10 rounded-full bg-[#8B3E22] flex items-center justify-center text-[#F5EDE4] font-semibold text-sm shrink-0">
+              {t.initiale}
+            </div>
+            <div>
+              <p class="text-sm font-medium text-[#2C2416]">{t.name}</p>
+              <p class="text-xs text-[#767A55]">{t.activite}</p>
+            </div>
+            <span class="ml-auto text-xs font-medium text-[#8B3E22] bg-[#8B3E22]/10 px-2.5 py-1 rounded-full whitespace-nowrap">
+              {t.result}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div class="text-center mt-10">
+      <a href="https://cal.com/claire-vigneron-k5okcq/30min" target="_blank" rel="noopener"
+        class="inline-flex items-center gap-2 text-sm font-medium text-[#8B3E22] hover:underline">
+        Réserver un appel découverte gratuit
+        <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5"></iconify-icon>
+      </a>
+    </div>
+
+  </div>
+</section>
