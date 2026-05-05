@@ -1,0 +1,91 @@
+---
+---
+
+<section class="py-16 md:py-24 px-6 md:px-12 bg-[#F5EDE4]">
+  <div class="max-w-7xl mx-auto">
+
+    <!-- En-tête -->
+    <div class="text-center mb-14">
+      <span class="text-[#767A55] uppercase tracking-widest text-sm font-semibold">Collaboration transparente</span>
+      <h2 class="text-4xl md:text-5xl font-serif text-[#2C2416] mt-3 leading-tight">
+        Un espace dédié,<br />
+        <span class="italic text-[#8B3E22]">rien qu'à vous.</span>
+      </h2>
+      <p class="mt-5 text-lg text-[#2C2416]/60 font-light max-w-xl mx-auto leading-relaxed">
+        Chaque client accède à un espace privé pour suivre ses contenus, valider les publications et consulter ses statistiques Instagram — en temps réel.
+      </p>
+    </div>
+
+    <!-- Grille features -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-14">
+
+      {[
+        {
+          icon: 'solar:check-circle-bold',
+          color: '#8B3E22',
+          title: 'Validation en un clic',
+          desc: "Vous recevez chaque contenu avant publication. Valider, refuser ou commenter — tout se passe ici, sans email, sans WhatsApp.",
+        },
+        {
+          icon: 'solar:chart-2-bold',
+          color: '#767A55',
+          title: 'Statistiques Instagram',
+          desc: "Abonnés, portée, engagement, meilleur post du mois : toutes vos stats Instagram en un coup d'œil, mises à jour automatiquement.",
+        },
+        {
+          icon: 'solar:calendar-bold',
+          color: '#8B3E22',
+          title: 'Calendrier éditorial',
+          desc: "Visualisez le planning de publication mois par mois. Vous savez exactement quand et quoi sera publié.",
+        },
+        {
+          icon: 'solar:chat-round-dots-bold',
+          color: '#767A55',
+          title: 'Messagerie directe',
+          desc: "Un fil de discussion dédié pour échanger avec moi sans vous perdre dans vos mails. Vos notes, mes réponses, tout au même endroit.",
+        },
+        {
+          icon: 'solar:folder-bold',
+          color: '#8B3E22',
+          title: 'Documents partagés',
+          desc: "Contrats, devis, audits, comptes-rendus : tous vos documents sont accessibles et téléchargeables à tout moment.",
+        },
+        {
+          icon: 'solar:bell-bold',
+          color: '#767A55',
+          title: 'Bilan mensuel',
+          desc: "Chaque mois, vous recevez un bilan complet de votre activité Instagram, alimenté par vos vraies statistiques.",
+        },
+      ].map(f => (
+        <div class="bg-white rounded-2xl p-6 border border-[#D6CCC0] hover:border-[#8B3E22] hover:shadow-md transition-all group">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={`background:${f.color}18`}>
+            <iconify-icon icon={f.icon} style={`color:${f.color};font-size:1.4rem`}></iconify-icon>
+          </div>
+          <h3 class="font-semibold text-[#2C2416] mb-2">{f.title}</h3>
+          <p class="text-sm text-[#767A55] leading-relaxed font-light">{f.desc}</p>
+        </div>
+      ))}
+    </div>
+
+    <!-- CTA central -->
+    <div class="bg-[#2C2416] rounded-3xl p-10 md:p-14 text-center text-[#F5EDE4] relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-64 h-64 bg-[#8B3E22]/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+      <div class="absolute bottom-0 left-0 w-48 h-48 bg-[#767A55]/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+      <div class="relative z-10">
+        <span class="text-[#D6CCC0] uppercase tracking-widest text-xs font-semibold">Accès privé inclus dans toutes les offres</span>
+        <h3 class="text-3xl md:text-4xl font-serif mt-3 mb-4">
+          Vous méritez de savoir<br />
+          <span class="italic text-[#D6CCC0]">exactement ce qui se passe.</span>
+        </h3>
+        <p class="text-[#F5EDE4]/60 font-light mb-8 max-w-lg mx-auto">
+          Aucun outil à installer. Depuis votre téléphone ou ordinateur, votre espace est accessible partout, à tout moment.
+        </p>
+        <a href="https://cal.com/claire-vigneron-k5okcq/30min?user=claire-vigneron-k5okcq&overlayCalendar=true" target="_blank" rel="noopener"
+          class="inline-block bg-[#F5EDE4] text-[#2C2416] px-8 py-4 rounded-full font-medium hover:bg-white transition-colors">
+          Découvrir les offres →
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>

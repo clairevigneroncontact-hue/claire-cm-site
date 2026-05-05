@@ -153,6 +153,7 @@ function buildEmail(type, prenom, data) {
     case 'bilan': {
       const { month = '', year = new Date().getFullYear() } = data;
       const monthLabel = month || new Date().toLocaleDateString('fr-FR', { month: 'long' });
+      const bestPost = data.bestPost;
       return {
         subject: `Bilan mensuel ${monthLabel} ${year} — Votre Instagram`,
         html: shell(`
@@ -171,18 +172,28 @@ function buildEmail(type, prenom, data) {
                 <td align="right" style="padding:8px 0;border-bottom:1px solid #D6CCC0"><p style="margin:0;color:#8B3E22;font-weight:600;font-size:13px">${data.nouveauxAbonnes ?? '—'}</p></td>
               </tr>
               <tr>
-                <td style="padding:8px 0;border-bottom:1px solid #D6CCC0"><p style="margin:0;color:#2C2416;font-size:13px">Portée moyenne</p></td>
+                <td style="padding:8px 0;border-bottom:1px solid #D6CCC0"><p style="margin:0;color:#2C2416;font-size:13px">Portée totale</p></td>
                 <td align="right" style="padding:8px 0;border-bottom:1px solid #D6CCC0"><p style="margin:0;color:#8B3E22;font-weight:600;font-size:13px">${data.porteeMovenne ?? '—'}</p></td>
               </tr>
               <tr>
-                <td style="padding:8px 0"><p style="margin:0;color:#2C2416;font-size:13px">Engagement moyen</p></td>
+                <td style="padding:8px 0"><p style="margin:0;color:#2C2416;font-size:13px">Taux d'engagement</p></td>
                 <td align="right" style="padding:8px 0"><p style="margin:0;color:#8B3E22;font-weight:600;font-size:13px">${data.engagementMoyen ?? '—'}</p></td>
               </tr>
             </table>
+            ${bestPost ? `
+            <div style="margin:20px 0 0;padding:16px;background:#fff;border-radius:10px">
+              <p style="color:#8B3E22;font-size:11px;font-weight:600;text-transform:uppercase;margin:0 0 12px">🏆 Meilleur post du mois</p>
+              <table width="100%" cellpadding="0" cellspacing="0"><tr>
+                ${bestPost.img ? `<td style="width:64px;padding-right:12px"><a href="${bestPost.url||'#'}"><img src="${bestPost.img}" width="64" height="64" style="border-radius:8px;object-fit:cover;display:block" /></a></td>` : ''}
+                <td>
+                  <p style="margin:0 0 6px;color:#2C2416;font-size:13px;line-height:1.4">${bestPost.caption ? bestPost.caption.slice(0,80) + (bestPost.caption.length > 80 ? '…' : '') : '—'}</p>
+                  <p style="margin:0;color:#767A55;font-size:12px">❤️ ${bestPost.likes||0} &nbsp; 💬 ${bestPost.comments||0}${bestPost.reposts != null ? ` &nbsp; ↻ ${bestPost.reposts}` : ''}${bestPost.saves != null ? ` &nbsp; 🔖 ${bestPost.saves}` : ''}</p>
+                </td>
+              </tr></table>
+            </div>` : ''}
             ${data.highlights ? `<div style="margin:16px 0 0;padding:12px 16px;background:#fff;border-radius:10px;border-left:3px solid #8B3E22"><p style="color:#8B3E22;font-size:11px;font-weight:600;text-transform:uppercase;margin:0 0 6px">Points forts du mois</p><p style="color:#2C2416;font-size:13px;margin:0;line-height:1.6">${String(data.highlights).replace(/\n/g,'<br>')}</p></div>` : ''}
-        ${data.next ? `<div style="margin:12px 0 0;padding:12px 16px;background:#fff;border-radius:10px;border-left:3px solid #D6CCC0"><p style="color:#767A55;font-size:11px;font-weight:600;text-transform:uppercase;margin:0 0 6px">Le mois prochain</p><p style="color:#2C2416;font-size:13px;margin:0;line-height:1.6">${String(data.next).replace(/\n/g,'<br>')}</p></div>` : ''}
-        <p style="color:#767A55;font-size:11px;font-style:italic;margin:16px 0 0">Les statistiques détaillées seront disponibles prochainement dans votre espace client.</p>
-            ${BTN('Voir mon espace client', DASHBOARD_URL)}
+            ${data.next ? `<div style="margin:12px 0 0;padding:12px 16px;background:#fff;border-radius:10px;border-left:3px solid #D6CCC0"><p style="color:#767A55;font-size:11px;font-weight:600;text-transform:uppercase;margin:0 0 6px">Le mois prochain</p><p style="color:#2C2416;font-size:13px;margin:0;line-height:1.6">${String(data.next).replace(/\n/g,'<br>')}</p></div>` : ''}
+            ${BTN('Voir mes statistiques', DASHBOARD_URL)}
           </td></tr></table>
           <p style="color:#767A55;font-size:13px;margin:0">À bientôt pour le mois prochain !</p>
         `),

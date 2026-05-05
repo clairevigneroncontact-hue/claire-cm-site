@@ -3096,16 +3096,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   // Bilan mensuel — modal d'édition avant envoi
   let _bilanClientId = null;
 
-  window.sendMonthlyReport = (clientId) => {
+  window.sendMonthlyReport = async (clientId) => {
     _bilanClientId = clientId;
-    // Pré-remplir mois et année précédents
     const prev  = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
     const mois  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
     const sel   = document.getElementById('bilan-month');
     const yr    = document.getElementById('bilan-year');
     if (sel) sel.value = mois[prev.getMonth()];
     if (yr)  yr.value  = prev.getFullYear();
-    // Vider les champs éditables
     ['bilan-contenus','bilan-abonnes','bilan-portee','bilan-engagement','bilan-highlights','bilan-next'].forEach(id => {
       const el = document.getElementById(id); if (el) el.value = '';
     });
@@ -3113,6 +3111,61 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     if (msg) msg.classList.add('hidden');
     document.getElementById('bilan-modal')?.classList.remove('hidden');
     document.getElementById('bilan-overlay')?.classList.remove('hidden');
+
+    // Auto-remplissage avec les stats Instagram
+    try {
+      const sb  = await getSB();
+      const prevMonth = prev.toISOString().slice(0,7);
+
+      const [igRes, insRes, { count: nbContenus }] = await Promise.all([
+        fetch(`/api/instagram-stats?clientId=${clientId}`).then(r => r.json()),
+        fetch(`/api/instagram-account-insights?clientId=${clientId}`).then(r => r.json()),
+        sb.from('content_items').select('id', { count: 'exact', head: true })
+          .eq('client_id', clientId).eq('status', 'approved')
+          .gte('scheduled_at', prevMonth + '-01').lte('scheduled_at', prevMonth + '-31'),
+      ]);
+
+      if (igRes.profile) {
+        const p = igRes.profile;
+        const media = igRes.media || [];
+        const totalEng = media.reduce((s, m) => s + (m.like_count||0) + (m.comments_count||0), 0);
+        const avgEng   = (media.length && p.followers_count)
+          ? ((totalEng / media.length) / p.followers_count * 100).toFixed(2) + '%'
+          : '—';
+
+        // Variation abonnés depuis insights
+        const followerData = insRes.followers || [];
+        const followerGain = followerData.reduce((s, d) => s + (d.value || 0), 0);
+        const followerStr  = followerGain > 0 ? `+${followerGain}` : String(followerGain);
+
+        // Portée totale du mois depuis insights
+        const reachData  = insRes.reach || [];
+        const totalReach = reachData.reduce((s, d) => s + (d.value || 0), 0);
+
+        const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+        set('bilan-contenus',   nbContenus ?? media.length);
+        set('bilan-abonnes',    followerGain !== 0 ? followerStr : p.followers_count);
+        set('bilan-portee',     totalReach > 0 ? totalReach.toLocaleString('fr-FR') : '—');
+        set('bilan-engagement', avgEng);
+
+        // Meilleur post du mois en note automatique
+        const scored = media.map(m => ({ ...m, score: (m.like_count||0)+(m.comments_count||0)*2+(m.reposts_count||0)*2+(m.saved_count||0)*3 })).sort((a,b)=>b.score-a.score);
+        const best = scored[0];
+        if (best) {
+          window._bilanBestPost = {
+            img:      best.media_type === 'VIDEO' ? (best.thumbnail_url||'') : (best.media_url||''),
+            url:      best.permalink || '',
+            caption:  best.caption || '',
+            likes:    best.like_count || 0,
+            comments: best.comments_count || 0,
+            reposts:  best.reposts_count ?? null,
+            saves:    best.saved_count ?? null,
+          };
+          const h = document.getElementById('bilan-highlights');
+          if (h && !h.value) h.value = `🏆 Meilleur post : ${best.caption?.slice(0,60) || best.timestamp?.slice(0,10) || '—'}\n❤️ ${best.like_count||0} likes · 💬 ${best.comments_count||0} commentaires${best.reposts_count != null ? ` · ↻ ${best.reposts_count} reposts` : ''}`;
+        }
+      }
+    } catch(_) {}
   };
 
   window.closeBilanModal = () => {
@@ -3140,7 +3193,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       body: JSON.stringify({
         clientId: _bilanClientId,
         type: 'bilan',
-        data: { month, year, contenusPublies: contenus, nouveauxAbonnes: abonnes, porteeMovenne: portee, engagementMoyen: engagement, highlights, next },
+        data: {
+          month, year,
+          contenusPublies: contenus, nouveauxAbonnes: abonnes, porteeMovenne: portee, engagementMoyen: engagement,
+          highlights, next,
+          bestPost: window._bilanBestPost || null,
+        },
       }),
     });
     const d = await res.json().catch(()=>({}));
