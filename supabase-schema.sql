@@ -48,13 +48,20 @@ alter table client_uploads enable row level security;
 
 create policy "own_profile" on profiles for select using (auth.uid() = id);
 create policy "admin_all_profiles" on profiles for all using (exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
-create policy "update_own_profile" on profiles for update using (auth.uid() = id);
+create policy "update_own_profile" on profiles for update
+  using (auth.uid() = id)
+  with check (auth.uid() = id and role = (select role from profiles where id = auth.uid()));
+
+create policy "insert_own_profile" on profiles for insert
+  with check (auth.uid() = id and role = 'client');
 
 create policy "own_docs" on documents for select using (client_id = auth.uid());
 create policy "admin_all_docs" on documents for all using (exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
 
 create policy "own_content" on content_items for select using (client_id = auth.uid());
-create policy "update_own_content" on content_items for update using (client_id = auth.uid());
+create policy "update_own_content" on content_items for update
+  using (client_id = auth.uid())
+  with check (client_id = auth.uid());
 create policy "admin_all_content" on content_items for all using (exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
 
 create policy "own_uploads" on client_uploads for select using (client_id = auth.uid());
