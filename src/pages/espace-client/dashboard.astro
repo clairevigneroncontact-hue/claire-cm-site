@@ -132,22 +132,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <!-- Onglet Accueil -->
       <div id="tab-home-panel">
 
-        <!-- Mini stats rapides -->
-        <div id="quick-stats-bar" class="grid grid-cols-3 gap-3 mb-5 hidden">
-          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0] text-center">
-            <p class="text-xs text-[#767A55] mb-1">Abonnés</p>
-            <p id="qs-followers" class="text-2xl font-semibold text-[#2C2416]">—</p>
-          </div>
-          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0] text-center">
-            <p class="text-xs text-[#767A55] mb-1">Portée (30j)</p>
-            <p id="qs-reach" class="text-2xl font-semibold text-[#8B3E22]">—</p>
-          </div>
-          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0] text-center">
-            <p class="text-xs text-[#767A55] mb-1">Objectifs ce mois</p>
-            <p id="qs-objectives" class="text-2xl font-semibold text-[#2C2416]">—</p>
-          </div>
-        </div>
-
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
           <!-- Tâches -->
@@ -1214,22 +1198,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         if (qsObj) qsObj.textContent = `${done}/${objectives.length}`;
       }
 
-      // Quick stats bar (si Instagram connecté)
-      if (p.ig_account_id) {
-        const qsBar = document.getElementById('quick-stats-bar');
-        if (qsBar) qsBar.classList.remove('hidden');
-        fetch(`/api/instagram-account-insights?clientId=${uid}&days=30`).then(r => r.json()).then(d => {
-          if (d.followersCount != null) {
-            const el = document.getElementById('qs-followers');
-            if (el) el.textContent = d.followersCount.toLocaleString('fr-FR');
-          }
-          if (d.reach?.length) {
-            const total = d.reach.reduce((s, v) => s + (v.value || 0), 0);
-            const el = document.getElementById('qs-reach');
-            if (el) el.textContent = total.toLocaleString('fr-FR');
-          }
-        }).catch(() => {});
-      }
       document.getElementById('infos-content').innerHTML = [
         fullName              ? `<p><span class="font-medium text-[#2C2416]">Nom :</span> ${fullName}</p>` : '',
         (p.email || session.user.email) ? `<p><span class="font-medium text-[#2C2416]">Email :</span> ${p.email || session.user.email}</p>` : '',

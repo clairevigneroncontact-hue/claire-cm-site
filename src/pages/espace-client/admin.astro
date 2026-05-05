@@ -99,26 +99,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </button>
         </div>
 
-        <!-- Stats globales -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0]">
-            <p class="text-xs text-[#767A55] mb-1 uppercase tracking-wide">Clients actifs</p>
-            <p id="gstat-clients" class="text-3xl font-semibold text-[#2C2416]">—</p>
-          </div>
-          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0]">
-            <p class="text-xs text-[#767A55] mb-1 uppercase tracking-wide">À valider</p>
-            <p id="gstat-pending" class="text-3xl font-semibold text-[#8B3E22]">—</p>
-          </div>
-          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0]">
-            <p class="text-xs text-[#767A55] mb-1 uppercase tracking-wide">CA mensuel estimé</p>
-            <p id="gstat-revenue" class="text-3xl font-semibold text-[#2C2416]">—</p>
-          </div>
-          <div class="bg-white rounded-2xl p-4 border border-[#D6CCC0]">
-            <p class="text-xs text-[#767A55] mb-1 uppercase tracking-wide">Clients inactifs</p>
-            <p id="gstat-inactive" class="text-3xl font-semibold text-[#767A55]">—</p>
-            <p class="text-[10px] text-[#767A55]/60">+14 jours sans activité</p>
-          </div>
-        </div>
 
 
         <!-- Formulaire nouveau client -->
@@ -2522,9 +2502,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <p style="font-size:12px;color:#767A55;margin-top:8px">TVA non applicable — Article 293B du CGI</p>
       <hr class="divider">
       <footer>Claire Vigneron · Community Manager · SIREN 939 956 421 · clairevigneron.contact@gmail.com · 06 78 30 13 58</footer>
-      <script>window.print();<\/script></body></html>`;
+      </body></html>`;
       const w = window.open('', '_blank');
-      if (w) { w.document.write(html); w.document.close(); }
+      if (w) { w.document.write(html); w.document.close(); setTimeout(() => w.print(), 500); }
     };
 
     window.uploadDoc = async (clientId) => {
