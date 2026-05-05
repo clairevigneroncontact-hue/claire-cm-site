@@ -3299,6 +3299,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     // Messages privés Instagram
+    const _igAvatar = (p, size = 8) => p?.profile_pic
+      ? `<img src="${p.profile_pic}" class="w-${size} h-${size} rounded-full object-cover shrink-0 border border-[#D6CCC0]" />`
+      : `<div class="w-${size} h-${size} rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] flex items-center justify-center shrink-0 text-white text-[${size<=8?'10':'xs'}px] font-bold">${(p?.name||p?.username||'?')[0].toUpperCase()}</div>`;
+
     window.loadIgDMs = async (clientId) => {
       const cont = document.getElementById('ig-dms-container');
       if (!cont || !clientId) return;
@@ -3310,42 +3314,72 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const convs = data.conversations || [];
         if (!convs.length) { inner.innerHTML = '<p class="text-xs text-[#767A55] italic">Aucun message récent.</p>'; return; }
 
-        // Afficher la première conversation par défaut
         const renderConv = (conv, allConvs) => {
           const participants = (conv.participants?.data||[]).filter(p => p.id !== clientId);
-          const name        = participants[0]?.name || participants[0]?.username || 'Inconnu';
+          const other       = participants[0] || {};
+          const name        = other.name || other.username || 'Inconnu';
+          const username    = other.username ? '@' + other.username : '';
           const msgs        = conv.messages?.data || [];
-          const recipientId = participants[0]?.id || '';
-          return `<div class="flex gap-3 h-[360px]">
-            <!-- Liste conversations -->
-            <div class="w-40 shrink-0 border-r border-[#D6CCC0] overflow-y-auto pr-3 space-y-1">
-              ${allConvs.map((c, i) => {
-                const p2 = (c.participants?.data||[]).filter(p => p.id !== clientId);
-                const n2 = p2[0]?.name || p2[0]?.username || 'Inconnu';
+          const recipientId = other.id || '';
+          return `<div class="flex h-[420px]">
+            <!-- Liste conversations style IG -->
+            <div class="w-48 shrink-0 border-r border-[#D6CCC0] overflow-y-auto">
+              <p class="text-[10px] text-[#767A55] uppercase tracking-widest px-3 py-2">Messages</p>
+              ${allConvs.map(c => {
+                const p2    = (c.participants?.data||[]).filter(p => p.id !== clientId)[0] || {};
+                const n2    = p2.name || p2.username || 'Inconnu';
                 const last2 = c.messages?.data?.[0];
                 const isActive = c.id === conv.id;
-                return `<button onclick="selectDmConv('${clientId}','${c.id}')" class="w-full flex items-center gap-2 p-2 rounded-xl text-left transition-colors ${isActive ? 'bg-[#8B3E22]/10 border border-[#8B3E22]/20' : 'hover:bg-[#F5EDE4]'}">
-                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] flex items-center justify-center shrink-0 text-white text-xs font-bold">${n2[0]?.toUpperCase()||'?'}</div>
-                  <div class="min-w-0"><p class="text-xs font-semibold text-[#2C2416] truncate">${n2}</p><p class="text-[10px] text-[#767A55] truncate">${last2?.message||'📎'}</p></div>
+                const timeAgo = last2?.created_time ? new Date(last2.created_time).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '';
+                return `<button onclick="selectDmConv('${clientId}','${c.id}')" class="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${isActive ? 'bg-[#8B3E22]/10' : 'hover:bg-[#F5EDE4]'}">
+                  ${_igAvatar(p2, 10)}
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                      <p class="text-xs font-semibold text-[#2C2416] truncate">${n2}</p>
+                      <span class="text-[10px] text-[#767A55] shrink-0 ml-1">${timeAgo}</span>
+                    </div>
+                    <p class="text-[11px] text-[#767A55] truncate">${last2?.message||'📎 Pièce jointe'}</p>
+                  </div>
                 </button>`;
               }).join('')}
             </div>
-            <!-- Messages de la conversation active -->
+            <!-- Conversation active style IG -->
             <div class="flex-1 flex flex-col min-w-0">
-              <div class="flex items-center gap-2 mb-3 pb-2 border-b border-[#D6CCC0]">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] flex items-center justify-center shrink-0 text-white text-xs font-bold">${name[0]?.toUpperCase()||'?'}</div>
-                <p class="text-sm font-semibold text-[#2C2416]">${name}</p>
-                <a href="https://instagram.com/direct" target="_blank" class="ml-auto text-[10px] text-[#767A55] hover:text-[#8B3E22]">Ouvrir IG →</a>
+              <!-- Header -->
+              <div class="flex items-center gap-3 px-4 py-3 border-b border-[#D6CCC0]">
+                ${_igAvatar(other, 9)}
+                <div>
+                  <p class="text-sm font-semibold text-[#2C2416]">${name}</p>
+                  ${username ? `<p class="text-[11px] text-[#767A55]">${username}</p>` : ''}
+                </div>
+                <a href="https://instagram.com/${other.username||'direct'}" target="_blank" class="ml-auto text-[11px] text-[#767A55] hover:text-[#8B3E22] flex items-center gap-1">
+                  <iconify-icon icon="mdi:instagram" class="text-base"></iconify-icon> Voir le profil
+                </a>
               </div>
-              <div class="flex-1 overflow-y-auto space-y-2 mb-3" id="dm-msgs-${conv.id}">
-                ${[...msgs].reverse().map(m => `<div class="flex ${m.from?.id === clientId ? 'justify-end' : 'justify-start'}">
-                  <div class="max-w-[80%] text-xs px-3 py-2 rounded-2xl ${m.from?.id === clientId ? 'bg-[#8B3E22] text-white rounded-br-sm' : 'bg-[#F5EDE4] text-[#2C2416] rounded-bl-sm'}">${m.message||'📎'}</div>
-                </div>`).join('')}
+              <!-- Messages -->
+              <div class="flex-1 overflow-y-auto px-4 py-3 space-y-2" id="dm-msgs-${conv.id}">
+                ${[...msgs].reverse().map(m => {
+                  const isMine = m.from?.id === clientId;
+                  const senderPic = isMine ? null : (m.from || other);
+                  const time = m.created_time ? new Date(m.created_time).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+                  return `<div class="flex items-end gap-2 ${isMine ? 'justify-end' : 'justify-start'}">
+                    ${!isMine ? _igAvatar(senderPic, 7) : ''}
+                    <div class="max-w-[70%]">
+                      ${!isMine && name ? `<p class="text-[10px] text-[#767A55] mb-0.5 ml-1">${name}</p>` : ''}
+                      <div class="px-3 py-2 rounded-2xl text-sm ${isMine ? 'bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-br-sm' : 'bg-[#F5EDE4] text-[#2C2416] rounded-bl-sm border border-[#D6CCC0]'}">${m.message||'📎'}</div>
+                      <p class="text-[10px] text-[#767A55] mt-0.5 ${isMine ? 'text-right' : 'text-left'} px-1">${time}</p>
+                    </div>
+                  </div>`;
+                }).join('')}
               </div>
-              <div class="flex gap-2">
-                <input type="text" id="dm-input-${conv.id}" placeholder="Écrire un message…" onkeydown="if(event.key==='Enter') sendIgDM('${clientId}','${recipientId}','dm-input-${conv.id}')"
-                  class="flex-1 px-3 py-2 text-sm rounded-xl border border-[#D6CCC0] focus:outline-none focus:border-[#8B3E22]" />
-                <button onclick="sendIgDM('${clientId}','${recipientId}','dm-input-${conv.id}')" class="px-4 py-2 bg-[#8B3E22] text-white rounded-xl text-sm hover:bg-[#6B2E1A] transition-colors shrink-0">
+              <!-- Input style IG -->
+              <div class="flex items-center gap-3 px-4 py-3 border-t border-[#D6CCC0]">
+                <div class="flex-1 flex items-center bg-[#F5EDE4] rounded-full px-4 py-2 border border-[#D6CCC0] gap-2">
+                  <input type="text" id="dm-input-${conv.id}" placeholder="Message…" onkeydown="if(event.key==='Enter') sendIgDM('${clientId}','${recipientId}','dm-input-${conv.id}')"
+                    class="flex-1 bg-transparent text-sm focus:outline-none text-[#2C2416] placeholder-[#767A55]" />
+                  <button data-emoji-btn type="button" onclick="toggleEmojiPicker(this,'dm-input-${conv.id}')" class="text-lg text-[#767A55] hover:text-[#2C2416] transition-colors shrink-0">😊</button>
+                </div>
+                <button onclick="sendIgDM('${clientId}','${recipientId}','dm-input-${conv.id}')" class="w-10 h-10 bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-full flex items-center justify-center hover:opacity-90 transition-opacity shrink-0">
                   <iconify-icon icon="ph:paper-plane-tilt" class="text-base"></iconify-icon>
                 </button>
               </div>
@@ -3355,7 +3389,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
         window._dmConvs = convs;
         window._dmClientId = clientId;
+        window._renderDmConvAdmin = renderConv;
         inner.innerHTML = renderConv(convs[0], convs);
+        // Scroll vers le bas des messages
+        const msgsEl = inner.querySelector(`[id^="dm-msgs-"]`);
+        if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
       } catch(err) {
         inner.innerHTML = `<p class="text-xs text-red-500">Erreur : ${err.message}</p>`;
       }
@@ -3364,19 +3402,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     window.selectDmConv = (clientId, convId) => {
       const convs = window._dmConvs || [];
       const conv  = convs.find(c => c.id === convId);
-      if (!conv) return;
-      const cont  = document.getElementById('ig-dms-container');
-      const inner = cont?.querySelector('.p-5') || cont;
-      if (inner) inner.innerHTML = ''; // will be re-rendered by loadIgDMs logic
-      // Re-use render logic
-      const participants = (conv.participants?.data||[]).filter(p => p.id !== clientId);
-      const recipientId  = participants[0]?.id || '';
-      const name         = participants[0]?.name || participants[0]?.username || 'Inconnu';
-      const msgs         = conv.messages?.data || [];
-      if (!inner) return;
-      inner.innerHTML = window._renderDmConv ? window._renderDmConv(conv, convs) : '';
-      // Fallback: just reload
-      loadIgDMs(clientId);
+      const inner = document.querySelector('#ig-dms-container .p-5');
+      if (conv && inner && window._renderDmConvAdmin) {
+        inner.innerHTML = window._renderDmConvAdmin(conv, convs);
+        const msgsEl = inner.querySelector(`[id^="dm-msgs-"]`);
+        if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
+      }
     };
 
     window.sendIgDM = async (clientId, recipientId, inputId) => {

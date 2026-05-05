@@ -27,7 +27,7 @@ export async function onRequestGet({ request, env }) {
     const igId  = profile.ig_account_id;
 
     const res  = await fetch(
-      `https://graph.instagram.com/${igId}/conversations?platform=instagram&fields=id,participants,messages{id,message,from,created_time,attachments}&limit=20&access_token=${token}`
+      `https://graph.instagram.com/${igId}/conversations?platform=instagram&fields=id,participants{name,username,profile_pic},messages{id,message,from{name,username,profile_pic},created_time}&limit=20&access_token=${token}`
     );
     const json = await res.json();
 

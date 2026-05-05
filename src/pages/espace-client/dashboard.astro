@@ -823,6 +823,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         };
 
         // DMs Instagram dashboard
+        const _dashAvatar = (p, size = 8) => p?.profile_pic
+          ? `<img src="${p.profile_pic}" class="w-${size} h-${size} rounded-full object-cover shrink-0 border border-[#D6CCC0]" />`
+          : `<div class="w-${size} h-${size} rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] flex items-center justify-center shrink-0 text-white text-[10px] font-bold">${(p?.name||p?.username||'?')[0].toUpperCase()}</div>`;
+
         window.loadDashDMs = async () => {
           const cont  = document.getElementById('dash-dms-container');
           const inner = cont?.querySelector('.p-5') || cont;
@@ -837,36 +841,61 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             window._dashDmConvs = convs;
             const renderConv = (conv) => {
               const participants = (conv.participants?.data||[]).filter(p => p.id !== uid);
-              const name        = participants[0]?.name || participants[0]?.username || 'Inconnu';
+              const other       = participants[0] || {};
+              const name        = other.name || other.username || 'Inconnu';
+              const username    = other.username ? '@' + other.username : '';
               const msgs        = conv.messages?.data || [];
-              const recipientId = participants[0]?.id || '';
-              return `<div class="flex gap-3 h-[320px]">
-                <div class="w-36 shrink-0 border-r border-[#D6CCC0] overflow-y-auto pr-3 space-y-1">
+              const recipientId = other.id || '';
+              return `<div class="flex h-[380px]">
+                <!-- Liste conversations -->
+                <div class="w-44 shrink-0 border-r border-[#D6CCC0] overflow-y-auto">
+                  <p class="text-[10px] text-[#767A55] uppercase tracking-widest px-3 py-2">Messages</p>
                   ${convs.map(c => {
-                    const p2   = (c.participants?.data||[]).filter(p => p.id !== uid);
-                    const n2   = p2[0]?.name || p2[0]?.username || 'Inconnu';
+                    const p2   = (c.participants?.data||[]).filter(p => p.id !== uid)[0]||{};
+                    const n2   = p2.name || p2.username || 'Inconnu';
                     const last = c.messages?.data?.[0];
                     const isActive = c.id === conv.id;
-                    return `<button onclick="selectDashConv('${c.id}')" class="w-full flex items-center gap-2 p-2 rounded-xl text-left transition-colors ${isActive?'bg-[#8B3E22]/10 border border-[#8B3E22]/20':'hover:bg-[#F5EDE4]'}">
-                      <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] flex items-center justify-center shrink-0 text-white text-[10px] font-bold">${n2[0]?.toUpperCase()||'?'}</div>
-                      <div class="min-w-0"><p class="text-xs font-semibold text-[#2C2416] truncate">${n2}</p><p class="text-[10px] text-[#767A55] truncate">${last?.message||'📎'}</p></div>
+                    const timeAgo = last?.created_time ? new Date(last.created_time).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '';
+                    return `<button onclick="selectDashConv('${c.id}')" class="w-full flex items-center gap-2 px-3 py-2.5 text-left transition-colors ${isActive?'bg-[#8B3E22]/10':'hover:bg-[#F5EDE4]'}">
+                      ${_dashAvatar(p2, 9)}
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                          <p class="text-xs font-semibold text-[#2C2416] truncate">${n2}</p>
+                          <span class="text-[10px] text-[#767A55] shrink-0 ml-1">${timeAgo}</span>
+                        </div>
+                        <p class="text-[11px] text-[#767A55] truncate">${last?.message||'📎'}</p>
+                      </div>
                     </button>`;
                   }).join('')}
                 </div>
+                <!-- Conversation -->
                 <div class="flex-1 flex flex-col min-w-0">
-                  <div class="flex items-center gap-2 mb-3 pb-2 border-b border-[#D6CCC0]">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] flex items-center justify-center text-white text-xs font-bold">${name[0]?.toUpperCase()||'?'}</div>
-                    <p class="text-sm font-semibold text-[#2C2416]">${name}</p>
+                  <div class="flex items-center gap-3 px-4 py-3 border-b border-[#D6CCC0]">
+                    ${_dashAvatar(other, 9)}
+                    <div>
+                      <p class="text-sm font-semibold text-[#2C2416]">${name}</p>
+                      ${username ? `<p class="text-[11px] text-[#767A55]">${username}</p>` : ''}
+                    </div>
                   </div>
-                  <div class="flex-1 overflow-y-auto space-y-2 mb-3">
-                    ${[...msgs].reverse().map(m => `<div class="flex ${m.from?.id===uid?'justify-end':'justify-start'}">
-                      <div class="max-w-[80%] text-xs px-3 py-2 rounded-2xl ${m.from?.id===uid?'bg-[#8B3E22] text-white rounded-br-sm':'bg-[#F5EDE4] text-[#2C2416] rounded-bl-sm'}">${m.message||'📎'}</div>
-                    </div>`).join('')}
+                  <div class="flex-1 overflow-y-auto px-4 py-3 space-y-2" id="dash-dm-msgs-${conv.id}">
+                    ${[...msgs].reverse().map(m => {
+                      const isMine = m.from?.id === uid;
+                      const time   = m.created_time ? new Date(m.created_time).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+                      return `<div class="flex items-end gap-2 ${isMine?'justify-end':'justify-start'}">
+                        ${!isMine ? _dashAvatar(m.from||other, 7) : ''}
+                        <div class="max-w-[70%]">
+                          <div class="px-3 py-2 rounded-2xl text-sm ${isMine?'bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-br-sm':'bg-[#F5EDE4] text-[#2C2416] rounded-bl-sm border border-[#D6CCC0]'}">${m.message||'📎'}</div>
+                          <p class="text-[10px] text-[#767A55] mt-0.5 ${isMine?'text-right':'text-left'} px-1">${time}</p>
+                        </div>
+                      </div>`;
+                    }).join('')}
                   </div>
-                  <div class="flex gap-2">
-                    <input type="text" id="dash-dm-input-${conv.id}" placeholder="Écrire un message…" onkeydown="if(event.key==='Enter') sendDashDM('${recipientId}','dash-dm-input-${conv.id}')"
-                      class="flex-1 px-3 py-2 text-sm rounded-xl border border-[#D6CCC0] focus:outline-none focus:border-[#8B3E22]" />
-                    <button onclick="sendDashDM('${recipientId}','dash-dm-input-${conv.id}')" class="px-4 py-2 bg-[#8B3E22] text-white rounded-xl text-sm hover:bg-[#6B2E1A] transition-colors shrink-0">
+                  <div class="flex items-center gap-3 px-4 py-3 border-t border-[#D6CCC0]">
+                    <div class="flex-1 flex items-center bg-[#F5EDE4] rounded-full px-4 py-2 border border-[#D6CCC0] gap-2">
+                      <input type="text" id="dash-dm-input-${conv.id}" placeholder="Message…" onkeydown="if(event.key==='Enter') sendDashDM('${recipientId}','dash-dm-input-${conv.id}')"
+                        class="flex-1 bg-transparent text-sm focus:outline-none text-[#2C2416] placeholder-[#767A55]" />
+                    </div>
+                    <button onclick="sendDashDM('${recipientId}','dash-dm-input-${conv.id}')" class="w-10 h-10 bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white rounded-full flex items-center justify-center hover:opacity-90 transition-opacity shrink-0">
                       <iconify-icon icon="ph:paper-plane-tilt" class="text-base"></iconify-icon>
                     </button>
                   </div>
@@ -876,13 +905,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
             inner.innerHTML = renderConv(convs[0]);
             window._dashRenderConv = renderConv;
+            const msgsEl = inner.querySelector(`[id^="dash-dm-msgs-"]`);
+            if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
           } catch(e) { if (inner) inner.innerHTML = `<p class="text-xs text-red-500">${e.message}</p>`; }
         };
 
         window.selectDashConv = (convId) => {
           const conv  = (window._dashDmConvs||[]).find(c => c.id === convId);
           const inner = document.querySelector('#dash-dms-container .p-5');
-          if (conv && inner && window._dashRenderConv) inner.innerHTML = window._dashRenderConv(conv);
+          if (conv && inner && window._dashRenderConv) {
+            inner.innerHTML = window._dashRenderConv(conv);
+            const msgsEl = inner.querySelector(`[id^="dash-dm-msgs-"]`);
+            if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
+          }
         };
 
         window.sendDashDM = async (recipientId, inputId) => {
