@@ -1711,15 +1711,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <p class="text-sm text-[#767A55]">Chargement…</p>
             </div>
           </div>
-          <!-- Messages privés Instagram — grand panel -->
-          <div id="ig-dms-container" class="bg-white rounded-2xl border border-[#D6CCC0] overflow-hidden">
-            <div class="flex items-center gap-2 px-5 py-4 border-b border-[#D6CCC0] bg-[#F5EDE4]">
-              <iconify-icon icon="mdi:instagram" class="text-[#8B3E22] text-lg"></iconify-icon>
-              <h3 class="text-sm font-semibold text-[#2C2416]">Messages privés Instagram</h3>
-              <button onclick="loadIgDMs(window._currentAdminClientId)" class="ml-auto text-xs text-[#8B3E22] hover:underline">↺ Rafraîchir</button>
-            </div>
-            <div class="p-5 min-h-[300px]">
-              <p class="text-xs text-[#767A55] italic">Chargement des messages…</p>
+          <!-- Messages privés Instagram -->
+          <div id="ig-dms-container" style="background:#fff;border-radius:12px;border:1px solid #dbdbdb;overflow:hidden;min-height:520px;display:flex;flex-direction:column;">
+            <div id="ig-dms-inner" style="flex:1;display:flex;flex-direction:column;">
+              <p style="padding:20px;font-size:13px;color:#8e8e8e;font-style:italic;">Chargement des messages…</p>
             </div>
           </div>
         </div>
@@ -3304,16 +3299,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       : `<div style="width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:white;font-size:${size<=28?'10':'12'}px;font-weight:700;">${(p?.name||p?.username||'?')[0].toUpperCase()}</div>`;
 
     window.loadIgDMs = async (clientId) => {
-      const cont = document.getElementById('ig-dms-container');
-      if (!cont || !clientId) return;
-      const inner = cont.querySelector('.p-5') || cont;
+      const inner = document.getElementById('ig-dms-inner');
+      if (!inner || !clientId) return;
+      inner.innerHTML = `<p style="padding:20px;font-size:13px;color:#8e8e8e;">Chargement…</p>`;
       try {
         const res  = await fetch(`/api/instagram-messages?clientId=${clientId}`);
         const data = await res.json();
-        if (data.error) { inner.innerHTML = `<p class="text-xs text-[#767A55]">Non disponible : ${data.error}</p>`; return; }
+        if (data.error) { inner.innerHTML = `<p style="padding:20px;font-size:13px;color:#8e8e8e;">Non disponible : ${data.error}</p>`; return; }
         const convs = data.conversations || [];
         const igAccountId = data.igAccountId || '';
-        if (!convs.length) { inner.innerHTML = '<p class="text-xs text-[#767A55] italic">Aucun message récent.</p>'; return; }
+        if (!convs.length) { inner.innerHTML = '<p style="padding:20px;font-size:13px;color:#8e8e8e;font-style:italic;">Aucun message.</p>'; return; }
 
         const _findMyId = (conv) => {
           const igAID = String(igAccountId || '');
@@ -3326,7 +3321,37 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           return byExclusion || igAID;
         };
 
-        const renderConv = (conv, allConvs) => {
+        const _renderDmList = (allConvs) => {
+          inner.innerHTML = `
+            <div style="padding:16px 16px 8px;border-bottom:1px solid #dbdbdb;display:flex;align-items:center;gap:8px;">
+              <iconify-icon icon="mdi:instagram" style="font-size:22px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></iconify-icon>
+              <p style="font-size:16px;font-weight:700;color:#000;flex:1;">Messages</p>
+              <button onclick="loadIgDMs(window._currentAdminClientId)" style="font-size:18px;background:none;border:none;cursor:pointer;color:#8e8e8e;" title="Rafraîchir">↺</button>
+            </div>
+            <div style="overflow-y:auto;flex:1;">
+              ${allConvs.map(c => {
+                const myId2 = _findMyId(c);
+                const p2    = (c.participants?.data||[]).find(p => String(p.id) !== myId2) || (c.participants?.data||[])[0] || {};
+                const n2    = p2.name || p2.username || 'Inconnu';
+                const last2 = c.messages?.data?.[0];
+                const lastMsg = last2?.isMine ? `Vous : ${last2?.message||'📎'}` : (last2?.message||'📎');
+                const timeAgo = last2?.created_time ? new Date(last2.created_time).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '';
+                return `<button onclick="selectDmConv('${clientId}','${c.id}')" style="width:100%;display:flex;align-items:center;gap:12px;padding:12px 16px;text-align:left;background:transparent;border:none;border-bottom:1px solid #f0f0f0;cursor:pointer;">
+                  ${_igAvatar(p2, 56)}
+                  <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+                      <p style="font-size:14px;font-weight:600;color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n2}</p>
+                      <span style="font-size:12px;color:#8e8e8e;flex-shrink:0;margin-left:8px;">${timeAgo}</span>
+                    </div>
+                    <p style="font-size:13px;color:#8e8e8e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${lastMsg}</p>
+                  </div>
+                  <span style="color:#8e8e8e;font-size:18px;">›</span>
+                </button>`;
+              }).join('')}
+            </div>`;
+        };
+
+        const _renderDmConv = (conv, allConvs) => {
           const myId        = _findMyId(conv);
           const allP        = conv.participants?.data || [];
           const other       = allP.find(p => String(p.id) !== myId) || allP[0] || {};
@@ -3334,96 +3359,65 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           const username    = other.username ? '@' + other.username : '';
           const msgs        = conv.messages?.data || [];
           const recipientId = other.id || '';
-          return `<div style="display:flex;height:460px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #dbdbdb;">
-            <!-- Liste conversations IG -->
-            <div style="width:220px;flex-shrink:0;border-right:1px solid #dbdbdb;display:flex;flex-direction:column;overflow:hidden;">
-              <div style="padding:16px 16px 8px;border-bottom:1px solid #dbdbdb;">
-                <p style="font-size:15px;font-weight:700;color:#000;">Messages</p>
+          inner.innerHTML = `
+            <!-- Header conversation IG -->
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #dbdbdb;background:#fff;">
+              <button onclick="window._igDmShowList()" style="background:none;border:none;cursor:pointer;font-size:22px;color:#000;padding:0 4px 0 0;line-height:1;">‹</button>
+              ${_igAvatar(other, 36)}
+              <div style="flex:1;min-width:0;">
+                <p style="font-size:14px;font-weight:600;color:#000;line-height:1.2;">${name}</p>
+                ${username ? `<p style="font-size:12px;color:#8e8e8e;line-height:1.2;">${username}</p>` : ''}
               </div>
-              <div style="overflow-y:auto;flex:1;">
-                ${allConvs.map(c => {
-                  const myId2 = _findMyId(c);
-                  const p2    = (c.participants?.data||[]).find(p => String(p.id) !== myId2) || (c.participants?.data||[])[0] || {};
-                  const n2    = p2.name || p2.username || 'Inconnu';
-                  const last2 = c.messages?.data?.[0];
-                  const isActive = c.id === conv.id;
-                  const lastMsg = last2?.isMine ? 'Vous : ' + (last2?.message||'📎') : (last2?.message||'📎');
-                  const timeAgo = last2?.created_time ? new Date(last2.created_time).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '';
-                  return `<button onclick="selectDmConv('${clientId}','${c.id}')" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;text-align:left;background:${isActive?'#fafafa':'transparent'};border:none;cursor:pointer;transition:background 0.15s;">
-                    ${_igAvatar(p2, 44)}
-                    <div style="flex:1;min-width:0;">
-                      <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
-                        <p style="font-size:13px;font-weight:${isActive?'600':'400'};color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n2}</p>
-                        <span style="font-size:11px;color:#8e8e8e;flex-shrink:0;">${timeAgo}</span>
-                      </div>
-                      <p style="font-size:12px;color:#8e8e8e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">${lastMsg}</p>
-                    </div>
-                  </button>`;
-                }).join('')}
-              </div>
+              <a href="https://instagram.com/${other.username||'direct'}" target="_blank" style="color:#8e8e8e;font-size:22px;text-decoration:none;flex-shrink:0;" title="Voir le profil">ⓘ</a>
             </div>
-            <!-- Conversation active IG -->
-            <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
-              <!-- Header IG -->
-              <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #dbdbdb;">
-                ${_igAvatar(other, 44)}
-                <div style="flex:1;min-width:0;">
-                  <p style="font-size:14px;font-weight:600;color:#000;line-height:1.2;">${name}</p>
-                  ${username ? `<p style="font-size:12px;color:#8e8e8e;">${username}</p>` : ''}
-                </div>
-                <a href="https://instagram.com/${other.username||'direct'}" target="_blank" style="color:#0095f6;font-size:13px;text-decoration:none;font-weight:600;flex-shrink:0;">Voir le profil</a>
-              </div>
-              <!-- Zone messages IG -->
-              <div style="flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:4px;" id="dm-msgs-${conv.id}">
-                ${[...msgs].reverse().map((m, i, arr) => {
-                  const isMine = m.isMine === true;
-                  const prevMine = i > 0 ? arr[i-1].isMine === true : null;
-                  const showAvatar = !isMine && (i === arr.length - 1 || arr[i+1]?.isMine !== false);
-                  const time = m.created_time ? new Date(m.created_time).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
-                  return `<div style="display:flex;align-items:flex-end;gap:6px;justify-content:${isMine?'flex-end':'flex-start'};margin-top:${prevMine !== null && prevMine !== isMine ? '8px' : '2px'};">
-                    <div style="width:28px;flex-shrink:0;">${showAvatar ? _igAvatar(m.from||other, 28) : ''}</div>
-                    <div style="max-width:65%;">
-                      <div title="${time}" style="padding:8px 14px;border-radius:22px;font-size:14px;line-height:1.4;word-break:break-word;${isMine ? 'background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;' : 'background:#efefef;color:#000;'}">${m.message||'📎'}</div>
-                    </div>
-                  </div>`;
-                }).join('')}
-              </div>
-              <!-- Input IG -->
-              <div style="padding:10px 12px;border-top:1px solid #dbdbdb;display:flex;align-items:center;gap:8px;">
-                <div style="flex:1;display:flex;align-items:center;border:1px solid #dbdbdb;border-radius:22px;padding:8px 14px;gap:8px;background:#fff;">
-                  <input type="text" id="dm-input-${conv.id}" placeholder="Message…" onkeydown="if(event.key==='Enter') sendIgDM('${clientId}','${recipientId}','dm-input-${conv.id}')"
-                    style="flex:1;border:none;outline:none;font-size:14px;color:#000;background:transparent;" />
-                  <button data-emoji-btn type="button" onclick="toggleEmojiPicker(this,'dm-input-${conv.id}')" style="font-size:20px;background:none;border:none;cursor:pointer;padding:0;line-height:1;">😊</button>
-                </div>
-                <button onclick="sendIgDM('${clientId}','${recipientId}','dm-input-${conv.id}')" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                  <iconify-icon icon="ph:paper-plane-tilt-fill" style="font-size:18px;"></iconify-icon>
-                </button>
-              </div>
+            <!-- Messages IG -->
+            <div style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:3px;background:#fff;" id="dm-msgs-${conv.id}">
+              ${[...msgs].reverse().map((m, i, arr) => {
+                const isMine = m.isMine === true;
+                const prevSame = i > 0 && (arr[i-1].isMine === true) === isMine;
+                const nextSame = i < arr.length-1 && (arr[i+1].isMine === true) === isMine;
+                const showAvatar = !isMine && !nextSame;
+                const time = m.created_time ? new Date(m.created_time).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+                const marginTop = !prevSame ? '8px' : '2px';
+                return `<div style="display:flex;align-items:flex-end;gap:6px;justify-content:${isMine?'flex-end':'flex-start'};margin-top:${marginTop};">
+                  <div style="width:28px;flex-shrink:0;align-self:flex-end;">${showAvatar ? _igAvatar(m.from||other, 28) : ''}</div>
+                  <div style="max-width:68%;">
+                    <div title="${time}" style="padding:9px 14px;border-radius:20px;font-size:14px;line-height:1.45;word-break:break-word;cursor:default;${isMine ? 'background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;' : 'background:#efefef;color:#000;'}">${m.message||'📎'}</div>
+                  </div>
+                </div>`;
+              }).join('')}
             </div>
-          </div>`;
+            <!-- Input IG -->
+            <div style="padding:10px 12px;border-top:1px solid #dbdbdb;display:flex;align-items:center;gap:8px;background:#fff;">
+              <div style="flex:1;display:flex;align-items:center;border:1.5px solid #dbdbdb;border-radius:22px;padding:7px 14px;gap:8px;">
+                <input type="text" id="dm-input-${conv.id}" placeholder="Message…" onkeydown="if(event.key==='Enter') sendIgDM('${clientId}','${recipientId}','dm-input-${conv.id}')"
+                  style="flex:1;border:none;outline:none;font-size:14px;color:#000;background:transparent;" />
+                <button data-emoji-btn type="button" onclick="toggleEmojiPicker(this,'dm-input-${conv.id}')" style="font-size:20px;background:none;border:none;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">😊</button>
+              </div>
+              <button onclick="sendIgDM('${clientId}','${recipientId}','dm-input-${conv.id}')" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <iconify-icon icon="ph:paper-plane-tilt-fill" style="font-size:17px;"></iconify-icon>
+              </button>
+            </div>`;
+          const msgsEl = document.getElementById(`dm-msgs-${conv.id}`);
+          if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
         };
 
-        window._dmConvs = convs;
-        window._dmClientId = clientId;
-        window._renderDmConvAdmin = renderConv;
-        inner.innerHTML = renderConv(convs[0], convs);
-        // Scroll vers le bas des messages
-        const msgsEl = inner.querySelector(`[id^="dm-msgs-"]`);
-        if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
+        window._igDmShowList  = () => _renderDmList(convs);
+        window._dmConvs       = convs;
+        window._dmClientId    = clientId;
+        window._renderDmConvAdmin = _renderDmConv;
+        };
+
+        _renderDmList(convs);
       } catch(err) {
-        inner.innerHTML = `<p class="text-xs text-red-500">Erreur : ${err.message}</p>`;
+        inner.innerHTML = `<p style="padding:20px;font-size:13px;color:red;">Erreur : ${err.message}</p>`;
       }
     };
 
     window.selectDmConv = (clientId, convId) => {
       const convs = window._dmConvs || [];
       const conv  = convs.find(c => c.id === convId);
-      const inner = document.querySelector('#ig-dms-container .p-5');
-      if (conv && inner && window._renderDmConvAdmin) {
-        inner.innerHTML = window._renderDmConvAdmin(conv, convs);
-        const msgsEl = inner.querySelector(`[id^="dm-msgs-"]`);
-        if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
-      }
+      if (conv && window._renderDmConvAdmin) window._renderDmConvAdmin(conv, convs);
     };
 
     window.sendIgDM = async (clientId, recipientId, inputId) => {

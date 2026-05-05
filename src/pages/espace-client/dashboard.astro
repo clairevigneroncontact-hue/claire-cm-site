@@ -328,14 +328,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
         </div>
         <!-- Messages privés Instagram -->
-        <div id="dash-dms-container" class="bg-white rounded-2xl border border-[#D6CCC0] overflow-hidden">
-          <div class="flex items-center gap-2 px-5 py-4 border-b border-[#D6CCC0] bg-[#F5EDE4]">
-            <iconify-icon icon="mdi:instagram" class="text-[#8B3E22] text-lg"></iconify-icon>
-            <h3 class="text-sm font-semibold text-[#2C2416]">Mes messages privés Instagram</h3>
-            <button onclick="loadDashDMs()" class="ml-auto text-xs text-[#8B3E22] hover:underline">↺ Rafraîchir</button>
-          </div>
-          <div class="p-5 min-h-[250px]">
-            <p class="text-xs text-[#767A55] italic">Chargement des messages…</p>
+        <div id="dash-dms-container" style="background:#fff;border-radius:12px;border:1px solid #dbdbdb;overflow:hidden;min-height:480px;display:flex;flex-direction:column;">
+          <div id="dash-dms-inner" style="flex:1;display:flex;flex-direction:column;">
+            <p style="padding:20px;font-size:13px;color:#8e8e8e;font-style:italic;">Chargement des messages…</p>
           </div>
         </div>
       </div>
@@ -828,19 +823,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           : `<div style="width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:white;font-size:${size<=28?'10':'12'}px;font-weight:700;">${(p?.name||p?.username||'?')[0].toUpperCase()}</div>`;
 
         window.loadDashDMs = async () => {
-          const cont  = document.getElementById('dash-dms-container');
-          const inner = cont?.querySelector('.p-5') || cont;
+          const inner = document.getElementById('dash-dms-inner');
           if (!inner) return;
+          inner.innerHTML = `<p style="padding:20px;font-size:13px;color:#8e8e8e;">Chargement…</p>`;
           try {
             const res  = await fetch(`/api/instagram-messages?clientId=${uid}`);
             const data = await res.json();
-            if (data.error) { inner.innerHTML = `<p class="text-xs text-[#767A55]">Non disponible : ${data.error}</p>`; return; }
+            if (data.error) { inner.innerHTML = `<p style="padding:20px;font-size:13px;color:#8e8e8e;">Non disponible : ${data.error}</p>`; return; }
             const convs = data.conversations || [];
             const igAccountId = data.igAccountId || '';
-            if (!convs.length) { inner.innerHTML = '<p class="text-xs text-[#767A55] italic">Aucun message récent.</p>'; return; }
+            if (!convs.length) { inner.innerHTML = '<p style="padding:20px;font-size:13px;color:#8e8e8e;font-style:italic;">Aucun message.</p>'; return; }
 
             window._dashDmConvs = convs;
-            window._dashIgAccountId = igAccountId;
             const _findDashMyId = (conv) => {
               const igAID = String(igAccountId || '');
               const allP  = conv.participants?.data || [];
@@ -850,7 +844,38 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               if (igAID && sIds.includes(igAID)) return igAID;
               return sIds.find(id => !pIds.has(id)) || igAID;
             };
-            const renderConv = (conv) => {
+
+            const _renderDashList = () => {
+              inner.innerHTML = `
+                <div style="padding:16px 16px 8px;border-bottom:1px solid #dbdbdb;display:flex;align-items:center;gap:8px;">
+                  <iconify-icon icon="mdi:instagram" style="font-size:22px;"></iconify-icon>
+                  <p style="font-size:16px;font-weight:700;color:#000;flex:1;">Messages</p>
+                  <button onclick="loadDashDMs()" style="font-size:18px;background:none;border:none;cursor:pointer;color:#8e8e8e;">↺</button>
+                </div>
+                <div style="overflow-y:auto;flex:1;">
+                  ${convs.map(c => {
+                    const myId2 = _findDashMyId(c);
+                    const p2    = (c.participants?.data||[]).find(p => String(p.id) !== myId2) || (c.participants?.data||[])[0] || {};
+                    const n2    = p2.name || p2.username || 'Inconnu';
+                    const last  = c.messages?.data?.[0];
+                    const lastMsg = last?.isMine ? `Vous : ${last?.message||'📎'}` : (last?.message||'📎');
+                    const timeAgo = last?.created_time ? new Date(last.created_time).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '';
+                    return `<button onclick="selectDashConv('${c.id}')" style="width:100%;display:flex;align-items:center;gap:12px;padding:12px 16px;text-align:left;background:transparent;border:none;border-bottom:1px solid #f0f0f0;cursor:pointer;">
+                      ${_dashAvatar(p2, 56)}
+                      <div style="flex:1;min-width:0;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+                          <p style="font-size:14px;font-weight:600;color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n2}</p>
+                          <span style="font-size:12px;color:#8e8e8e;flex-shrink:0;margin-left:8px;">${timeAgo}</span>
+                        </div>
+                        <p style="font-size:13px;color:#8e8e8e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${lastMsg}</p>
+                      </div>
+                      <span style="color:#8e8e8e;font-size:18px;">›</span>
+                    </button>`;
+                  }).join('')}
+                </div>`;
+            };
+
+            const _renderDashConv = (conv) => {
               const myId        = _findDashMyId(conv);
               const allP        = conv.participants?.data || [];
               const other       = allP.find(p => String(p.id) !== myId) || allP[0] || {};
@@ -858,86 +883,53 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               const username    = other.username ? '@' + other.username : '';
               const msgs        = conv.messages?.data || [];
               const recipientId = other.id || '';
-              return `<div style="display:flex;height:420px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #dbdbdb;">
-                <!-- Liste conversations IG -->
-                <div style="width:200px;flex-shrink:0;border-right:1px solid #dbdbdb;display:flex;flex-direction:column;overflow:hidden;">
-                  <div style="padding:14px 14px 8px;border-bottom:1px solid #dbdbdb;">
-                    <p style="font-size:15px;font-weight:700;color:#000;">Messages</p>
-                  </div>
-                  <div style="overflow-y:auto;flex:1;">
-                    ${convs.map(c => {
-                      const myId2 = _findDashMyId(c);
-                      const p2    = (c.participants?.data||[]).find(p => String(p.id) !== myId2) || (c.participants?.data||[])[0] || {};
-                      const n2   = p2.name || p2.username || 'Inconnu';
-                      const last = c.messages?.data?.[0];
-                      const isActive = c.id === conv.id;
-                      const lastMsg = last?.isMine ? 'Vous : ' + (last?.message||'📎') : (last?.message||'📎');
-                      const timeAgo = last?.created_time ? new Date(last.created_time).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '';
-                      return `<button onclick="selectDashConv('${c.id}')" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;text-align:left;background:${isActive?'#fafafa':'transparent'};border:none;cursor:pointer;">
-                        ${_dashAvatar(p2, 44)}
-                        <div style="flex:1;min-width:0;">
-                          <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
-                            <p style="font-size:13px;font-weight:${isActive?'600':'400'};color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n2}</p>
-                            <span style="font-size:11px;color:#8e8e8e;flex-shrink:0;">${timeAgo}</span>
-                          </div>
-                          <p style="font-size:12px;color:#8e8e8e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">${lastMsg}</p>
-                        </div>
-                      </button>`;
-                    }).join('')}
+              inner.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #dbdbdb;background:#fff;">
+                  <button onclick="window._dashDmShowList()" style="background:none;border:none;cursor:pointer;font-size:22px;color:#000;padding:0 4px 0 0;line-height:1;">‹</button>
+                  ${_dashAvatar(other, 36)}
+                  <div style="flex:1;min-width:0;">
+                    <p style="font-size:14px;font-weight:600;color:#000;line-height:1.2;">${name}</p>
+                    ${username ? `<p style="font-size:12px;color:#8e8e8e;line-height:1.2;">${username}</p>` : ''}
                   </div>
                 </div>
-                <!-- Conversation IG -->
-                <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
-                  <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #dbdbdb;">
-                    ${_dashAvatar(other, 44)}
-                    <div style="flex:1;min-width:0;">
-                      <p style="font-size:14px;font-weight:600;color:#000;line-height:1.2;">${name}</p>
-                      ${username ? `<p style="font-size:12px;color:#8e8e8e;">${username}</p>` : ''}
-                    </div>
-                  </div>
-                  <div style="flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:4px;" id="dash-dm-msgs-${conv.id}">
-                    ${[...msgs].reverse().map((m, i, arr) => {
-                      const isMine = m.isMine === true;
-                      const prevMine = i > 0 ? arr[i-1].isMine === true : null;
-                      const showAvatar = !isMine && (i === arr.length-1 || arr[i+1]?.isMine !== false);
-                      const time = m.created_time ? new Date(m.created_time).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
-                      return `<div style="display:flex;align-items:flex-end;gap:6px;justify-content:${isMine?'flex-end':'flex-start'};margin-top:${prevMine !== null && prevMine !== isMine ? '8px' : '2px'};">
-                        <div style="width:28px;flex-shrink:0;">${showAvatar ? _dashAvatar(m.from||other, 28) : ''}</div>
-                        <div style="max-width:65%;">
-                          <div title="${time}" style="padding:8px 14px;border-radius:22px;font-size:14px;line-height:1.4;word-break:break-word;${isMine?'background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;':'background:#efefef;color:#000;'}">${m.message||'📎'}</div>
-                        </div>
-                      </div>`;
-                    }).join('')}
-                  </div>
-                  <div style="padding:10px 12px;border-top:1px solid #dbdbdb;display:flex;align-items:center;gap:8px;">
-                    <div style="flex:1;display:flex;align-items:center;border:1px solid #dbdbdb;border-radius:22px;padding:8px 14px;gap:8px;">
-                      <input type="text" id="dash-dm-input-${conv.id}" placeholder="Message…" onkeydown="if(event.key==='Enter') sendDashDM('${recipientId}','dash-dm-input-${conv.id}')"
-                        style="flex:1;border:none;outline:none;font-size:14px;color:#000;background:transparent;" />
-                      <span style="font-size:20px;cursor:default;">😊</span>
-                    </div>
-                    <button onclick="sendDashDM('${recipientId}','dash-dm-input-${conv.id}')" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                      <iconify-icon icon="ph:paper-plane-tilt-fill" style="font-size:18px;"></iconify-icon>
-                    </button>
-                  </div>
+                <div style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:3px;background:#fff;" id="dash-dm-msgs-${conv.id}">
+                  ${[...msgs].reverse().map((m, i, arr) => {
+                    const isMine = m.isMine === true;
+                    const prevSame = i > 0 && (arr[i-1].isMine === true) === isMine;
+                    const nextSame = i < arr.length-1 && (arr[i+1].isMine === true) === isMine;
+                    const showAvatar = !isMine && !nextSame;
+                    const time = m.created_time ? new Date(m.created_time).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+                    return `<div style="display:flex;align-items:flex-end;gap:6px;justify-content:${isMine?'flex-end':'flex-start'};margin-top:${!prevSame?'8px':'2px'};">
+                      <div style="width:28px;flex-shrink:0;">${showAvatar ? _dashAvatar(m.from||other, 28) : ''}</div>
+                      <div style="max-width:68%;">
+                        <div title="${time}" style="padding:9px 14px;border-radius:20px;font-size:14px;line-height:1.45;word-break:break-word;${isMine?'background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;':'background:#efefef;color:#000;'}">${m.message||'📎'}</div>
+                      </div>
+                    </div>`;
+                  }).join('')}
                 </div>
-              </div>`;
+                <div style="padding:10px 12px;border-top:1px solid #dbdbdb;display:flex;align-items:center;gap:8px;background:#fff;">
+                  <div style="flex:1;display:flex;align-items:center;border:1.5px solid #dbdbdb;border-radius:22px;padding:7px 14px;gap:8px;">
+                    <input type="text" id="dash-dm-input-${conv.id}" placeholder="Message…" onkeydown="if(event.key==='Enter') sendDashDM('${recipientId}','dash-dm-input-${conv.id}')"
+                      style="flex:1;border:none;outline:none;font-size:14px;color:#000;background:transparent;" />
+                    <span style="font-size:20px;cursor:default;flex-shrink:0;">😊</span>
+                  </div>
+                  <button onclick="sendDashDM('${recipientId}','dash-dm-input-${conv.id}')" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <iconify-icon icon="ph:paper-plane-tilt-fill" style="font-size:17px;"></iconify-icon>
+                  </button>
+                </div>`;
+              const msgsEl = document.getElementById(`dash-dm-msgs-${conv.id}`);
+              if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
             };
 
-            inner.innerHTML = renderConv(convs[0]);
-            window._dashRenderConv = renderConv;
-            const msgsEl = inner.querySelector(`[id^="dash-dm-msgs-"]`);
-            if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
-          } catch(e) { if (inner) inner.innerHTML = `<p class="text-xs text-red-500">${e.message}</p>`; }
+            window._dashDmShowList = _renderDashList;
+            window._dashRenderConv = _renderDashConv;
+            _renderDashList();
+          } catch(e) { if (inner) inner.innerHTML = `<p style="padding:20px;font-size:13px;color:red;">${e.message}</p>`; }
         };
 
         window.selectDashConv = (convId) => {
-          const conv  = (window._dashDmConvs||[]).find(c => c.id === convId);
-          const inner = document.querySelector('#dash-dms-container .p-5');
-          if (conv && inner && window._dashRenderConv) {
-            inner.innerHTML = window._dashRenderConv(conv);
-            const msgsEl = inner.querySelector(`[id^="dash-dm-msgs-"]`);
-            if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
-          }
+          const conv = (window._dashDmConvs||[]).find(c => c.id === convId);
+          if (conv && window._dashRenderConv) window._dashRenderConv(conv);
         };
 
         window.sendDashDM = async (recipientId, inputId) => {
