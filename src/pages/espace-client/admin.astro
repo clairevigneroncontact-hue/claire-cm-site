@@ -1830,7 +1830,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                   <div class="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-colors flex items-center justify-center">
                     <div class="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold text-center leading-loose px-1">
                       <div>❤️ ${m.like_count || 0} &nbsp; 💬 ${m.comments_count || 0}</div>
-                      <div>${m.reposts_count != null ? `🔁 ${m.reposts_count}` : ''}${m.reposts_count != null && m.shares_count != null ? ' &nbsp; ' : ''}${m.shares_count != null ? `<iconify-icon icon="ph:paper-plane-tilt" class="align-middle"></iconify-icon> ${m.shares_count}` : ''}</div>
+                      <div>${m.reposts_count != null ? `<iconify-icon icon="ph:arrows-clockwise" class="align-middle"></iconify-icon> ${m.reposts_count}` : ''}${m.reposts_count != null && m.shares_count != null ? ' &nbsp; ' : ''}${m.shares_count != null ? `<iconify-icon icon="ph:paper-plane-tilt" class="align-middle"></iconify-icon> ${m.shares_count}` : ''}</div>
                     </div>
                   </div>
                 </a>`;
@@ -1862,7 +1862,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         offer:             document.getElementById('ci-offer').value,
       }).eq('id', clientId);
       msg.className = `text-sm rounded-xl px-4 py-3 mb-3 ${error ? 'text-red-600 bg-red-50' : 'text-green-700 bg-green-50'}`;
-      msg.textContent = error ? 'Erreur.' : 'Informations mises à jour ✓';
+      msg.textContent = error ? `Erreur : ${error.message}` : 'Informations mises à jour ✓';
       msg.classList.remove('hidden');
       setTimeout(() => msg.classList.add('hidden'), 3000);
     };
