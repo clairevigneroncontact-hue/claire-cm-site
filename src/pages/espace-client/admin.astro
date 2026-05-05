@@ -1823,6 +1823,32 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const avgEngage = (media.length && p.followers_count)
           ? ((totalEng / media.length) / p.followers_count * 100).toFixed(2)
           : '—';
+        // Post le plus performant du mois (calculé avant le rendu)
+        const thisMonth = new Date().toISOString().slice(0, 7);
+        const monthMedia = media.filter(m => (m.timestamp || '').slice(0, 7) === thisMonth);
+        const scored = (monthMedia.length ? monthMedia : media).map(m => ({
+          ...m, score: (m.like_count||0) + (m.comments_count||0)*2 + (m.reposts_count||0)*2 + (m.saved_count||0)*3,
+        })).sort((a, b) => b.score - a.score);
+        const best = scored[0];
+        const bestImg = best ? (best.media_type === 'VIDEO' ? (best.thumbnail_url||'') : (best.media_url||'')) : '';
+        const bestBlock = best ? `
+          <div class="border-t border-[#D6CCC0] mt-4 pt-4">
+            <p class="text-[10px] text-[#767A55] uppercase tracking-widest mb-2">🏆 Post du mois</p>
+            <a href="${best.permalink||'#'}" target="_blank" class="flex gap-3 items-center group">
+              ${bestImg ? `<img src="${bestImg}" class="w-12 h-12 rounded-lg object-cover shrink-0 border border-[#D6CCC0]" />` : '<div class="w-12 h-12 rounded-lg bg-[#EDE6DB] shrink-0"></div>'}
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap gap-2 text-xs font-semibold text-[#2C2416]">
+                  <span>❤️ ${(best.like_count||0).toLocaleString('fr-FR')}</span>
+                  <span>💬 ${(best.comments_count||0).toLocaleString('fr-FR')}</span>
+                  ${best.reposts_count != null ? `<span><iconify-icon icon="ph:arrows-clockwise" class="align-middle"></iconify-icon> ${best.reposts_count}</span>` : ''}
+                  ${best.saved_count != null ? `<span>🔖 ${best.saved_count}</span>` : ''}
+                </div>
+                ${best.caption ? `<p class="text-xs text-[#767A55] mt-1 line-clamp-1">${best.caption.slice(0,60)}</p>` : ''}
+              </div>
+              <iconify-icon icon="solar:arrow-right-up-linear" stroke-width="1.5" class="text-[#D6CCC0] group-hover:text-[#8B3E22] shrink-0 transition-colors"></iconify-icon>
+            </a>
+          </div>` : '';
+
         container.innerHTML = `
           <div class="bg-white rounded-2xl p-5 border border-[#D6CCC0] mb-4">
             <div class="flex items-center gap-4 mb-4">
@@ -1849,6 +1875,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 <p class="text-[10px] text-[#767A55] uppercase tracking-widest mt-0.5">Engagement</p>
               </div>
             </div>
+            ${bestBlock}
           </div>
           ${media.length ? `<div class="bg-white rounded-2xl p-5 border border-[#D6CCC0]">
             <div class="flex items-center justify-between mb-3">
@@ -1871,35 +1898,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <!-- Panel commentaires au clic -->
             <div id="ig-post-comments-panel-${clientId}" class="hidden border-t border-[#D6CCC0] pt-3"></div>
           </div>` : ''}`;
-
-        // Post le plus performant du mois
-        const thisMonth = new Date().toISOString().slice(0, 7);
-        const monthMedia = media.filter(m => (m.timestamp || '').slice(0, 7) === thisMonth);
-        const scored = (monthMedia.length ? monthMedia : media).map(m => ({
-          ...m,
-          score: (m.like_count || 0) + (m.comments_count || 0) * 2 + (m.reposts_count || 0) * 2 + (m.saved_count || 0) * 3,
-        })).sort((a, b) => b.score - a.score);
-        const best = scored[0];
-        if (best) {
-          const bestImg = best.media_type === 'VIDEO' ? (best.thumbnail_url || '') : (best.media_url || '');
-          container.innerHTML += `<div class="bg-white rounded-2xl p-5 border border-[#D6CCC0] mt-4">
-            <h3 class="text-sm font-medium text-[#2C2416] mb-3">🏆 Post du mois</h3>
-            <a href="${best.permalink || '#'}" target="_blank" class="flex gap-3 items-center group">
-              ${bestImg ? `<img src="${bestImg}" class="w-16 h-16 rounded-xl object-cover shrink-0 border border-[#D6CCC0]" />` : '<div class="w-16 h-16 rounded-xl bg-[#EDE6DB] shrink-0"></div>'}
-              <div class="flex-1 min-w-0">
-                <p class="text-xs text-[#767A55] mb-1.5">${new Date(best.timestamp || Date.now()).toLocaleDateString('fr-FR', {day:'2-digit',month:'long'})}</p>
-                <div class="flex flex-wrap gap-2 text-xs font-semibold text-[#2C2416]">
-                  <span>❤️ ${(best.like_count||0).toLocaleString('fr-FR')}</span>
-                  <span>💬 ${(best.comments_count||0).toLocaleString('fr-FR')}</span>
-                  ${best.reposts_count != null ? `<span><iconify-icon icon="ph:arrows-clockwise" class="align-middle"></iconify-icon> ${best.reposts_count}</span>` : ''}
-                  ${best.saved_count != null ? `<span>🔖 ${best.saved_count}</span>` : ''}
-                </div>
-                ${best.caption ? `<p class="text-xs text-[#767A55] mt-1 line-clamp-2">${best.caption.slice(0,80)}</p>` : ''}
-              </div>
-              <iconify-icon icon="solar:arrow-right-up-linear" stroke-width="1.5" class="text-[#D6CCC0] group-hover:text-[#8B3E22] shrink-0 transition-colors"></iconify-icon>
-            </a>
-          </div>`;
-        }
 
         // Courbes d'évolution
         const insightsRes  = await fetch(`/api/instagram-account-insights?clientId=${clientId}`);
