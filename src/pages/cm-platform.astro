@@ -1,0 +1,258 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="CM Platform — L'espace client pour les Community Managers"
+  description="La plateforme tout-en-un pour les Community Managers freelance. Espace admin, espace client avec validation des contenus, statistiques Instagram, bilan mensuel."
+  hideChatWidget={true}
+>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500&display=swap');
+  .cmp { font-family: 'Plus Jakarta Sans', sans-serif; }
+  .cmp-inter { font-family: 'Inter', sans-serif; }
+  .gradient-text {
+    background: linear-gradient(135deg, #6C63FF, #FF6584);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #6C63FF, #8B5CF6);
+    color: white;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    display: inline-block;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-secondary {
+    background: white;
+    color: #6C63FF;
+    border: 2px solid #6C63FF;
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { background: #6C63FF; color: white; }
+  .feature-card {
+    background: white;
+    border: 1px solid #E8E8F0;
+    border-radius: 16px;
+    padding: 28px;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .feature-card:hover { box-shadow: 0 8px 32px rgba(108,99,255,0.12); transform: translateY(-2px); }
+  .price-card {
+    background: white;
+    border: 2px solid #E8E8F0;
+    border-radius: 20px;
+    padding: 36px 28px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .price-card.featured {
+    border-color: #6C63FF;
+    box-shadow: 0 8px 32px rgba(108,99,255,0.2);
+    transform: scale(1.03);
+  }
+</style>
+
+<div class="cmp" style="background:#F8F9FF; min-height:100vh;">
+
+  <!-- NAV -->
+  <nav style="background:white; border-bottom:1px solid #E8E8F0; padding:0 24px; position:sticky; top:0; z-index:50;">
+    <div style="max-width:1100px; margin:0 auto; display:flex; align-items:center; height:64px; gap:16px;">
+      <a href="/cm-platform" style="font-size:20px; font-weight:800; color:#1A1A2E; text-decoration:none;">
+        CM<span style="color:#6C63FF;">space</span>
+        <span style="background:#FF6584; color:white; font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; margin-left:6px; vertical-align:middle;">BÊTA</span>
+      </a>
+      <div style="flex:1;"></div>
+      <a href="#pricing" style="font-size:14px; color:#2D2D44; text-decoration:none; font-weight:500;">Tarifs</a>
+      <a href="#beta" class="btn-primary" style="padding:10px 20px; font-size:14px;">Rejoindre la bêta</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section style="max-width:1100px; margin:0 auto; padding:80px 24px 60px; text-align:center;">
+    <div style="display:inline-block; background:#EEF2FF; color:#6C63FF; font-size:13px; font-weight:600; padding:6px 16px; border-radius:20px; margin-bottom:24px;">
+      🚀 Bêta ouverte — 10 places gratuites pendant 1 mois
+    </div>
+    <h1 style="font-size:clamp(36px,5vw,64px); font-weight:800; color:#1A1A2E; line-height:1.1; margin:0 0 20px;">
+      L'outil que tes clients<br><span class="gradient-text">attendaient depuis longtemps</span>
+    </h1>
+    <p class="cmp-inter" style="font-size:18px; color:#6B7280; max-width:580px; margin:0 auto 36px; line-height:1.6;">
+      Arrête de gérer tes clients sur WhatsApp et Google Drive.<br>
+      CMspace centralise tout : validation des contenus, statistiques Instagram, bilans mensuels, messagerie.
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a href="#beta" class="btn-primary">Rejoindre la bêta gratuite →</a>
+      <a href="#features" class="btn-secondary">Voir les fonctionnalités</a>
+    </div>
+
+    <!-- Dashboard mockup -->
+    <div style="margin-top:56px; background:white; border-radius:20px; border:1px solid #E8E8F0; box-shadow:0 24px 80px rgba(108,99,255,0.12); overflow:hidden; max-width:860px; margin-left:auto; margin-right:auto;">
+      <div style="background:#1A1A2E; padding:12px 20px; display:flex; align-items:center; gap:8px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:#FF5F57;"></div>
+        <div style="width:12px;height:12px;border-radius:50%;background:#FFBD2E;"></div>
+        <div style="width:12px;height:12px;border-radius:50%;background:#28CA41;"></div>
+        <div style="flex:1; background:#2D2D44; border-radius:6px; height:24px; margin:0 40px;"></div>
+      </div>
+      <div style="padding:32px; background:#F8F9FF; display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+        <div style="background:white; border-radius:12px; padding:20px; border:1px solid #E8E8F0;">
+          <p style="font-size:11px; color:#9CA3AF; font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin:0 0 8px;">Abonnés</p>
+          <p style="font-size:28px; font-weight:800; color:#1A1A2E; margin:0;">1 247</p>
+          <p style="font-size:12px; color:#10B981; margin:4px 0 0;">▲ +83 ce mois</p>
+        </div>
+        <div style="background:white; border-radius:12px; padding:20px; border:1px solid #E8E8F0;">
+          <p style="font-size:11px; color:#9CA3AF; font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin:0 0 8px;">Portée</p>
+          <p style="font-size:28px; font-weight:800; color:#1A1A2E; margin:0;">12 480</p>
+          <p style="font-size:12px; color:#10B981; margin:4px 0 0;">▲ ×3 vs mois dernier</p>
+        </div>
+        <div style="background:white; border-radius:12px; padding:20px; border:1px solid #E8E8F0;">
+          <p style="font-size:11px; color:#9CA3AF; font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin:0 0 8px;">Contenus en attente</p>
+          <p style="font-size:28px; font-weight:800; color:#6C63FF; margin:0;">3</p>
+          <p style="font-size:12px; color:#F59E0B; margin:4px 0 0;">⏳ À valider</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLÈME -->
+  <section style="max-width:1100px; margin:0 auto; padding:60px 24px;">
+    <div style="background:#1A1A2E; border-radius:24px; padding:56px 48px; text-align:center;">
+      <h2 style="font-size:clamp(24px,3vw,40px); font-weight:800; color:white; margin:0 0 16px;">
+        En ce moment tu jonglais entre…
+      </h2>
+      <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin:32px 0;">
+        {['💬 WhatsApp pour les retours clients', '📁 Google Drive pour les fichiers', '📊 Sheets pour les stats', '📧 Email pour les bilans', '📅 Notion pour les plannings', '🤷 Et beaucoup d\'improvisation'].map(t =>
+          <span style="background:#2D2D44; color:#E8E8F0; padding:10px 18px; border-radius:20px; font-size:14px; font-weight:500;">{t}</span>
+        )}
+      </div>
+      <p style="color:#9CA3AF; font-size:16px; max-width:480px; margin:0 auto;">
+        Résultat : tes clients ne savent pas où en est leur contenu, et toi tu perds du temps à tout coordonner.
+      </p>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" style="max-width:1100px; margin:0 auto; padding:60px 24px;">
+    <div style="text-align:center; margin-bottom:48px;">
+      <h2 style="font-size:clamp(28px,3vw,44px); font-weight:800; color:#1A1A2E; margin:0 0 12px;">
+        Tout est centralisé.<br><span class="gradient-text">Pour toi et tes clients.</span>
+      </h2>
+      <p class="cmp-inter" style="color:#6B7280; font-size:16px; max-width:500px; margin:0 auto;">
+        CMspace te donne un espace admin professionnel et un espace client pour chacun de tes comptes.
+      </p>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px;">
+      {[
+        { icon:'✅', title:'Validation des contenus', desc:'Ton client voit chaque post avant publication. Il valide, refuse ou commente directement. Rien ne part sans son accord.' },
+        { icon:'📊', title:'Statistiques Instagram', desc:'Portée, abonnés, impressions, taux d\'engagement. Toutes les stats en temps réel, pour toi et ton client.' },
+        { icon:'📅', title:'Calendrier éditorial', desc:'Visualise le planning des publications. Déplace les posts, change les dates, tout se synchronise.' },
+        { icon:'💬', title:'Messagerie intégrée', desc:'Messages privés Instagram et fil de discussion interne. Plus besoin de jongler entre WhatsApp et Instagram.' },
+        { icon:'📁', title:'Documents et factures', desc:'Dépose les contrats, devis et factures directement dans l\'espace du client. Tout est centralisé.' },
+        { icon:'📈', title:'Bilan mensuel auto', desc:'Les stats du mois s\'intègrent automatiquement. Tu valides, tu envoies. Le client reçoit un bilan pro en quelques clics.' },
+      ].map(f =>
+        <div class="feature-card">
+          <div style="font-size:32px; margin-bottom:14px;">{f.icon}</div>
+          <h3 style="font-size:17px; font-weight:700; color:#1A1A2E; margin:0 0 8px;">{f.title}</h3>
+          <p class="cmp-inter" style="font-size:14px; color:#6B7280; margin:0; line-height:1.6;">{f.desc}</p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" style="max-width:1100px; margin:0 auto; padding:60px 24px;">
+    <div style="text-align:center; margin-bottom:48px;">
+      <h2 style="font-size:clamp(28px,3vw,44px); font-weight:800; color:#1A1A2E; margin:0 0 12px;">Tarifs simples</h2>
+      <p class="cmp-inter" style="color:#6B7280; font-size:16px;">Sans engagement. Annule quand tu veux.</p>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; align-items:center;">
+      <div class="price-card">
+        <p style="font-size:13px; font-weight:700; color:#6B7280; text-transform:uppercase; letter-spacing:.08em; margin:0 0 8px;">Solo</p>
+        <p style="font-size:44px; font-weight:800; color:#1A1A2E; margin:0 0 4px;">19€<span style="font-size:16px; font-weight:400; color:#6B7280;">/mois</span></p>
+        <p style="font-size:13px; color:#6B7280; margin:0 0 24px;">Jusqu'à 3 clients</p>
+        <ul class="cmp-inter" style="list-style:none; padding:0; margin:0 0 28px; text-align:left; font-size:14px; color:#374151;">
+          {['✓ Espace admin + client','✓ Validation contenus','✓ Stats Instagram','✓ Messagerie','✓ Documents'].map(i => <li style="padding:5px 0;">{i}</li>)}
+        </ul>
+        <a href="#beta" class="btn-secondary" style="width:100%; text-align:center; box-sizing:border-box;">Commencer</a>
+      </div>
+      <div class="price-card featured">
+        <div style="background:#6C63FF; color:white; font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; display:inline-block; margin-bottom:12px;">POPULAIRE</div>
+        <p style="font-size:13px; font-weight:700; color:#6B7280; text-transform:uppercase; letter-spacing:.08em; margin:0 0 8px;">Pro</p>
+        <p style="font-size:44px; font-weight:800; color:#1A1A2E; margin:0 0 4px;">39€<span style="font-size:16px; font-weight:400; color:#6B7280;">/mois</span></p>
+        <p style="font-size:13px; color:#6B7280; margin:0 0 24px;">Jusqu'à 8 clients</p>
+        <ul class="cmp-inter" style="list-style:none; padding:0; margin:0 0 28px; text-align:left; font-size:14px; color:#374151;">
+          {['✓ Tout de Solo','✓ Bilan mensuel auto','✓ DMs Instagram','✓ Commentaires IG','✓ Calendrier éditorial','✓ Rapports avancés'].map(i => <li style="padding:5px 0;">{i}</li>)}
+        </ul>
+        <a href="#beta" class="btn-primary" style="width:100%; text-align:center; box-sizing:border-box;">Commencer</a>
+      </div>
+      <div class="price-card">
+        <p style="font-size:13px; font-weight:700; color:#6B7280; text-transform:uppercase; letter-spacing:.08em; margin:0 0 8px;">Unlimited</p>
+        <p style="font-size:44px; font-weight:800; color:#1A1A2E; margin:0 0 4px;">59€<span style="font-size:16px; font-weight:400; color:#6B7280;">/mois</span></p>
+        <p style="font-size:13px; color:#6B7280; margin:0 0 24px;">Clients illimités</p>
+        <ul class="cmp-inter" style="list-style:none; padding:0; margin:0 0 28px; text-align:left; font-size:14px; color:#374151;">
+          {['✓ Tout de Pro','✓ Clients illimités','✓ Support prioritaire','✓ Nouvelles fonctionnalités en avant-première','✓ Accès à vie au prix bêta'].map(i => <li style="padding:5px 0;">{i}</li>)}
+        </ul>
+        <a href="#beta" class="btn-secondary" style="width:100%; text-align:center; box-sizing:border-box;">Commencer</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- BETA -->
+  <section id="beta" style="max-width:1100px; margin:0 auto; padding:60px 24px 80px;">
+    <div style="background:linear-gradient(135deg,#6C63FF,#8B5CF6); border-radius:24px; padding:64px 48px; text-align:center;">
+      <h2 style="font-size:clamp(28px,3vw,44px); font-weight:800; color:white; margin:0 0 16px;">
+        Rejoins les 10 premiers CMs testeurs
+      </h2>
+      <p class="cmp-inter" style="color:rgba(255,255,255,0.85); font-size:17px; max-width:520px; margin:0 auto 12px; line-height:1.6;">
+        1 mois gratuit. Sans engagement. Tu testes, tu donnes tes retours, tu gardes l'accès au prix bêta à vie.
+      </p>
+      <p style="color:rgba(255,255,255,0.65); font-size:14px; margin:0 0 36px;">
+        🔴 Places restantes : <strong style="color:white;">10 / 10</strong>
+      </p>
+      <form id="beta-form" style="display:flex; gap:12px; max-width:480px; margin:0 auto; flex-wrap:wrap;">
+        <input type="email" id="beta-email" placeholder="ton@email.com" required
+          style="flex:1; min-width:200px; padding:14px 18px; border-radius:10px; border:none; font-size:15px; font-family:inherit; outline:none;" />
+        <button type="submit"
+          style="background:#FF6584; color:white; border:none; padding:14px 24px; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap;">
+          Je rejoins la bêta →
+        </button>
+      </form>
+      <p id="beta-msg" style="color:white; font-size:14px; margin-top:16px; min-height:20px;"></p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="border-top:1px solid #E8E8F0; padding:32px 24px; text-align:center;">
+    <p style="color:#9CA3AF; font-size:13px; margin:0;">
+      CMspace · Une initiative de <a href="https://clairevigneron.com" style="color:#6C63FF; text-decoration:none;">Claire Vigneron</a> · Community Manager
+    </p>
+  </footer>
+
+</div>
+
+<script is:inline>
+  document.getElementById('beta-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('beta-email')?.value;
+    const msg   = document.getElementById('beta-msg');
+    if (!email || !msg) return;
+    msg.textContent = 'Inscription en cours…';
+    // TODO : connecter à Supabase pour stocker les emails bêta
+    await new Promise(r => setTimeout(r, 800));
+    msg.textContent = '✅ Parfait ! On te contacte très vite pour t\'onboarder.';
+    document.getElementById('beta-email').value = '';
+  });
+</script>
+
+</BaseLayout>
