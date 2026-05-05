@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#F5EDE4"/>
+  <rect width="1200" height="630" fill="#EDE6DB"/>
+  <!-- Cercle décoratif fond -->
+  <circle cx="950" cy="315" r="400" fill="#D6CCC0" opacity="0.4"/>
+  <circle cx="200" cy="500" r="200" fill="#D6CCC0" opacity="0.3"/>
+  <!-- Logo C -->
+  <circle cx="140" cy="120" r="56" fill="#8B3E22"/>
+  <text x="140" y="138" text-anchor="middle" font-family="Georgia,serif" font-size="52" fill="#F5EDE4">C</text>
+  <!-- Nom -->
+  <text x="220" y="108" font-family="Georgia,serif" font-size="32" fill="#2C2416">Claire Vigneron</text>
+  <text x="220" y="142" font-family="Arial,sans-serif" font-size="18" fill="#767A55" letter-spacing="3">COMMUNITY MANAGER</text>
+  <!-- Ligne séparatrice -->
+  <line x1="100" y1="200" x2="600" y2="200" stroke="#D6CCC0" stroke-width="1"/>
+  <!-- Accroche principale -->
+  <text x="100" y="290" font-family="Georgia,serif" font-size="52" fill="#2C2416">Instagram pour</text>
+  <text x="100" y="355" font-family="Georgia,serif" font-size="52" fill="#8B3E22" font-style="italic">artisans &amp; indépendants.</text>
+  <!-- Description -->
+  <text x="100" y="420" font-family="Arial,sans-serif" font-size="22" fill="#767A55">Audit · Pack Contenu · Accompagnement Mensuel</text>
+  <!-- Domaine -->
+  <text x="100" y="560" font-family="Arial,sans-serif" font-size="20" fill="#8B3E22">clairevigneron.com</text>
+</svg>
