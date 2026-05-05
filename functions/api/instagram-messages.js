@@ -33,17 +33,35 @@ export async function onRequestGet({ request, env }) {
 
     if (json.error) return resp({ error: json.error.message, code: json.error.code }, 400);
 
-    // Tag each message with isMine server-side — igId is known with certainty here
-    const conversations = (json.data || []).map(conv => ({
-      ...conv,
-      messages: conv.messages ? {
-        ...conv.messages,
-        data: (conv.messages.data || []).map(m => ({
-          ...m,
-          isMine: String(m.from?.id).trim() === igId,
-        })),
-      } : conv.messages,
-    }));
+    const conversations = (json.data || []).map(conv => {
+      // Index des participants : id → {name, username, profile_pic}
+      const participantMap = {};
+      (conv.participants?.data || []).forEach(p => {
+        participantMap[String(p.id).trim()] = p;
+      });
+
+      return {
+        ...conv,
+        messages: conv.messages ? {
+          ...conv.messages,
+          data: (conv.messages.data || []).map(m => {
+            const fromId   = String(m.from?.id || '').trim();
+            const fromPart = participantMap[fromId] || {};
+            return {
+              ...m,
+              // Enrichir from avec les données participants si Meta n'a pas tout renvoyé
+              from: {
+                id:          fromId,
+                name:        m.from?.name        || fromPart.name        || '',
+                username:    m.from?.username    || fromPart.username    || '',
+                profile_pic: m.from?.profile_pic || fromPart.profile_pic || '',
+              },
+              isMine: fromId === igId,
+            };
+          }),
+        } : conv.messages,
+      };
+    });
 
     return resp({ conversations, igAccountId: igId });
   } catch(err) {
