@@ -3540,7 +3540,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               </div>
               <div style="position:relative;margin-bottom:8px;">
                 <iconify-icon icon="solar:magnifer-linear" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#8e8e8e;font-size:14px;pointer-events:none;"></iconify-icon>
-                <input id="dm-search-input" type="text" placeholder="Rechercher une conversation…" value="${_dmSearch}"
+                <input id="dm-search-input" type="text" placeholder="Rechercher une conversation…" value="${window._dmSearch||''}"
                   style="width:100%;padding:8px 12px 8px 32px;border-radius:20px;border:1px solid #dbdbdb;font-size:13px;background:#fff;outline:none;box-sizing:border-box;"
                   oninput="window._dmSearch=this.value;window._renderDmList(window._dmAllConvs)" />
               </div>
