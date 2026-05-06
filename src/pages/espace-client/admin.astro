@@ -3427,11 +3427,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
             <div style="overflow-y:auto;flex:1;">
               ${allConvs.map(c => {
-                // Utiliser igAccountId directement pour trouver l'autre participant
+                // Extraire l'autre personne depuis les messages (from où isMine=false)
+                const otherFromMsg = (c.messages?.data||[]).find(m => m.isMine === false)?.from || {};
                 const p2 = (c.participants?.data||[]).find(p => String(p.id) !== String(igAccountId))
-                        || (c.participants?.data||[]).find(p => p.username !== 'clairevigneron')
+                        || otherFromMsg
                         || (c.participants?.data||[])[0] || {};
-                const n2    = p2.username || p2.name || 'Inconnu';
+                // Enrichir avec les données from si username manquant dans participants
+                const merged2 = { ...otherFromMsg, ...p2, username: p2.username || otherFromMsg.username, name: p2.name || otherFromMsg.name, profile_pic: p2.profile_pic || otherFromMsg.profile_pic };
+                const n2    = merged2.username || merged2.name || 'Inconnu';
                 const last2 = c.messages?.data?.[0];
                 const lastMsg = last2?.isMine ? `Vous : ${last2?.message||'📎'}` : (last2?.message||'📎');
                 const timeAgo = last2?.created_time ? new Date(last2.created_time).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '';
@@ -3454,7 +3457,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const _renderDmConv = (conv, allConvs) => {
           const myId        = _findMyId(conv);
           const allP        = conv.participants?.data || [];
-          const other       = allP.find(p => String(p.id) !== myId) || allP[0] || {};
+          const otherMsg    = (conv.messages?.data||[]).find(m => m.isMine === false)?.from || {};
+          const other       = allP.find(p => String(p.id) !== myId) || otherMsg || allP[0] || {};
+          // Enrichir avec from si pas de username dans participants
+          if (!other.username && otherMsg.username) { other.username = otherMsg.username; other.name = otherMsg.name; other.profile_pic = otherMsg.profile_pic; }
           const name        = other.name || other.username || 'Inconnu';
           const username    = other.username ? '@' + other.username : '';
           const msgs        = conv.messages?.data || [];

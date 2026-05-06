@@ -4,7 +4,7 @@ export async function onRequestGet({ request, env }) {
   const from     = url.searchParams.get('from') || 'admin';
 
   const APP_ID   = env.META_IG_APP_ID || '2342204119523490';
-  const REDIRECT = 'https://claire-cm-site.pages.dev/api/instagram-callback';
+  const REDIRECT = 'https://clairevigneron.com/api/instagram-callback';
   const state    = btoa(JSON.stringify({ clientId, from }));
 
   const authUrl = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=${APP_ID}&redirect_uri=${REDIRECT}&response_type=code&scope=instagram_business_basic,instagram_business_manage_insights,instagram_business_content_publish,instagram_business_manage_comments,instagram_business_manage_messages&state=${encodeURIComponent(state)}`;
