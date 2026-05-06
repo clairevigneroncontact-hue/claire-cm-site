@@ -45,7 +45,11 @@ export async function onRequestGet({ request, env }) {
 
     // Sauvegarde en base (claire-cm-site ou CMspace selon le state)
     if (isCMspace) {
-      await _saveCMspace(env, clientId, longToken, igAccountId, username);
+      const saveResult = await _saveCMspace(env, clientId, longToken, igAccountId, username);
+      if (!saveResult.ok) {
+        const errMsg = encodeURIComponent('ig_save_failed:' + saveResult.reason + ':status=' + (saveResult.status || 'n/a'));
+        return Response.redirect(`https://cm-space.pages.dev/admin?ig_error=${errMsg}`, 302);
+      }
       const cmDest = from === 'dashboard'
         ? `https://cm-space.pages.dev/client?ig_connected=1`
         : `https://cm-space.pages.dev/admin?ig_connected=1&open_client=${clientId}`;
@@ -62,16 +66,17 @@ export async function onRequestGet({ request, env }) {
 }
 
 async function _saveCMspace(env, clientId, token, igAccountId, username) {
-  if (!clientId) return;
+  if (!clientId) return { ok: false, reason: 'no_clientId' };
   const url = 'https://rntayoagpujvcpkhgyob.supabase.co';
   const key = String(env.CMSPACE_SUPABASE_SERVICE_KEY || '').replace(/[^\x21-\x7E]/g, '');
-  if (!key) return;
+  if (!key) return { ok: false, reason: 'no_service_key' };
   const expiresAt = new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString();
-  await fetch(`${url}/rest/v1/profiles?id=eq.${clientId}`, {
+  const r = await fetch(`${url}/rest/v1/profiles?id=eq.${clientId}`, {
     method: 'PATCH',
     headers: { 'apikey': key, 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
     body: JSON.stringify({ ig_access_token: token, ig_account_id: igAccountId, ig_token_expires_at: expiresAt, ...(username ? { instagram_handle: username } : {}) }),
   });
+  return { ok: r.ok, status: r.status };
 }
 
 async function _save(env, clientId, token, igAccountId, username) {
