@@ -10,12 +10,13 @@ export async function onRequestGet({ request, env }) {
 
     if (error || !code) return Response.redirect(`${ADMIN_URL}?ig_error=access_denied`, 302);
 
-    let clientId = '', from = 'admin';
-    try { const s = JSON.parse(atob(decodeURIComponent(state || ''))); clientId = s.clientId; from = s.from || 'admin'; } catch {}
+    let clientId = '', from = 'admin', app = '';
+    try { const s = JSON.parse(atob(decodeURIComponent(state || ''))); clientId = s.clientId; from = s.from || 'admin'; app = s.app || ''; } catch {}
 
+    const isCMspace = app === 'cmspace';
     const APP_ID     = env.META_IG_APP_ID || '2342204119523490';
     const APP_SECRET = env.META_IG_APP_SECRET || env.META_APP_SECRET || '';
-    const REDIRECT   = 'https://claire-cm-site.pages.dev/api/instagram-callback';
+    const REDIRECT   = 'https://clairevigneron.com/api/instagram-callback';
 
     // Échange code → token court Instagram
     // Note: redirect_uri doit être non-encodé pour correspondre à l'URL d'autorisation
@@ -42,15 +43,35 @@ export async function onRequestGet({ request, env }) {
     const igAccountId = String(igData.id || igUserId);
     const username    = igData.username || '';
 
-    // Sauvegarde en base
-    await _save(env, clientId, longToken, igAccountId, username);
+    // Sauvegarde en base (claire-cm-site ou CMspace selon le state)
+    if (isCMspace) {
+      await _saveCMspace(env, clientId, longToken, igAccountId, username);
+      const cmDest = from === 'dashboard'
+        ? `https://cm-space.pages.dev/client?ig_connected=1`
+        : `https://cm-space.pages.dev/admin?ig_connected=1&open_client=${clientId}`;
+      return Response.redirect(cmDest, 302);
+    }
 
+    await _save(env, clientId, longToken, igAccountId, username);
     const dest = from === 'dashboard' ? `${DASH_URL}?ig_connected=1` : `${ADMIN_URL}?ig_connected=1&open_client=${clientId}`;
     return Response.redirect(dest, 302);
 
   } catch(err) {
     return Response.redirect(`${ADMIN_URL}?ig_error=${encodeURIComponent(err.message)}`, 302);
   }
+}
+
+async function _saveCMspace(env, clientId, token, igAccountId, username) {
+  if (!clientId) return;
+  const url = 'https://rntayoagpujvcpkhgyob.supabase.co';
+  const key = String(env.CMSPACE_SUPABASE_SERVICE_KEY || '').replace(/[^\x21-\x7E]/g, '');
+  if (!key) return;
+  const expiresAt = new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString();
+  await fetch(`${url}/rest/v1/profiles?id=eq.${clientId}`, {
+    method: 'PATCH',
+    headers: { 'apikey': key, 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ ig_access_token: token, ig_account_id: igAccountId, ig_token_expires_at: expiresAt, ...(username ? { instagram_handle: username } : {}) }),
+  });
 }
 
 async function _save(env, clientId, token, igAccountId, username) {
