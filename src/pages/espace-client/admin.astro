@@ -3499,10 +3499,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           return byExclusion || igAID;
         };
 
-        let _dmFilter  = 'tout';
-        let _dmSearch  = '';
+        window._dmFilter  = 'tout';
+        window._dmSearch  = '';
+        window._dmAllConvs = convs;
         const _resolvedKey = `ig_resolved_${clientId}`;
-        const _resolved = new Set(JSON.parse(localStorage.getItem(_resolvedKey) || '[]'));
+        window._resolved = new Set(JSON.parse(localStorage.getItem(_resolvedKey) || '[]'));
 
         const _getConvInfo = (c) => {
           const otherFromMsg = (c.messages?.data||[]).find(m => m.isMine === false)?.from || {};
@@ -3510,25 +3511,25 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           const merged = { ...otherFromMsg, ...p2, username: p2.username||otherFromMsg.username, name: p2.name||otherFromMsg.name, profile_pic: p2.profile_pic||otherFromMsg.profile_pic };
           const last   = c.messages?.data?.[0];
           const isUnread  = last && !last.isMine;
-          const isResolved = _resolved.has(c.id);
+          const isResolved = (window._resolved||new Set()).has(c.id);
           return { merged, last, isUnread, isResolved };
         };
 
-        const _renderDmList = (allConvs) => {
+        window._renderDmList = (allConvs) => {
           const unreadCount  = allConvs.filter(c => _getConvInfo(c).isUnread).length;
           const unresolvedCount = allConvs.filter(c => !_getConvInfo(c).isResolved).length;
 
           let filtered = allConvs.filter(c => {
             const { merged, isUnread, isResolved } = _getConvInfo(c);
-            const q = _dmSearch.toLowerCase();
+            const q = (window._dmSearch||'').toLowerCase();
             const matchSearch = !q || (merged.username||'').toLowerCase().includes(q) || (merged.name||'').toLowerCase().includes(q);
             if (!matchSearch) return false;
-            if (_dmFilter === 'non_lus') return isUnread;
-            if (_dmFilter === 'non_resolus') return !isResolved;
+            if (window._dmFilter === 'non_lus') return isUnread;
+            if (window._dmFilter === 'non_resolus') return !isResolved;
             return true;
           });
 
-          const _tabStyle = (key) => `background:none;border:none;border-bottom:2px solid ${_dmFilter===key?'#000':'transparent'};padding:10px 12px;font-size:13px;font-weight:${_dmFilter===key?'700':'400'};color:${_dmFilter===key?'#000':'#8e8e8e'};cursor:pointer;white-space:nowrap;`;
+          const _tabStyle = (key) => `background:none;border:none;border-bottom:2px solid ${window._dmFilter===key?'#000':'transparent'};padding:10px 12px;font-size:13px;font-weight:${window._dmFilter===key?'700':'400'};color:${window._dmFilter===key?'#000':'#8e8e8e'};cursor:pointer;white-space:nowrap;`;
 
           inner.innerHTML = `
             <div style="padding:12px 16px 0;border-bottom:1px solid #dbdbdb;background:#fafafa;">
@@ -3541,16 +3542,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                 <iconify-icon icon="solar:magnifer-linear" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#8e8e8e;font-size:14px;pointer-events:none;"></iconify-icon>
                 <input id="dm-search-input" type="text" placeholder="Rechercher une conversation…" value="${_dmSearch}"
                   style="width:100%;padding:8px 12px 8px 32px;border-radius:20px;border:1px solid #dbdbdb;font-size:13px;background:#fff;outline:none;box-sizing:border-box;"
-                  oninput="_dmSearch=this.value;_renderDmList(convs)" />
+                  oninput="window._dmSearch=this.value;window._renderDmList(window._dmAllConvs)" />
               </div>
               <div style="display:flex;gap:0;overflow-x:auto;">
-                <button style="${_tabStyle('non_resolus')}" onclick="_dmFilter='non_resolus';_renderDmList(convs)">
+                <button style="${_tabStyle('non_resolus')}" onclick="window._dmFilter='non_resolus';window._renderDmList(window._dmAllConvs)">
                   Non résolu${unresolvedCount?` <span style='background:#262626;color:#fff;font-size:10px;padding:1px 5px;border-radius:10px;font-weight:700;'>${unresolvedCount}</span>`:''}
                 </button>
-                <button style="${_tabStyle('non_lus')}" onclick="_dmFilter='non_lus';_renderDmList(convs)">
+                <button style="${_tabStyle('non_lus')}" onclick="window._dmFilter='non_lus';window._renderDmList(window._dmAllConvs)">
                   Non lus${unreadCount?` <span style='background:#e63950;color:#fff;font-size:10px;padding:1px 5px;border-radius:10px;font-weight:700;'>${unreadCount}</span>`:''}
                 </button>
-                <button style="${_tabStyle('tout')}" onclick="_dmFilter='tout';_renderDmList(convs)">Tout</button>
+                <button style="${_tabStyle('tout')}" onclick="window._dmFilter='tout';window._renderDmList(window._dmAllConvs)">Tout</button>
               </div>
             </div>
             <div style="overflow-y:auto;flex:1;">
@@ -3571,7 +3572,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
                     </div>
                     ${isUnread ? '<span style="width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#833ab4,#fd1d1d);flex-shrink:0;margin-right:4px;"></span>' : ''}
                   </button>
-                  <button onclick="event.stopPropagation();_resolved.${isResolved?'delete':'add'}('${c.id}');localStorage.setItem('${_resolvedKey}',JSON.stringify([..._resolved]));_renderDmList(convs);"
+                  <button onclick="event.stopPropagation();window._resolved[isResolved?'delete':'add']('${c.id}');localStorage.setItem('${_resolvedKey}',JSON.stringify([...window._resolved]));window._renderDmList(window._dmAllConvs);"
                     title="${isResolved?'Marquer non résolu':'Marquer résolu'}"
                     style="padding:8px;background:none;border:none;cursor:pointer;color:${isResolved?'#10B981':'#d1d5db'};font-size:16px;flex-shrink:0;transition:color .15s;">✓</button>
                 </div>`;
@@ -3635,12 +3636,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
         };
 
-        window._igDmShowList  = () => _renderDmList(convs);
+        window._igDmShowList  = () => window._renderDmList(window._dmAllConvs||convs);
         window._dmConvs       = convs;
         window._dmClientId    = clientId;
         window._renderDmConvAdmin = _renderDmConv;
 
-        _renderDmList(convs);
+        window._renderDmList(convs);
       } catch(err) {
         inner.innerHTML = `<p style="padding:20px;font-size:13px;color:red;">Erreur : ${err.message}</p>`;
       }
