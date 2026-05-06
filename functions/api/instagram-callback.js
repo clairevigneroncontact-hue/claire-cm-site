@@ -16,7 +16,7 @@ export async function onRequestGet({ request, env }) {
     const isCMspace = app === 'cmspace';
     const APP_ID     = env.META_IG_APP_ID || '2342204119523490';
     const APP_SECRET = env.META_IG_APP_SECRET || env.META_APP_SECRET || '';
-    const REDIRECT   = 'https://clairevigneron.com/api/instagram-callback';
+    const REDIRECT   = 'https://claire-cm-site.pages.dev/api/instagram-callback';
 
     // Échange code → token court Instagram
     // Note: redirect_uri doit être non-encodé pour correspondre à l'URL d'autorisation
