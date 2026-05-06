@@ -1112,7 +1112,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const lastActivityDate = new Date(c.lastContent?.updated_at || c.lastUpload?.created_at || c.created_at).getTime();
         const daysSince = Math.floor((now - lastActivityDate) / (24*3600*1000));
         const health = pendingCount > 0 ? { dot: '⏳', label: '', color: 'text-amber-600' }
-          : daysSince <= 7  ? { dot: '🟢', label: 'Actif', color: 'text-green-600' }
+          : daysSince <= 7  ? { dot: '🟢', label: '', color: 'text-green-600' }
           : daysSince <= 14 ? { dot: '🟡', label: `${daysSince}j sans activité`, color: 'text-amber-600' }
           : { dot: '🔴', label: `${daysSince}j sans activité`, color: 'text-red-500' };
 
