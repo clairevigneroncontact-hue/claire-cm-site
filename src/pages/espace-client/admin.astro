@@ -3427,22 +3427,25 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
             <div style="overflow-y:auto;flex:1;">
               ${allConvs.map(c => {
-                const myId2 = _findMyId(c);
-                const p2    = (c.participants?.data||[]).find(p => String(p.id) !== myId2) || (c.participants?.data||[])[0] || {};
-                const n2    = p2.name || p2.username || 'Inconnu';
+                // Utiliser igAccountId directement pour trouver l'autre participant
+                const p2 = (c.participants?.data||[]).find(p => String(p.id) !== String(igAccountId))
+                        || (c.participants?.data||[]).find(p => p.username !== 'clairevigneron')
+                        || (c.participants?.data||[])[0] || {};
+                const n2    = p2.username || p2.name || 'Inconnu';
                 const last2 = c.messages?.data?.[0];
                 const lastMsg = last2?.isMine ? `Vous : ${last2?.message||'📎'}` : (last2?.message||'📎');
                 const timeAgo = last2?.created_time ? new Date(last2.created_time).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '';
-                return `<button onclick="selectDmConv('${clientId}','${c.id}')" style="width:100%;display:flex;align-items:center;gap:12px;padding:12px 16px;text-align:left;background:transparent;border:none;border-bottom:1px solid #f0f0f0;cursor:pointer;">
+                const isUnread = last2 && !last2.isMine;
+                return `<button onclick="selectDmConv('${clientId}','${c.id}')" style="width:100%;display:flex;align-items:center;gap:12px;padding:12px 16px;text-align:left;background:transparent;border:none;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'">
                   ${_igAvatar(p2, 56)}
                   <div style="flex:1;min-width:0;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
-                      <p style="font-size:14px;font-weight:600;color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n2}</p>
+                      <p style="font-size:14px;font-weight:${isUnread?'700':'500'};color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">@${n2}</p>
                       <span style="font-size:12px;color:#8e8e8e;flex-shrink:0;margin-left:8px;">${timeAgo}</span>
                     </div>
-                    <p style="font-size:13px;color:#8e8e8e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${lastMsg}</p>
+                    <p style="font-size:13px;color:${isUnread?'#000':'#8e8e8e'};font-weight:${isUnread?'600':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${lastMsg}</p>
                   </div>
-                  <span style="color:#8e8e8e;font-size:18px;">›</span>
+                  ${isUnread ? '<span style="width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#833ab4,#fd1d1d);flex-shrink:0;"></span>' : '<span style="color:#8e8e8e;font-size:18px;">›</span>'}
                 </button>`;
               }).join('')}
             </div>`;
