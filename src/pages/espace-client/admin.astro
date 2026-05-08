@@ -1149,6 +1149,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     }
 
     window.openClient = async (clientId) => {
+      // Arrêter le refresh DM du client précédent
+      if (window._igDmRefreshTimer) { clearInterval(window._igDmRefreshTimer); window._igDmRefreshTimer = null; }
       document.getElementById('view-list').classList.add('hidden');
       document.getElementById('view-client').classList.remove('hidden');
       document.getElementById('client-detail').innerHTML = '<p class="text-sm text-[#2C2416]/40 italic p-4">Chargement…</p>';
@@ -3395,9 +3397,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     };
 
     // Messages privés Instagram
-    const _igAvatar = (p, size = 32) => p?.profile_pic
-      ? `<img src="${p.profile_pic}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #D6CCC0;" />`
-      : `<div style="width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:white;font-size:${size<=28?'10':'12'}px;font-weight:700;">${(p?.name||p?.username||'?')[0].toUpperCase()}</div>`;
+    const _igAvatar = (p, size = 32) => {
+      const initial = (p?.name || p?.username || '?')[0].toUpperCase();
+      const fs = size <= 28 ? '10' : '12';
+      const fallback = `<div style="width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);display:flex;align-items:center;justify-content:center;color:white;font-size:${fs}px;font-weight:700;">${initial}</div>`;
+      if (!p?.profile_pic) return `<div style="flex-shrink:0;">${fallback}</div>`;
+      // Image par-dessus le fallback — si l'image échoue elle se masque, le fallback reste visible
+      return `<div style="position:relative;width:${size}px;height:${size}px;flex-shrink:0;">${fallback}<img src="${p.profile_pic}" style="position:absolute;inset:0;width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:1px solid #D6CCC0;" onerror="this.style.display='none'" /></div>`;
+    };
 
     // ─── Meilleurs moments (heatmap activité abonnés) ───────────────────────
     window.loadBestTimes = async (clientId) => {
@@ -3505,12 +3512,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const _resolvedKey = `ig_resolved_${clientId}`;
         window._resolved = new Set(JSON.parse(localStorage.getItem(_resolvedKey) || '[]'));
 
+        const _igReadKey = (convId) => `ig_read_${clientId}_${convId}`;
+        const _markConvRead = (convId, lastTime) => localStorage.setItem(_igReadKey(convId), lastTime || new Date().toISOString());
+
         const _getConvInfo = (c) => {
           const otherFromMsg = (c.messages?.data||[]).find(m => m.isMine === false)?.from || {};
           const p2 = (c.participants?.data||[]).find(p => String(p.id) !== String(igAccountId)) || otherFromMsg || (c.participants?.data||[])[0] || {};
           const merged = { ...otherFromMsg, ...p2, username: p2.username||otherFromMsg.username, name: p2.name||otherFromMsg.name, profile_pic: p2.profile_pic||otherFromMsg.profile_pic };
+          // Fallback lisible si ni nom ni username
+          if (!merged.username && !merged.name && merged.id) merged.username = 'user_' + String(merged.id).slice(-6);
           const last   = c.messages?.data?.[0];
-          const isUnread  = last && !last.isMine;
+          // Non lu = dernier message reçu (pas envoyé par nous) ET plus récent que la dernière ouverture de la conv
+          const readAt = localStorage.getItem(_igReadKey(c.id));
+          const isUnread = last && !last.isMine && (!readAt || new Date(last.created_time) > new Date(readAt));
           const isResolved = (window._resolved||new Set()).has(c.id);
           return { merged, last, isUnread, isResolved };
         };
@@ -3636,10 +3650,29 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
         };
 
-        window._igDmShowList  = () => window._renderDmList(window._dmAllConvs||convs);
+        window._igDmShowList  = () => { window._igDmViewingConv = false; window._renderDmList(window._dmAllConvs||convs); };
         window._dmConvs       = convs;
         window._dmClientId    = clientId;
+        window._markConvRead  = _markConvRead;
         window._renderDmConvAdmin = _renderDmConv;
+
+        // Auto-refresh toutes les 30s pendant que l'onglet stats est ouvert
+        if (window._igDmRefreshTimer) clearInterval(window._igDmRefreshTimer);
+        window._igDmViewingConv = false;
+        window._igDmRefreshTimer = setInterval(() => {
+          const statsPanel = document.getElementById('ctab-stats-panel');
+          if (statsPanel && !statsPanel.classList.contains('hidden') && !window._igDmViewingConv) {
+            fetch(`/api/instagram-messages?clientId=${clientId}`)
+              .then(r => r.json())
+              .then(d => {
+                if (!d.error && d.conversations?.length) {
+                  window._dmAllConvs = d.conversations;
+                  window._dmConvs    = d.conversations;
+                  if (!window._igDmViewingConv) window._renderDmList(d.conversations);
+                }
+              }).catch(() => {});
+          }
+        }, 30000);
 
         window._renderDmList(convs);
       } catch(err) {
@@ -3650,7 +3683,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     window.selectDmConv = (clientId, convId) => {
       const convs = window._dmConvs || [];
       const conv  = convs.find(c => c.id === convId);
-      if (conv && window._renderDmConvAdmin) window._renderDmConvAdmin(conv, convs);
+      if (!conv) return;
+      // Marquer comme lu : stocker le timestamp du dernier message
+      const lastTime = conv.messages?.data?.[0]?.created_time;
+      if (window._markConvRead) window._markConvRead(convId, lastTime);
+      window._igDmViewingConv = true;
+      if (window._renderDmConvAdmin) window._renderDmConvAdmin(conv, convs);
     };
 
     window.sendIgDM = async (clientId, recipientId, inputId) => {
