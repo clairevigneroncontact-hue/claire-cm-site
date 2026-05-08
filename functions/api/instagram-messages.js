@@ -33,11 +33,42 @@ export async function onRequestGet({ request, env }) {
 
     if (json.error) return resp({ error: json.error.message, code: json.error.code }, 400);
 
-    const conversations = (json.data || []).map(conv => {
-      // Index des participants : id → {name, username, profile_pic}
+    // Collecter les IDs participants uniques (hors notre propre compte)
+    const allConvs = json.data || [];
+    const unknownIds = new Set();
+    for (const conv of allConvs) {
+      for (const p of (conv.participants?.data || [])) {
+        const pid = String(p.id).trim();
+        if (pid !== igId && !p.username && !p.name) unknownIds.add(pid);
+      }
+    }
+
+    // Appels parallèles pour enrichir les profils manquants
+    const profileCache = {};
+    if (unknownIds.size > 0) {
+      await Promise.all([...unknownIds].map(async (pid) => {
+        try {
+          const pr = await fetch(
+            `https://graph.instagram.com/${pid}?fields=name,username,profile_pic&access_token=${token}`
+          );
+          const pj = await pr.json();
+          if (!pj.error) profileCache[pid] = pj;
+        } catch(_) {}
+      }));
+    }
+
+    const conversations = allConvs.map(conv => {
+      // Index des participants enrichi : id → {name, username, profile_pic}
       const participantMap = {};
       (conv.participants?.data || []).forEach(p => {
-        participantMap[String(p.id).trim()] = p;
+        const pid = String(p.id).trim();
+        const cached = profileCache[pid] || {};
+        participantMap[pid] = {
+          ...p,
+          name:        p.name        || cached.name        || '',
+          username:    p.username    || cached.username    || '',
+          profile_pic: p.profile_pic || cached.profile_pic || '',
+        };
       });
 
       return {
@@ -46,10 +77,9 @@ export async function onRequestGet({ request, env }) {
           ...conv.messages,
           data: (conv.messages.data || []).map(m => {
             const fromId   = String(m.from?.id || '').trim();
-            const fromPart = participantMap[fromId] || {};
+            const fromPart = participantMap[fromId] || profileCache[fromId] || {};
             return {
               ...m,
-              // Enrichir from avec les données participants si Meta n'a pas tout renvoyé
               from: {
                 id:          fromId,
                 name:        m.from?.name        || fromPart.name        || '',
