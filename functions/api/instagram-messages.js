@@ -15,34 +15,29 @@ export async function onRequestGet({ request, env }) {
     const supabaseKey = env.SUPABASE_SERVICE_KEY;
     const key = String(supabaseKey).replace(/[^\x21-\x7E]/g, '');
 
+    // Récupérer token + username (pour identifier Claire dans les conversations)
     const profileRes = await fetch(
-      `${supabaseUrl}/rest/v1/profiles?id=eq.${clientId}&select=ig_access_token,ig_account_id`,
+      `${supabaseUrl}/rest/v1/profiles?id=eq.${clientId}&select=ig_access_token,ig_account_id,instagram_handle`,
       { headers: { apikey: key, Authorization: `Bearer ${key}` } }
     );
     const profiles = await profileRes.json();
     const profile  = Array.isArray(profiles) ? profiles[0] : null;
     if (!profile?.ig_access_token || !profile?.ig_account_id) return resp({ error: 'no_token' }, 404);
 
-    const token = profile.ig_access_token;
-    const igId  = String(profile.ig_account_id).trim();
-
-    // Récupérer l'ID réel du compte authentifié (peut différer de ig_account_id stocké)
-    let myRealId = igId;
-    try {
-      const meRes  = await fetch(`https://graph.instagram.com/me?fields=id&access_token=${token}`);
-      const meData = await meRes.json();
-      if (meData.id) myRealId = String(meData.id).trim();
-    } catch (_) {}
+    const token      = profile.ig_access_token;
+    const igId       = String(profile.ig_account_id).trim();
+    const myUsername = (profile.instagram_handle || '').replace('@', '').toLowerCase().trim();
 
     const res  = await fetch(
-      `https://graph.instagram.com/${myRealId}/conversations?platform=instagram&fields=id,participants{id,name,username,profile_pic},messages{id,message,from{id,name,username,profile_pic},created_time}&limit=20&access_token=${token}`
+      `https://graph.instagram.com/${igId}/conversations?platform=instagram&fields=id,participants{id,name,username,profile_pic},messages{id,message,from{id,name,username,profile_pic},created_time}&limit=20&access_token=${token}`
     );
     const json = await res.json();
 
     if (json.error) return resp({ error: json.error.message, code: json.error.code }, 400);
 
-    // Collecter les IDs participants uniques (hors notre propre compte)
     const allConvs = json.data || [];
+
+    // Enrichir les profils manquants
     const unknownIds = new Set();
     for (const conv of allConvs) {
       for (const p of (conv.participants?.data || [])) {
@@ -50,15 +45,11 @@ export async function onRequestGet({ request, env }) {
         if (pid !== igId && !p.username && !p.name) unknownIds.add(pid);
       }
     }
-
-    // Appels parallèles pour enrichir les profils manquants
     const profileCache = {};
     if (unknownIds.size > 0) {
       await Promise.all([...unknownIds].map(async (pid) => {
         try {
-          const pr = await fetch(
-            `https://graph.instagram.com/${pid}?fields=name,username,profile_pic&access_token=${token}`
-          );
+          const pr = await fetch(`https://graph.instagram.com/${pid}?fields=name,username,profile_pic&access_token=${token}`);
           const pj = await pr.json();
           if (!pj.error) profileCache[pid] = pj;
         } catch(_) {}
@@ -66,7 +57,7 @@ export async function onRequestGet({ request, env }) {
     }
 
     const conversations = allConvs.map(conv => {
-      // Index des participants enrichi : id → {name, username, profile_pic}
+      // Index des participants enrichi
       const participantMap = {};
       (conv.participants?.data || []).forEach(p => {
         const pid = String(p.id).trim();
@@ -78,6 +69,19 @@ export async function onRequestGet({ request, env }) {
           profile_pic: p.profile_pic || cached.profile_pic || '',
         };
       });
+
+      // Identifier l'ID de Claire dans CETTE conversation par son username
+      // (l'IGSID dans les conversations ≠ ig_account_id stocké en base)
+      const myParticipantId = (() => {
+        if (myUsername) {
+          const found = Object.values(participantMap).find(
+            p => (p.username || '').toLowerCase() === myUsername
+          );
+          if (found) return String(found.id).trim();
+        }
+        // Fallback : ig_account_id stocké
+        return igId;
+      })();
 
       return {
         ...conv,
@@ -94,14 +98,19 @@ export async function onRequestGet({ request, env }) {
                 username:    m.from?.username    || fromPart.username    || '',
                 profile_pic: m.from?.profile_pic || fromPart.profile_pic || '',
               },
-              isMine: fromId === myRealId,
+              isMine: fromId === myParticipantId,
             };
           }),
         } : conv.messages,
+        // Passer l'ID résolu de Claire pour ce contexte
+        _myId: myParticipantId,
       };
     });
 
-    return resp({ conversations, igAccountId: myRealId });
+    // igAccountId = l'ID réel de Claire dans les conversations (premier résolu)
+    const resolvedMyId = conversations[0]?._myId || igId;
+
+    return resp({ conversations, igAccountId: resolvedMyId, myUsername });
   } catch(err) {
     return resp({ error: err.message }, 500);
   }

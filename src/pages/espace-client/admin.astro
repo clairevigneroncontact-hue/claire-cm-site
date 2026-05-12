@@ -3518,12 +3518,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const _markConvRead = (convId, lastTime) => localStorage.setItem(_igReadKey(convId), lastTime || new Date().toISOString());
 
         const _getConvInfo = (c) => {
-          // isMine est calculé côté serveur (fiable) — on s'y fie directement
+          // isMine est calculé côté serveur (fiable, basé sur username)
           const msgs = c.messages?.data || [];
           const otherMsg = msgs.find(m => m.isMine === false);
           const otherFromMsg = otherMsg?.from || {};
-          // L'autre participant = celui dont l'ID ≠ igAccountId
-          const p2 = (c.participants?.data||[]).find(p => String(p.id) !== String(igAccountId)) || otherFromMsg || (c.participants?.data||[])[0] || {};
+          // Utiliser l'ID résolu par conversation (_myId), sinon igAccountId global
+          const myId = c._myId || igAccountId;
+          const p2 = (c.participants?.data||[]).find(p => String(p.id) !== String(myId)) || otherFromMsg || (c.participants?.data||[])[0] || {};
           const merged = {
             ...otherFromMsg,
             ...p2,
@@ -3605,11 +3606,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         };
 
         const _renderDmConv = (conv, allConvs) => {
-          // Utiliser isMine calculé côté serveur (fiable)
           const msgs  = conv.messages?.data || [];
           const allP  = conv.participants?.data || [];
           const otherMsg = msgs.find(m => m.isMine === false)?.from || {};
-          const other = { ...(allP.find(p => String(p.id) !== String(igAccountId)) || otherMsg || allP[0] || {}) };
+          const myId  = conv._myId || igAccountId;
+          const other = { ...(allP.find(p => String(p.id) !== String(myId)) || otherMsg || allP[0] || {}) };
           if (!other.username && otherMsg.username) { other.username = otherMsg.username; other.name = otherMsg.name; other.profile_pic = otherMsg.profile_pic; }
           if (!other.username && !other.name && other.id) other.username = 'user_' + String(other.id).slice(-6);
           const name        = other.name || other.username || 'Inconnu';
