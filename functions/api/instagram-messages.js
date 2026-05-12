@@ -29,7 +29,7 @@ export async function onRequestGet({ request, env }) {
     const myUsername = (profile.instagram_handle || '').replace('@', '').toLowerCase().trim();
 
     const res  = await fetch(
-      `https://graph.instagram.com/${igId}/conversations?platform=instagram&fields=id,participants{id,name,username,profile_pic},messages{id,message,from{id,name,username,profile_pic},created_time}&limit=20&access_token=${token}`
+      `https://graph.instagram.com/${igId}/conversations?platform=instagram&fields=id,participants{id,name,username,profile_pic,profile_picture_url},messages{id,message,from{id,name,username,profile_pic,profile_picture_url},created_time}&limit=20&access_token=${token}`
     );
     const json = await res.json();
 
@@ -49,7 +49,7 @@ export async function onRequestGet({ request, env }) {
     if (unknownIds.size > 0) {
       await Promise.all([...unknownIds].map(async (pid) => {
         try {
-          const pr = await fetch(`https://graph.instagram.com/${pid}?fields=name,username,profile_pic&access_token=${token}`);
+          const pr = await fetch(`https://graph.instagram.com/${pid}?fields=name,username,profile_pic,profile_picture_url&access_token=${token}`);
           const pj = await pr.json();
           if (!pj.error) profileCache[pid] = pj;
         } catch(_) {}
@@ -64,9 +64,10 @@ export async function onRequestGet({ request, env }) {
         const cached = profileCache[pid] || {};
         participantMap[pid] = {
           ...p,
-          name:        p.name        || cached.name        || '',
-          username:    p.username    || cached.username    || '',
-          profile_pic: p.profile_pic || cached.profile_pic || '',
+          name:        p.name              || cached.name              || '',
+          username:    p.username          || cached.username          || '',
+          profile_pic: p.profile_pic       || p.profile_picture_url   ||
+                       cached.profile_pic  || cached.profile_picture_url || '',
         };
       });
 
@@ -94,9 +95,10 @@ export async function onRequestGet({ request, env }) {
               ...m,
               from: {
                 id:          fromId,
-                name:        m.from?.name        || fromPart.name        || '',
-                username:    m.from?.username    || fromPart.username    || '',
-                profile_pic: m.from?.profile_pic || fromPart.profile_pic || '',
+                name:        m.from?.name                 || fromPart.name        || '',
+                username:    m.from?.username             || fromPart.username    || '',
+                profile_pic: m.from?.profile_pic          || m.from?.profile_picture_url ||
+                             fromPart.profile_pic         || fromPart.profile_picture_url || '',
               },
               isMine: fromId === myParticipantId,
             };
