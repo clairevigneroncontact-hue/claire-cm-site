@@ -3508,17 +3508,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const igAccountId = data.igAccountId || '';
         if (!convs.length) { inner.innerHTML = '<p style="padding:20px;font-size:13px;color:#8e8e8e;font-style:italic;">Aucun message.</p>'; return; }
 
-        const _findMyId = (conv) => {
-          const igAID = String(igAccountId || '');
-          const allP  = conv.participants?.data || [];
-          const msgs  = conv.messages?.data || [];
-          const pIds  = new Set(allP.map(p => String(p.id)));
-          const sIds  = [...new Set(msgs.map(m => m.from?.id).filter(Boolean).map(String))];
-          if (igAID && sIds.includes(igAID)) return igAID;
-          const byExclusion = sIds.find(id => !pIds.has(id));
-          return byExclusion || igAID;
-        };
-
         window._dmFilter  = 'tout';
         window._dmSearch  = '';
         window._dmAllConvs = convs;
@@ -3529,22 +3518,25 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         const _markConvRead = (convId, lastTime) => localStorage.setItem(_igReadKey(convId), lastTime || new Date().toISOString());
 
         const _getConvInfo = (c) => {
-          // _findMyId détecte notre IGSID réel (peut différer de igAccountId stocké en base)
-          const myId = _findMyId(c);
-          // Re-calculer isMine avec le bon ID (le backend peut se tromper si IGSID ≠ IG User ID)
-          const msgs = (c.messages?.data || []).map(m => ({
-            ...m,
-            isMine: String(m.from?.id || '').trim() === myId,
-          }));
-          const otherFromMsg = msgs.find(m => !m.isMine)?.from || {};
-          const p2 = (c.participants?.data||[]).find(p => String(p.id) !== myId) || otherFromMsg || (c.participants?.data||[])[0] || {};
-          const merged = { ...otherFromMsg, ...p2, username: p2.username||otherFromMsg.username, name: p2.name||otherFromMsg.name, profile_pic: p2.profile_pic||otherFromMsg.profile_pic };
+          // isMine est calculé côté serveur (fiable) — on s'y fie directement
+          const msgs = c.messages?.data || [];
+          const otherMsg = msgs.find(m => m.isMine === false);
+          const otherFromMsg = otherMsg?.from || {};
+          // L'autre participant = celui dont l'ID ≠ igAccountId
+          const p2 = (c.participants?.data||[]).find(p => String(p.id) !== String(igAccountId)) || otherFromMsg || (c.participants?.data||[])[0] || {};
+          const merged = {
+            ...otherFromMsg,
+            ...p2,
+            username:    p2.username    || otherFromMsg.username    || '',
+            name:        p2.name        || otherFromMsg.name        || '',
+            profile_pic: p2.profile_pic || otherFromMsg.profile_pic || '',
+          };
           if (!merged.username && !merged.name && merged.id) merged.username = 'user_' + String(merged.id).slice(-6);
           const last = msgs[0];
           const readAt = localStorage.getItem(_igReadKey(c.id));
-          const isUnread = last && !last.isMine && (!readAt || new Date(last.created_time) > new Date(readAt));
+          const isUnread = last && last.isMine === false && (!readAt || new Date(last.created_time) > new Date(readAt));
           const isResolved = (window._resolved||new Set()).has(c.id);
-          return { merged, last, isUnread, isResolved };
+          return { merged, msgs, last, isUnread, isResolved };
         };
 
         window._renderDmList = (allConvs) => {
@@ -3613,15 +3605,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         };
 
         const _renderDmConv = (conv, allConvs) => {
-          const myId = _findMyId(conv);
-          // Re-calculer isMine avec le bon IGSID
-          const msgs = (conv.messages?.data || []).map(m => ({
-            ...m,
-            isMine: String(m.from?.id || '').trim() === myId,
-          }));
-          const allP     = conv.participants?.data || [];
-          const otherMsg = msgs.find(m => !m.isMine)?.from || {};
-          const other    = allP.find(p => String(p.id) !== myId) || otherMsg || allP[0] || {};
+          // Utiliser isMine calculé côté serveur (fiable)
+          const msgs  = conv.messages?.data || [];
+          const allP  = conv.participants?.data || [];
+          const otherMsg = msgs.find(m => m.isMine === false)?.from || {};
+          const other = { ...(allP.find(p => String(p.id) !== String(igAccountId)) || otherMsg || allP[0] || {}) };
           if (!other.username && otherMsg.username) { other.username = otherMsg.username; other.name = otherMsg.name; other.profile_pic = otherMsg.profile_pic; }
           if (!other.username && !other.name && other.id) other.username = 'user_' + String(other.id).slice(-6);
           const name        = other.name || other.username || 'Inconnu';
