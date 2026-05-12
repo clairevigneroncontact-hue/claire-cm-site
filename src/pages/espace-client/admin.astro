@@ -899,25 +899,43 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       const phone     = document.getElementById('nc-phone').value.trim();
       const offer     = document.getElementById('nc-offer').value;
       const msgEl     = document.getElementById('nc-msg');
-      if (!email) { msgEl.textContent = 'Email obligatoire.'; msgEl.className = 'text-sm rounded-xl px-4 py-3 mb-3 text-red-600 bg-red-50'; return; }
+      const btn       = document.getElementById('nc-submit');
 
-      // Envoyer email reset (agit comme invitation)
-      await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/espace-client/nouveau-mot-de-passe' });
-
-      // Créer/mettre à jour le profil
-      const { data: existing } = await sb.from('profiles').select('id').eq('email', email).single();
-      if (existing) {
-        await sb.from('profiles').update({ full_name: name, instagram_handle: instagram, phone, offer }).eq('email', email);
-      } else {
-        // Le profil sera créé par le trigger quand le client s'inscrira
-        // On stocke les infos en attendant via un upsert
-        await sb.from('profiles').upsert({ id: crypto.randomUUID(), email, full_name: name, instagram_handle: instagram, phone, offer, role: 'client' });
+      if (!email) {
+        msgEl.textContent = 'Email obligatoire.';
+        msgEl.className = 'text-sm rounded-xl px-4 py-3 mb-3 text-red-600 bg-red-50';
+        msgEl.classList.remove('hidden');
+        return;
       }
 
-      msgEl.textContent = `Invitation envoyée à ${email}.`;
-      msgEl.className = 'text-sm rounded-xl px-4 py-3 mb-3 text-green-700 bg-green-50';
+      btn.disabled = true;
+      btn.textContent = 'Envoi…';
+
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch('/api/invite-client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name, instagram, phone, offer, accessToken: session?.access_token }),
+      });
+      const result = await res.json();
+
+      btn.disabled = false;
+      btn.textContent = "Créer l'espace";
+
+      if (!res.ok || result.error) {
+        msgEl.textContent = `Erreur : ${result.error || 'Réessaie'}`;
+        msgEl.className = 'text-sm rounded-xl px-4 py-3 mb-3 text-red-600 bg-red-50';
+      } else {
+        msgEl.textContent = `Invitation envoyée à ${email} ✓`;
+        msgEl.className = 'text-sm rounded-xl px-4 py-3 mb-3 text-green-700 bg-green-50';
+        document.getElementById('nc-email').value = '';
+        document.getElementById('nc-name').value = '';
+        document.getElementById('nc-instagram').value = '';
+        document.getElementById('nc-phone').value = '';
+        document.getElementById('nc-offer').value = '';
+        loadClients();
+      }
       msgEl.classList.remove('hidden');
-      loadClients();
     };
 
     // Switcher onglets principaux
