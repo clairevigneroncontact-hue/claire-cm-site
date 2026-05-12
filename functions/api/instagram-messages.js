@@ -26,8 +26,16 @@ export async function onRequestGet({ request, env }) {
     const token = profile.ig_access_token;
     const igId  = String(profile.ig_account_id).trim();
 
+    // Récupérer l'ID réel du compte authentifié (peut différer de ig_account_id stocké)
+    let myRealId = igId;
+    try {
+      const meRes  = await fetch(`https://graph.instagram.com/me?fields=id&access_token=${token}`);
+      const meData = await meRes.json();
+      if (meData.id) myRealId = String(meData.id).trim();
+    } catch (_) {}
+
     const res  = await fetch(
-      `https://graph.instagram.com/${igId}/conversations?platform=instagram&fields=id,participants{id,name,username,profile_pic},messages{id,message,from{id,name,username,profile_pic},created_time}&limit=20&access_token=${token}`
+      `https://graph.instagram.com/${myRealId}/conversations?platform=instagram&fields=id,participants{id,name,username,profile_pic},messages{id,message,from{id,name,username,profile_pic},created_time}&limit=20&access_token=${token}`
     );
     const json = await res.json();
 
@@ -86,14 +94,14 @@ export async function onRequestGet({ request, env }) {
                 username:    m.from?.username    || fromPart.username    || '',
                 profile_pic: m.from?.profile_pic || fromPart.profile_pic || '',
               },
-              isMine: fromId === igId,
+              isMine: fromId === myRealId,
             };
           }),
         } : conv.messages,
       };
     });
 
-    return resp({ conversations, igAccountId: igId });
+    return resp({ conversations, igAccountId: myRealId });
   } catch(err) {
     return resp({ error: err.message }, 500);
   }

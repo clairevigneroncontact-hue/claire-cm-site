@@ -26,13 +26,21 @@ export async function onRequestGet({ request, env }) {
     const token = profile.ig_access_token;
     const igId  = profile.ig_account_id;
 
-    // Heures d'activité des abonnés (online_followers)
+    // Heures d'activité des abonnés — online_followers nécessite l'API Facebook Graph
     const res = await fetch(
-      `https://graph.instagram.com/${igId}/insights?metric=online_followers&period=lifetime&access_token=${token}`
+      `https://graph.facebook.com/v19.0/${igId}/insights?metric=online_followers&period=lifetime&access_token=${token}`
     );
     const json = await res.json();
 
-    if (json.error) return resp({ error: json.error.message, code: json.error.code }, 400);
+    // Fallback sur graph.instagram.com si l'API Facebook échoue
+    if (json.error) {
+      const res2 = await fetch(
+        `https://graph.instagram.com/${igId}/insights?metric=online_followers&period=lifetime&access_token=${token}`
+      );
+      const json2 = await res2.json();
+      if (json2.error) return resp({ error: json2.error.message, code: json2.error.code }, 400);
+      Object.assign(json, json2);
+    }
 
     // Restructurer : { "0": {Mon: X, Tue: Y, ...}, "1": {...} ... "23": {...} }
     const raw = json?.data?.[0]?.values?.[0]?.value || json?.data?.[0]?.value || null;
