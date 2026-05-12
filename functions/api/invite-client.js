@@ -1,5 +1,7 @@
 export async function onRequestPost(context) {
-  const { SUPABASE_URL, SUPABASE_SERVICE_KEY, PUBLIC_ADMIN_EMAIL } = context.env;
+  const SUPABASE_URL    = context.env.SUPABASE_URL || context.env.PUBLIC_SUPABASE_URL;
+  const SUPABASE_SERVICE_KEY = context.env.SUPABASE_SERVICE_KEY;
+  const PUBLIC_ADMIN_EMAIL   = context.env.PUBLIC_ADMIN_EMAIL;
 
   let body;
   try { body = await context.request.json(); }
@@ -27,11 +29,18 @@ export async function onRequestPost(context) {
       apikey: SUPABASE_SERVICE_KEY,
       Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
     },
-    body: JSON.stringify({ email, data: { full_name: name || '' } }),
+    body: JSON.stringify({
+      email,
+      data: { full_name: name || '' },
+      redirect_to: 'https://clairevigneron.com/espace-client/nouveau-mot-de-passe',
+    }),
   });
 
   const inviteData = await inviteRes.json();
-  if (!inviteRes.ok) return json({ error: inviteData.msg || inviteData.message || 'Erreur invitation' }, 400);
+  if (!inviteRes.ok) return json({
+    error: inviteData.msg || inviteData.message || inviteData.error_description || 'Erreur invitation',
+    detail: inviteData,
+  }, 400);
 
   // Créer le profil avec le vrai ID Supabase Auth
   if (inviteData.id) {
